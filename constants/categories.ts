@@ -1,0 +1,104 @@
+import { Category } from '@/types';
+
+export const CATEGORIES: Category[] = [
+  {
+    id: '1',
+    name: 'Профоборудование',
+    slug: 'profoborudovanie',
+    icon: '🏭',
+    description: 'Профессиональное оборудование для предприятий',
+    subcategories: [
+      { id: '1-1', name: 'Тепловое', slug: 'teplovoe', categoryId: '1' },
+      { id: '1-2', name: 'Холодильное', slug: 'holodilnoe', categoryId: '1' },
+      { id: '1-3', name: 'Электромеханическое', slug: 'elektromehanicheskoe', categoryId: '1' },
+      { id: '1-4', name: 'Хлебопекарное', slug: 'hlebopekarnoe', categoryId: '1' },
+      { id: '1-5', name: 'Кондитерское', slug: 'konditerskoe', categoryId: '1' },
+      { id: '1-6', name: 'Для баров', slug: 'dlya-barov', categoryId: '1' },
+      { id: '1-7', name: 'Мясоперерабатывающее', slug: 'myasopererabatyvayushchee', categoryId: '1' },
+      { id: '1-8', name: 'Оборудование фаст-фуд', slug: 'oborudovanie-fast-fud', categoryId: '1' },
+      { id: '1-9', name: 'Нейтральное', slug: 'neytralnoe', categoryId: '1' },
+      { id: '1-10', name: 'Фасовочно-упаковочное', slug: 'fasovochno-upakovochnoe', categoryId: '1' },
+      { id: '1-11', name: 'Прачечное', slug: 'prachechnoe', categoryId: '1' },
+      { id: '1-12', name: 'Весовое', slug: 'vesovoe', categoryId: '1' },
+      { id: '1-13', name: 'Посудомоечное', slug: 'posudomoechnoe', categoryId: '1' },
+      { id: '1-14', name: 'Линии раздачи', slug: 'linii-razdachi', categoryId: '1' },
+      { id: '1-15', name: 'Оборудование для кейтеринга', slug: 'oborudovanie-dlya-kejteringa', categoryId: '1' },
+    ],
+  },
+  {
+    id: '2',
+    name: 'Кофеварки и кофемашины',
+    slug: 'kofevarki-i-kofemashiny',
+    icon: '☕',
+    description: 'Оборудование для приготовления кофе',
+    subcategories: [
+      { id: '2-1', name: 'Чайники для кофе', slug: 'chajniki-dlya-kofe', categoryId: '2' },
+      { id: '2-2', name: 'Кофемашины', slug: 'kofemashiny', categoryId: '2' },
+      { id: '2-3', name: 'Кофе-принтеры', slug: 'kofe-printery', categoryId: '2' },
+      { id: '2-4', name: 'Кофеварки', slug: 'kofevarki', categoryId: '2' },
+      { id: '2-5', name: 'Сиропные станции', slug: 'siropnye-stancii', categoryId: '2' },
+      { id: '2-6', name: 'Кофемолки', slug: 'kofemolki', categoryId: '2' },
+      { id: '2-7', name: 'Холодильники для молока', slug: 'holodilniki-dlya-moloka', categoryId: '2' },
+      { id: '2-8', name: 'Вспениватели и дозаторы молока', slug: 'vspenivateli-i-dozatory-moloka', categoryId: '2' },
+      { id: '2-9', name: 'Подогреватели чашек для кофе', slug: 'podogrevateli-chashek-dlya-kofe', categoryId: '2' },
+      { id: '2-10', name: 'Средства для очистки кофемашин', slug: 'sredstva-dlya-ochistki-kofemashin', categoryId: '2' },
+      { id: '2-11', name: 'Кофе', slug: 'kofe', categoryId: '2' },
+      { id: '2-12', name: 'Джезвы', slug: 'dzhezy', categoryId: '2' },
+      { id: '2-13', name: 'Аксессуары', slug: 'aksessuary', categoryId: '2' },
+    ],
+  },
+  {
+    id: '3',
+    name: 'Промышленная мебель',
+    slug: 'promyshlennaya-mebel',
+    icon: '🪑',
+    description: 'Мебель для производственных помещений',
+    subcategories: [
+      { id: '3-1', name: 'Тумбы и тележки', slug: 'tumby-i-telezhki', categoryId: '3' },
+      { id: '3-2', name: 'Шкафы инструментальные', slug: 'shkafy-instrumentalnye', categoryId: '3' },
+      { id: '3-3', name: 'Верстаки', slug: 'verstaki', categoryId: '3' },
+    ],
+  },
+  {
+    id: '4',
+    name: 'Климатическая техника',
+    slug: 'klimaticheskaya-tehnika',
+    icon: '❄️',
+    description: 'Оборудование для климат-контроля',
+    subcategories: [
+      { id: '4-1', name: 'Воздухоочистители', slug: 'vozduhoochisteli', categoryId: '4' },
+      { id: '4-2', name: 'Кондиционеры, сплит-системы', slug: 'kondicionery-split-sistemy', categoryId: '4' },
+      { id: '4-3', name: 'Обогреватели', slug: 'obogrevateli', categoryId: '4' },
+      { id: '4-4', name: 'Увлажнители воздуха', slug: 'uvlazhniteli-vozduha', categoryId: '4' },
+    ],
+  },
+  {
+    id: '5',
+    name: 'Телекоммуникационное оборудование',
+    slug: 'telekommunikacionnoe-oborudovanie',
+    icon: '📡',
+    description: 'Серверное и телекоммуникационное оборудование',
+    subcategories: [
+      { id: '5-1', name: 'Серверные шкафы', slug: 'servernye-shkafy', categoryId: '5' },
+      { id: '5-2', name: 'Телекоммуникационные шкафы', slug: 'telekommunikacionnye-shkafy', categoryId: '5' },
+    ],
+  },
+  {
+    id: '6',
+    name: 'Точки продаж',
+    slug: 'tochki-prodazh',
+    icon: '🏪',
+    description: 'Автоматизированные точки продаж',
+    subcategories: [
+      { id: '6-1', name: 'Микромаркеты', slug: 'mikromarkety', categoryId: '6' },
+      { id: '6-2', name: 'Продуктоматы', slug: 'produktomaty', categoryId: '6' },
+    ],
+  },
+];
+
+export const COMPANY_INFO = {
+  name: 'ProfiTech',
+  slogan: 'От идеи до воплощения',
+  defaultWhatsApp: '+79000000000', // Замените на реальный номер
+};
+

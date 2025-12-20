@@ -1,0 +1,12 @@
+id,name,description,categoryId,subcategoryId,manufacturer,images,char_мощность,char_объем,char_материал,char_габариты
+1,Кофемашина Professional X1000,Профессиональная автоматическая кофемашина с сенсорным управлением,2,2-2,CoffeeTech,/products/coffee-machine-1.jpg,1800W,2.5L,Нержавеющая сталь,450x350x550mm
+2,Холодильный шкаф Premium 600,Двухдверный холодильный шкаф для ресторанов,1,1-2,ColdMaster,/products/fridge-1.jpg,450W,600L,Нержавеющая сталь,1400x700x2000mm
+3,Тепловая витрина Gastro Pro,Настольная тепловая витрина с подсветкой,1,1-1,HeatEquip,/products/warmer-1.jpg,1200W,85L,Стекло/металл,900x400x650mm
+4,Планетарный миксер PM-20,Профессиональный планетарный миксер 20 литров,1,1-3,MixPro,/products/mixer-1.jpg,1100W,20L,Алюминий,450x550x700mm
+5,Кофемолка Barista Grind 2000,Профессиональная кофемолка с дозатором,2,2-6,GrindMaster,/products/grinder-1.jpg,350W,-,Металл/пластик,200x350x550mm
+6,Печь конвекционная Baker Plus,Электрическая конвекционная печь на 4 уровня,1,1-4,BakePro,/products/oven-1.jpg,3500W,64L,Нержавеющая сталь,800x750x700mm
+7,Блендер Bar Speed 3000,Профессиональный барный блендер,1,1-6,BarTech,/products/blender-1.jpg,2200W,2L,Пластик/металл,220x220x520mm
+8,Слайсер Meat Cut Pro,Слайсер для нарезки мяса и сыра,1,1-7,CutMaster,/products/slicer-1.jpg,300W,-,Алюминий/сталь,550x400x450mm
+9,Фритюрница Deep Fry 8L,Электрическая фритюрница с терморегулятором,1,1-8,FryPro,/products/fryer-1.jpg,3200W,8L,Нержавеющая сталь,400x450x380mm
+10,Витрина холодильная Display Cool,Настольная холодильная витрина,1,1-2,ShowCool,/products/display-1.jpg,180W,120L,Стекло/металл,900x650x1200mm
+

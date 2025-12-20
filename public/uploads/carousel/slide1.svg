@@ -1,0 +1,35 @@
+<svg width="1920" height="1080" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF6B35;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#F7931E;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FF8C42;stop-opacity:1" />
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" stroke-width="0.5" opacity="0.1"/>
+    </pattern>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1920" height="1080" fill="url(#grad1)"/>
+  <rect width="1920" height="1080" fill="url(#grid)"/>
+  
+  <!-- Decorative circles -->
+  <circle cx="1600" cy="200" r="300" fill="white" opacity="0.05"/>
+  <circle cx="300" cy="800" r="200" fill="white" opacity="0.05"/>
+  
+  <!-- Main content -->
+  <text x="960" y="450" font-family="Arial, sans-serif" font-size="120" fill="white" text-anchor="middle" font-weight="bold">
+    ProfiTech
+  </text>
+  <text x="960" y="580" font-family="Arial, sans-serif" font-size="50" fill="white" text-anchor="middle" opacity="0.95">
+    От идеи до воплощения
+  </text>
+  
+  <!-- Button shape -->
+  <rect x="810" y="650" width="300" height="70" rx="35" fill="white" opacity="0.95"/>
+  <text x="960" y="695" font-family="Arial, sans-serif" font-size="24" fill="#FF6B35" text-anchor="middle" font-weight="bold">
+    Смотреть каталог
+  </text>
+</svg>
+

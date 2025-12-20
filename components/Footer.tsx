@@ -1,0 +1,174 @@
+'use client';
+
+import Link from 'next/link';
+import { Mail, Phone, MapPin, Facebook, Instagram, Send } from 'lucide-react';
+import { COMPANY_INFO } from '@/constants/categories';
+
+export default function Footer() {
+  const currentYear = new Date().getFullYear();
+
+  return (
+    <footer className="bg-gradient-to-br from-gray-900 to-gray-800 text-white pt-16 pb-8">
+      <div className="container mx-auto px-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+          {/* О компании */}
+          <div>
+            <h3 className="text-2xl font-bold mb-4 gradient-text">
+              {COMPANY_INFO.name}
+            </h3>
+            <p className="text-gray-400 mb-4">{COMPANY_INFO.slogan}</p>
+            <p className="text-sm text-gray-500">
+              Профессиональное оборудование для бизнеса. Мы помогаем воплотить
+              ваши идеи в реальность.
+            </p>
+          </div>
+
+          {/* Навигация */}
+          <div>
+            <h4 className="text-lg font-semibold mb-4">Навигация</h4>
+            <ul className="space-y-2">
+              <li>
+                <Link
+                  href="/"
+                  className="text-gray-400 hover:text-[#FF6B35] transition-colors"
+                >
+                  Главная
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/catalog"
+                  className="text-gray-400 hover:text-[#FF6B35] transition-colors"
+                >
+                  Каталог
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/about"
+                  className="text-gray-400 hover:text-[#FF6B35] transition-colors"
+                >
+                  О нас
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/contacts"
+                  className="text-gray-400 hover:text-[#FF6B35] transition-colors"
+                >
+                  Контакты
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/cart"
+                  className="text-gray-400 hover:text-[#FF6B35] transition-colors"
+                >
+                  Корзина
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Контакты */}
+          <div>
+            <h4 className="text-lg font-semibold mb-4">Контакты</h4>
+            <ul className="space-y-3">
+              <li className="flex items-start space-x-3">
+                <Phone className="w-5 h-5 text-[#FF6B35] mt-1 flex-shrink-0" />
+                <div>
+                  <a
+                    href={`tel:${COMPANY_INFO.defaultWhatsApp}`}
+                    className="text-gray-400 hover:text-white transition-colors"
+                  >
+                    {COMPANY_INFO.defaultWhatsApp}
+                  </a>
+                </div>
+              </li>
+              <li className="flex items-start space-x-3">
+                <Mail className="w-5 h-5 text-[#FF6B35] mt-1 flex-shrink-0" />
+                <div>
+                  <a
+                    href="mailto:info@profitech.ru"
+                    className="text-gray-400 hover:text-white transition-colors"
+                  >
+                    info@profitech.ru
+                  </a>
+                </div>
+              </li>
+              <li className="flex items-start space-x-3">
+                <MapPin className="w-5 h-5 text-[#FF6B35] mt-1 flex-shrink-0" />
+                <div>
+                  <p className="text-gray-400">Москва, Россия</p>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          {/* Социальные сети */}
+          <div>
+            <h4 className="text-lg font-semibold mb-4">Мы в соцсетях</h4>
+            <div className="flex space-x-4">
+              <a
+                href="#"
+                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-[#FF6B35] transition-colors"
+                aria-label="Facebook"
+              >
+                <Facebook className="w-5 h-5" />
+              </a>
+              <a
+                href="#"
+                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-[#FF6B35] transition-colors"
+                aria-label="Instagram"
+              >
+                <Instagram className="w-5 h-5" />
+              </a>
+              <a
+                href={`https://wa.me/${COMPANY_INFO.defaultWhatsApp.replace(/\D/g, '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-green-500 transition-colors"
+                aria-label="WhatsApp"
+              >
+                <Phone className="w-5 h-5" />
+              </a>
+              <a
+                href="#"
+                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-[#FF6B35] transition-colors"
+                aria-label="Telegram"
+              >
+                <Send className="w-5 h-5" />
+              </a>
+            </div>
+            <div className="mt-6">
+              <p className="text-sm text-gray-400 mb-2">
+                Подпишитесь на новости
+              </p>
+              <form className="flex">
+                <input
+                  type="email"
+                  placeholder="Email"
+                  className="flex-1 px-4 py-2 bg-gray-800 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35] text-sm"
+                />
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-[#FF6B35] hover:bg-[#E85A28] rounded-r-lg transition-colors"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        {/* Copyright */}
+        <div className="border-t border-gray-700 pt-8 mt-8 text-center">
+          <p className="text-gray-400 text-sm">
+            © {currentYear} {COMPANY_INFO.name}. Все права защищены.
+          </p>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
