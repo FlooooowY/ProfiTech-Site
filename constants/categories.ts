@@ -94,11 +94,22 @@ export const CATEGORIES: Category[] = [
       { id: '6-2', name: 'Продуктоматы', slug: 'produktomaty', categoryId: '6' },
     ],
   },
+  {
+    id: '7',
+    name: 'Бытовая техника',
+    slug: 'bitovaya-tehnika',
+    icon: '🏠',
+    description: 'Техника для дома и кухни',
+    subcategories: [
+      { id: '7-1', name: 'Техника для кухни', slug: 'tehnika-dlya-kuhni', categoryId: '7' },
+      { id: '7-2', name: 'Техника для дома', slug: 'tehnika-dlya-doma', categoryId: '7' },
+    ],
+  },
 ];
 
 export const COMPANY_INFO = {
   name: 'ProfiTech',
   slogan: 'От идеи до воплощения',
-  defaultWhatsApp: '+79000000000', // Замените на реальный номер
+  defaultWhatsApp: '+79389000059',
 };
 

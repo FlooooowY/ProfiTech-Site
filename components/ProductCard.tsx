@@ -2,10 +2,12 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ShoppingCart, Eye, Heart } from 'lucide-react';
 import { Product } from '@/types';
 import { useCartStore } from '@/store/cartStore';
+import { getShortDescription } from '@/utils/textHelpers';
 
 interface ProductCardProps {
   product: Product;
@@ -38,14 +40,15 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
   };
 
   return (
-    <motion.div
-      className="card overflow-hidden group cursor-pointer"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -5 }}
-      onHoverStart={() => setIsHovered(true)}
-      onHoverEnd={() => setIsHovered(false)}
-    >
+    <Link href={`/catalog/${product.id}`}>
+      <motion.div
+        className="card overflow-hidden group cursor-pointer"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        whileHover={{ y: -5 }}
+        onHoverStart={() => setIsHovered(true)}
+        onHoverEnd={() => setIsHovered(false)}
+      >
       {/* Image Container */}
       <div className="relative aspect-square bg-gray-100 overflow-hidden">
         {product.images && product.images.length > 0 ? (
@@ -53,7 +56,19 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
             src={product.images[0]}
             alt={product.name}
             fill
+            loading="lazy"
+            placeholder="blur"
+            blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2YzZjRmNiIvPjwvc3ZnPg=="
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             className="object-cover group-hover:scale-110 transition-transform duration-500"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none';
+              const parent = target.parentElement;
+              if (parent) {
+                parent.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300"><span class="text-6xl">📦</span></div>';
+              }
+            }}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300">
@@ -114,7 +129,7 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
         </h3>
         
         <p className="text-sm text-gray-600 line-clamp-2 mb-3">
-          {product.description}
+          {getShortDescription(product.description, 100)}
         </p>
 
         {/* Characteristics */}
@@ -129,15 +144,23 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
           </div>
         )}
 
+        {/* Price Info */}
+        <div className="mb-3 py-2 px-3 bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg border border-orange-200">
+          <p className="text-sm font-medium text-orange-800 text-center">
+            💬 Для уточнения цены свяжитесь с нами
+          </p>
+        </div>
+
         {/* Action Button */}
         <button
           onClick={handleAddToCart}
           className="w-full py-2.5 bg-gradient-to-r from-[#FF6B35] to-[#F7931E] text-white rounded-lg font-medium hover:shadow-lg transform hover:scale-105 transition-all"
         >
-          Добавить в корзину
+          Добавить в запрос
         </button>
       </div>
     </motion.div>
+    </Link>
   );
 }
 

@@ -6,12 +6,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, Menu, X, Search, Phone } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { useCatalogStore } from '@/store/catalogStore';
-import { COMPANY_INFO } from '@/constants/categories';
+import { CATEGORIES, COMPANY_INFO } from '@/constants/categories';
+import CatalogDropdown from './CatalogDropdown';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isCatalogOpen, setIsCatalogOpen] = useState(false);
   const getTotalItems = useCartStore((state) => state.getTotalItems);
   const setSearchQueryStore = useCatalogStore((state) => state.setSearchQuery);
 
@@ -80,22 +82,31 @@ export default function Header() {
             </Link>
           </nav>
 
-          {/* Search Bar */}
-          <form
-            onSubmit={handleSearch}
-            className="hidden md:flex items-center bg-gray-100 rounded-full px-4 py-2 w-64"
-          >
-            <input
-              type="text"
-              placeholder="Поиск товаров..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-transparent flex-1 outline-none text-sm"
+          {/* Catalog Button + Search Bar */}
+          <div className="hidden md:flex items-center space-x-2">
+            <CatalogDropdown
+              categories={CATEGORIES}
+              isOpen={isCatalogOpen}
+              onToggle={() => setIsCatalogOpen(!isCatalogOpen)}
+              onClose={() => setIsCatalogOpen(false)}
             />
-            <button type="submit">
-              <Search className="w-5 h-5 text-gray-500" />
-            </button>
-          </form>
+            
+            <form
+              onSubmit={handleSearch}
+              className="flex items-center bg-gray-100 rounded-full px-4 py-2.5 w-80"
+            >
+              <input
+                type="text"
+                placeholder="Поиск товаров..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-transparent flex-1 outline-none text-sm"
+              />
+              <button type="submit">
+                <Search className="w-5 h-5 text-gray-500" />
+              </button>
+            </form>
+          </div>
 
           {/* Right Actions */}
           <div className="flex items-center space-x-4">

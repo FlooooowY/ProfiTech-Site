@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Trash2, Plus, Minus, ShoppingCart, ArrowRight } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { COMPANY_INFO } from '@/constants/categories';
+import { stripHtml } from '@/utils/textHelpers';
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, clearCart, getTotalItems } =
@@ -16,7 +17,7 @@ export default function CartPage() {
     if (items.length === 0) return;
 
     // Формируем сообщение для WhatsApp
-    let message = 'Здравствуйте! Хочу приобрести следующие товары:\n\n';
+    let message = 'Здравствуйте! Интересуют следующие товары:\n\n';
     
     items.forEach((item, index) => {
       message += `${index + 1}. ${item.product.name}\n`;
@@ -25,7 +26,7 @@ export default function CartPage() {
     });
 
     message += `\nОбщее количество позиций: ${getTotalItems()} шт.\n`;
-    message += 'Пожалуйста, свяжитесь со мной для уточнения деталей заказа.';
+    message += 'Пожалуйста, свяжитесь со мной для уточнения цены и деталей.';
 
     // Кодируем сообщение для URL
     const encodedMessage = encodeURIComponent(message);
@@ -47,9 +48,9 @@ export default function CartPage() {
           >
             <ShoppingCart className="w-16 h-16 text-gray-400" />
           </motion.div>
-          <h2 className="text-3xl font-bold mb-4">Корзина пуста</h2>
+          <h2 className="text-3xl font-bold mb-4">Список запросов пуст</h2>
           <p className="text-gray-600 mb-8">
-            Добавьте товары из каталога, чтобы оформить заказ
+            Добавьте товары из каталога для запроса цены
           </p>
           <Link
             href="/catalog"
@@ -68,10 +69,10 @@ export default function CartPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            <span className="gradient-text">Корзина</span>
+            <span className="gradient-text">Список запросов</span>
           </h1>
           <p className="text-gray-600 text-lg">
-            Товаров в корзине: <span className="font-semibold">{getTotalItems()}</span>
+            Товаров в списке: <span className="font-semibold">{getTotalItems()}</span>
           </p>
         </div>
 
@@ -109,8 +110,8 @@ export default function CartPage() {
                     <h3 className="text-xl font-semibold mb-2">
                       {item.product.name}
                     </h3>
-                    <p className="text-gray-600 text-sm mb-2">
-                      {item.product.description}
+                    <p className="text-gray-600 text-sm mb-2 line-clamp-2">
+                      {stripHtml(item.product.description)}
                     </p>
                     <div className="inline-block px-3 py-1 bg-gray-100 rounded-full text-sm font-medium">
                       {item.product.manufacturer}
@@ -144,7 +145,7 @@ export default function CartPage() {
                     <button
                       onClick={() => removeItem(item.product.id)}
                       className="w-10 h-10 bg-red-50 hover:bg-red-100 text-red-500 rounded-full flex items-center justify-center transition-colors"
-                      title="Удалить из корзины"
+                      title="Удалить из списка"
                     >
                       <Trash2 className="w-5 h-5" />
                     </button>
@@ -158,7 +159,7 @@ export default function CartPage() {
               onClick={clearCart}
               className="text-red-500 hover:text-red-600 font-medium transition-colors"
             >
-              Очистить корзину
+              Очистить список
             </button>
           </div>
 
@@ -182,8 +183,7 @@ export default function CartPage() {
 
               <div className="bg-gradient-to-r from-[#FFE66D]/20 to-[#FFA07A]/20 rounded-lg p-4 mb-6">
                 <p className="text-sm text-gray-700">
-                  <strong>Обратите внимание:</strong> Цены уточняйте у менеджера.
-                  После отправки заказа мы свяжемся с вами для согласования деталей.
+                  <strong>💬 Уточнение цены:</strong> После отправки запроса наш менеджер свяжется с вами для уточнения цены и деталей.
                 </p>
               </div>
 
@@ -191,7 +191,7 @@ export default function CartPage() {
                 onClick={handleCheckout}
                 className="w-full py-4 bg-gradient-to-r from-[#FF6B35] to-[#F7931E] text-white font-semibold rounded-lg hover:shadow-lg transform hover:scale-105 transition-all flex items-center justify-center space-x-2"
               >
-                <span>Оформить заказ</span>
+                <span>Отправить запрос</span>
                 <ArrowRight className="w-5 h-5" />
               </button>
 
