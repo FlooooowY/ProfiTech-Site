@@ -95,7 +95,7 @@ npm run db:import-products
 ```env
 DB_HOST=localhost
 DB_USER=u3364352_default
-DB_PASSWORD=nDpDE4luD7G84uk3
+DB_PASSWORD=nDpDE4luD7G84uk3!@#
 DB_NAME=u3364352_default
 ```
 

@@ -92,7 +92,7 @@ sudo mysql -u root -p
 CREATE DATABASE u3364352_default CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- Создайте пользователя
-CREATE USER 'u3364352_default'@'localhost' IDENTIFIED BY 'nDpDE4luD7G84uk3';
+CREATE USER 'u3364352_default'@'localhost' IDENTIFIED BY 'nDpDE4luD7G84uk3!@#';
 
 -- Выдайте права
 GRANT ALL PRIVILEGES ON u3364352_default.* TO 'u3364352_default'@'localhost';
@@ -200,7 +200,7 @@ cat .env.local
 ```env
 DB_HOST=localhost
 DB_USER=u3364352_default
-DB_PASSWORD=nDpDE4luD7G84uk3
+DB_PASSWORD=nDpDE4luD7G84uk3!@#
 DB_NAME=u3364352_default
 NODE_ENV=production
 NEXT_PUBLIC_SITE_URL=https://profitech.store
