@@ -341,18 +341,20 @@ export default function CatalogPage() {
   };
 
   const toggleCharacteristic = (charName: string, charValue: string) => {
-    setSelectedCharacteristics(prev => {
-      const current = prev[charName] || [];
+    setPendingFilters(prev => {
+      const current = prev.characteristics[charName] || [];
       const updated = current.includes(charValue)
         ? current.filter(v => v !== charValue)
         : [...current, charValue];
       
-      if (updated.length === 0) {
-        const { [charName]: _, ...rest } = prev;
-        return rest;
-      }
+      const newCharacteristics = updated.length === 0
+        ? (() => {
+            const { [charName]: _, ...rest } = prev.characteristics;
+            return rest;
+          })()
+        : { ...prev.characteristics, [charName]: updated };
       
-      return { ...prev, [charName]: updated };
+      return { ...prev, characteristics: newCharacteristics };
     });
   };
 
