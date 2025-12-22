@@ -402,15 +402,125 @@ sudo systemctl reload nginx
 
 ## Шаг 16: Настройка SSL (Let's Encrypt)
 
+**Важно:** Перед получением SSL сертификата убедитесь, что:
+1. Домен `profitech.store` указывает на IP-адрес вашего VPS (DNS настроен)
+2. Порты 80 и 443 открыты в файрволе
+3. Nginx запущен и доступен из интернета
+
+### Проверка DNS:
+
 ```bash
-# Установите Certbot
+# Проверьте, что домен указывает на ваш IP
+dig profitech.store +short
+# или
+nslookup profitech.store
+
+# Должен вернуться IP-адрес вашего VPS
+```
+
+### Настройка Nginx для ACME challenge:
+
+```bash
+# Отредактируйте конфигурацию Nginx
+sudo nano /etc/nginx/sites-available/profitech.store
+```
+
+Убедитесь, что в конфигурации есть блок для ACME challenge:
+
+```nginx
+server {
+    listen 80;
+    server_name profitech.store www.profitech.store;
+
+    # ACME challenge для Let's Encrypt
+    location /.well-known/acme-challenge/ {
+        root /var/www/html;
+    }
+
+    # Временный редирект на приложение (до получения SSL)
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+```bash
+# Проверьте конфигурацию
+sudo nginx -t
+
+# Перезагрузите Nginx
+sudo systemctl reload nginx
+```
+
+### Создайте директорию для ACME challenge:
+
+```bash
+sudo mkdir -p /var/www/html/.well-known/acme-challenge
+sudo chown -R www-data:www-data /var/www/html
+sudo chmod -R 755 /var/www/html
+```
+
+### Получите SSL сертификат:
+
+```bash
+# Установите Certbot (если еще не установлен)
 sudo apt install -y certbot python3-certbot-nginx
 
 # Получите SSL сертификат
 sudo certbot --nginx -d profitech.store -d www.profitech.store
 
-# Certbot автоматически обновит конфигурацию Nginx
-# Проверьте автопродление
+# Если все настроено правильно, Certbot автоматически:
+# - Получит сертификат
+# - Обновит конфигурацию Nginx
+# - Настроит редирект с HTTP на HTTPS
+```
+
+### Если все еще не работает:
+
+1. **Проверьте доступность домена:**
+   ```bash
+   curl -I http://profitech.store
+   # Должен вернуть HTTP 200 или 301
+   ```
+
+2. **Проверьте файрвол:**
+   ```bash
+   sudo ufw status
+   # Убедитесь, что порты 80 и 443 открыты
+   sudo ufw allow 80/tcp
+   sudo ufw allow 443/tcp
+   ```
+
+3. **Проверьте логи Nginx:**
+   ```bash
+   sudo tail -f /var/log/nginx/error.log
+   ```
+
+4. **Попробуйте получить сертификат в режиме standalone (если Nginx мешает):**
+   ```bash
+   # Остановите Nginx временно
+   sudo systemctl stop nginx
+   
+   # Получите сертификат
+   sudo certbot certonly --standalone -d profitech.store -d www.profitech.store
+   
+   # Запустите Nginx
+   sudo systemctl start nginx
+   
+   # Настройте Nginx вручную для использования сертификата
+   ```
+
+### Проверьте автопродление:
+
+```bash
 sudo certbot renew --dry-run
 ```
 
