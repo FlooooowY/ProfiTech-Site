@@ -99,14 +99,26 @@ node --version
 **Важно:** Для сборки Next.js нужны devDependencies (TypeScript и др.), поэтому используем полную установку, но с увеличенным лимитом памяти.
 
 ### Через SSH:
+
+**Если на сервере мало памяти, используйте установку по частям:**
+
 ```bash
 cd domains/profitech.store/public_html
 
-# Увеличьте лимит памяти Node.js и установите зависимости
-NODE_OPTIONS="--max-old-space-size=4096" npm install
+# Вариант 1: Установка с минимальным потреблением памяти
+NODE_OPTIONS="--max-old-space-size=1024" npm install --legacy-peer-deps --no-optional --prefer-offline
 
-# Или если памяти все равно не хватает, используйте:
-NODE_OPTIONS="--max-old-space-size=2048" npm install --legacy-peer-deps
+# Вариант 2: Если не работает, установите по частям
+# Сначала основные зависимости
+NODE_OPTIONS="--max-old-space-size=1024" npm install --save next react react-dom mysql2 zustand framer-motion lucide-react react-icons papaparse csv-parse @tanstack/react-query
+
+# Затем TypeScript и типы (нужны для сборки)
+NODE_OPTIONS="--max-old-space-size=1024" npm install --save-dev typescript @types/node @types/react @types/react-dom @types/papaparse
+
+# Затем остальные devDependencies
+NODE_OPTIONS="--max-old-space-size=1024" npm install --save-dev eslint eslint-config-next tailwindcss @tailwindcss/postcss tsx
+
+# Вариант 3: Если есть возможность, создайте swap файл (см. раздел "Решение проблем")
 ```
 
 ### Через ISPmanager:
