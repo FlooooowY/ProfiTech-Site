@@ -114,6 +114,7 @@ export const COMPANY_INFO = {
   telegram: '89389000059',
   telegramChannel: 'https://t.me/profitech_channel',
   email: 'saaev2019@bk.ru',
+  address: 'г.Грозный, улица 8 марта 97',
   workingHours: {
     weekdays: 'Пн-Пт: 9:00 - 20:00',
     saturday: 'Сб: до 15:00',

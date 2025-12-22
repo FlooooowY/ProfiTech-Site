@@ -37,8 +37,8 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #ffffff;
+    --foreground: #171717;
   }
 }
 
@@ -55,7 +55,7 @@ img, video, iframe {
 }
 
 body {
-  background: var(--background);
+  background: #ffffff;
   color: var(--foreground);
   font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   overflow-x: hidden;
@@ -79,22 +79,21 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Кастомный скроллбар */
+/* Кастомный скроллбар - скрыт, но прокрутка работает */
 ::-webkit-scrollbar {
-  width: 10px;
+  display: none; /* Chrome, Safari, Opera */
+  width: 0;
+  background: transparent;
 }
 
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
+html {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE и Edge */
 }
 
-::-webkit-scrollbar-thumb {
-  background: var(--primary);
-  border-radius: 5px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--primary-dark);
+body {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE и Edge */
 }
 
 /* Анимации */
@@ -153,7 +152,7 @@ html {
 .card {
   background: white;
   border-radius: 16px;
-  border: 1px solid rgba(0, 0, 0, 0.15);
+  border: 2px solid #FF6B35;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
   color: #000000; /* Обеспечиваем темный цвет текста по умолчанию */
@@ -162,6 +161,12 @@ html {
 .card:hover {
   transform: translateY(-5px);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Улучшенные стили для карточек товаров */
+.product-card {
+  backdrop-filter: blur(10px);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 1) 100%);
 }
 
 .card h3 {
@@ -181,14 +186,12 @@ section h2 span:not(.gradient-text):not([style*="color"]):not(.text-white-catego
   color: #000000 !important;
 }
 
-/* Белый текст для "Наши" в секции категорий - максимальная специфичность */
-section h2 span.text-white-categories,
-section h2 span[style*="color: #ffffff"],
-section h2 span[style*="color:#ffffff"] {
-  color: #ffffff !important;
+/* Оранжевый текст для "Наши" в секции категорий */
+section h2 span.text-white-categories {
+  color: #FF6B35 !important;
 }
 
-/* Исключение для карусели внутри section - максимальный приоритет */
+/* Белый текст для карусели - максимальный приоритет */
 section .carousel-container h2,
 section .carousel-container h2 *,
 section .carousel-container p,
@@ -203,7 +206,6 @@ section .carousel-text {
 .carousel-container h2 *,
 .carousel-container p,
 .carousel-container p *,
-.carousel-container .text-white,
 .carousel-container .carousel-text,
 .carousel-text {
   color: #ffffff !important;
@@ -224,21 +226,12 @@ section .carousel-text {
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* Кастомный скроллбар для фильтров */
+/* Кастомный скроллбар для фильтров - скрыт, но прокрутка работает */
+.custom-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE и Edge */
+}
+
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 10px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
-  border-radius: 10px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #E85A28 0%, #F7931E 100%);
+  display: none; /* Chrome, Safari, Opera */
 }

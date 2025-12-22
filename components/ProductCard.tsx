@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ShoppingCart, Eye, Heart } from 'lucide-react';
+import { ShoppingCart, Eye, Heart, Plus, Minus, Star, CheckCircle2 } from 'lucide-react';
 import { Product } from '@/types';
 import { useCartStore } from '@/store/cartStore';
+import { useFavoritesStore } from '@/store/favoritesStore';
 import { getShortDescription } from '@/utils/textHelpers';
 
 interface ProductCardProps {
@@ -15,13 +16,42 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, onQuickView }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
-  const addItem = useCartStore((state) => state.addItem);
+  const { addItem, updateQuantity, items } = useCartStore();
+  const { isFavorite, toggleFavorite } = useFavoritesStore();
+  
+  // Получаем количество товара в корзине
+  const cartQuantity = useMemo(() => {
+    const cartItem = items.find(item => item.product.id === product.id);
+    return cartItem?.quantity || 0;
+  }, [items, product.id]);
+  
+  // Проверяем, в избранном ли товар
+  const isProductFavorite = isFavorite(product.id);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    addItem(product);
+    addItem(product, 1);
+  };
+
+  const handleIncreaseQuantity = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (cartQuantity === 0) {
+      addItem(product, 1);
+    } else {
+      updateQuantity(product.id, cartQuantity + 1);
+    }
+  };
+
+  const handleDecreaseQuantity = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (cartQuantity > 1) {
+      updateQuantity(product.id, cartQuantity - 1);
+    } else {
+      updateQuantity(product.id, 0);
+    }
   };
 
   const handleQuickView = (e: React.MouseEvent) => {
@@ -35,7 +65,7 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
   const handleToggleFavorite = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsFavorite(!isFavorite);
+    toggleFavorite(product);
   };
 
   if (!product || !product.id) {
@@ -48,20 +78,20 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
   return (
     <Link href={`/catalog/${productId}`}>
       <motion.div
-        className="card overflow-hidden group cursor-pointer"
+        className="group cursor-pointer bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-gray-200/50 relative z-0"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        whileHover={{ y: -5 }}
+        whileHover={{ y: -8 }}
         onHoverStart={() => setIsHovered(true)}
         onHoverEnd={() => setIsHovered(false)}
       >
       {/* Image Container */}
-      <div className="relative aspect-square bg-gray-100 overflow-hidden">
+      <div className="relative aspect-square bg-gradient-to-br from-gray-50 via-white to-gray-50 overflow-hidden rounded-t-3xl">
         {product.images && product.images.length > 0 ? (
           <img
             src={product.images[0]}
             alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+            className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-700 ease-out p-6"
             loading="lazy"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
@@ -78,88 +108,135 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
           </div>
         )}
 
+        {/* Gradient Overlay on Hover */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+        {/* Top Badges */}
+        <div className="absolute top-3 right-3 z-20">
+          {/* Favorite Button */}
+          <motion.button
+            className="w-10 h-10 bg-white/98 backdrop-blur-md rounded-full flex items-center justify-center shadow-xl hover:bg-red-50 border border-gray-200/50 transition-all duration-300"
+            whileHover={{ scale: 1.15, rotate: 10 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={handleToggleFavorite}
+            title={isProductFavorite ? 'Удалить из избранного' : 'Добавить в избранное'}
+          >
+            <Heart
+              className={`w-5 h-5 transition-all duration-300 ${
+                isProductFavorite ? 'fill-red-500 text-red-500' : 'text-gray-700'
+              }`}
+            />
+          </motion.button>
+        </div>
+
+        {/* Stock Status Badge */}
+        <div className="absolute bottom-3 left-3 z-20">
+          <div className="px-3 py-1.5 bg-green-500/95 backdrop-blur-md rounded-full flex items-center gap-1.5 shadow-lg">
+            <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+            <span className="text-xs font-bold text-white">В наличии</span>
+          </div>
+        </div>
+
         {/* Overlay Actions */}
         <motion.div
-          className="absolute inset-0 bg-black/40 flex items-center justify-center space-x-2"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: isHovered ? 1 : 0 }}
-          transition={{ duration: 0.2 }}
+          className="absolute inset-0 flex items-center justify-center space-x-4 pointer-events-none"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : 20 }}
+          transition={{ duration: 0.3 }}
         >
           <motion.button
-            className="w-12 h-12 bg-white rounded-full flex items-center justify-center hover:bg-[#FF6B35] hover:text-white transition-colors"
-            whileHover={{ scale: 1.1 }}
+            className="w-16 h-16 bg-white/98 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-2xl hover:bg-[#FF6B35] hover:text-white transition-all duration-300 pointer-events-auto group/btn border border-gray-200/50"
+            whileHover={{ scale: 1.15, rotate: 5 }}
             whileTap={{ scale: 0.9 }}
             onClick={handleAddToCart}
             title="Добавить в корзину"
           >
-            <ShoppingCart className="w-5 h-5" />
+            <ShoppingCart className="w-6 h-6 group-hover/btn:scale-110 transition-transform" />
           </motion.button>
           <motion.button
-            className="w-12 h-12 bg-white rounded-full flex items-center justify-center hover:bg-[#FF6B35] hover:text-white transition-colors"
-            whileHover={{ scale: 1.1 }}
+            className="w-16 h-16 bg-white/98 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-2xl hover:bg-[#FF6B35] hover:text-white transition-all duration-300 pointer-events-auto group/btn border border-gray-200/50"
+            whileHover={{ scale: 1.15, rotate: -5 }}
             whileTap={{ scale: 0.9 }}
             onClick={handleQuickView}
             title="Быстрый просмотр"
           >
-            <Eye className="w-5 h-5" />
+            <Eye className="w-6 h-6 group-hover/btn:scale-110 transition-transform" />
           </motion.button>
         </motion.div>
-
-        {/* Favorite Button */}
-        <button
-          className="absolute top-3 right-3 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-white transition-colors z-10"
-          onClick={handleToggleFavorite}
-          title={isFavorite ? 'Удалить из избранного' : 'Добавить в избранное'}
-        >
-          <Heart
-            className={`w-5 h-5 ${
-              isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-800'
-            }`}
-          />
-        </button>
-
-        {/* Manufacturer Badge */}
-        <div className="absolute top-3 left-3 px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-medium text-gray-900">
-          {product.manufacturer}
-        </div>
       </div>
 
       {/* Content */}
-      <div className="p-4">
-        <h3 className="font-semibold text-lg mb-2 line-clamp-2 group-hover:text-[#FF6B35] transition-colors">
+      <div className="px-6 pt-7 pb-7 bg-white rounded-b-3xl">
+        {/* Product Name */}
+        <h3 className="font-bold text-xl mb-5 line-clamp-2 text-gray-900 group-hover:text-[#FF6B35] transition-colors duration-300 leading-tight min-h-[3.5rem]">
           {product.name}
         </h3>
         
-        <p className="text-sm text-gray-800 line-clamp-2 mb-3">
-          {getShortDescription(product.description, 100)}
+        {/* Description */}
+        <p className="text-sm text-gray-500 line-clamp-2 mb-6 leading-relaxed">
+          {getShortDescription(product.description, 90)}
         </p>
 
-        {/* Characteristics */}
+        {/* Key Characteristics - Compact Design */}
         {product.characteristics && product.characteristics.length > 0 && (
-          <div className="mb-3 space-y-1">
+          <div className="mb-5 grid grid-cols-2 gap-3">
             {product.characteristics.slice(0, 2).map((char, index) => (
-              <div key={index} className="flex items-center text-xs text-gray-700">
-                <span className="font-medium mr-2">{char.name}:</span>
-                <span className="text-gray-900">{char.value}</span>
+              <div key={index} className="bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-xl p-3 border border-gray-200/50">
+                <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">{char.name}</div>
+                <div className="text-sm font-bold text-gray-900">{char.value}</div>
               </div>
             ))}
           </div>
         )}
 
-        {/* Price Info */}
-        <div className="mb-3 py-2 px-3 bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg border border-orange-200">
-          <p className="text-sm font-medium text-orange-800 text-center">
-            💬 Для уточнения цены свяжитесь с нами
-          </p>
+        {/* Price Info - Enhanced */}
+        <div className="mb-5 py-4 px-4 bg-gradient-to-r from-[#FF6B35]/8 via-[#F7931E]/8 to-[#FF6B35]/8 rounded-2xl border-2 border-[#FF6B35]/15 backdrop-blur-sm">
+          <div className="flex items-center justify-center gap-2">
+            <span className="text-lg">💬</span>
+            <p className="text-xs font-bold text-[#FF6B35] uppercase tracking-wider">
+              Уточнить цену
+            </p>
+          </div>
         </div>
 
-        {/* Action Button */}
-        <button
-          onClick={handleAddToCart}
-          className="w-full py-2.5 bg-gradient-to-r from-[#FF6B35] to-[#F7931E] text-white rounded-lg font-medium hover:shadow-lg transform hover:scale-105 transition-all"
-        >
-          Добавить в запрос
-        </button>
+        {/* Action Button / Quantity Controls */}
+        {cartQuantity === 0 ? (
+          <motion.button
+            onClick={handleAddToCart}
+            className="w-full py-8 bg-gradient-to-r from-[#FF6B35] via-[#FF7A45] to-[#F7931E] text-white rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 relative overflow-visible group/btn"
+            whileHover={{ y: -1 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <span className="relative z-10 flex items-center justify-center space-x-3">
+              <ShoppingCart className="w-6 h-6" />
+              <span>Добавить в запрос</span>
+            </span>
+            <div className="absolute inset-0 bg-gradient-to-r from-[#F7931E] via-[#FF7A45] to-[#FF6B35] opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300" />
+            <div className="absolute inset-0 bg-white/10 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300" />
+          </motion.button>
+        ) : (
+          <div className="flex items-center gap-3">
+            <motion.button
+              onClick={handleDecreaseQuantity}
+              className="flex-1 py-6 bg-white border-2 border-[#FF6B35] text-[#FF6B35] rounded-2xl font-bold text-base shadow-lg hover:shadow-xl hover:bg-[#FF6B35] hover:text-white transition-all duration-300 flex items-center justify-center group"
+              whileHover={{ y: -1 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Minus className="w-6 h-6 group-hover:scale-110 transition-transform" />
+            </motion.button>
+            <div className="flex-1 py-6 bg-gradient-to-r from-[#FF6B35] to-[#F7931E] text-white rounded-2xl font-bold text-lg shadow-xl flex items-center justify-center min-w-[100px] border-2 border-transparent">
+              <span className="text-2xl">{cartQuantity}</span>
+            </div>
+            <motion.button
+              onClick={handleIncreaseQuantity}
+              className="flex-1 py-6 bg-white border-2 border-[#FF6B35] text-[#FF6B35] rounded-2xl font-bold text-base shadow-lg hover:shadow-xl hover:bg-[#FF6B35] hover:text-white transition-all duration-300 flex items-center justify-center group"
+              whileHover={{ y: -1 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Plus className="w-6 h-6 group-hover:scale-110 transition-transform" />
+            </motion.button>
+          </div>
+        )}
       </div>
     </motion.div>
     </Link>

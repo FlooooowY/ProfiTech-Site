@@ -75,7 +75,7 @@ export default function Carousel({ images, autoPlayInterval = 5000 }: CarouselPr
   };
 
   return (
-    <div className="carousel-container relative w-full h-[400px] md:h-[500px] lg:h-[600px] overflow-hidden bg-gray-900 rounded-2xl">
+    <div className="carousel-container relative w-full h-[400px] md:h-[500px] lg:h-[600px] overflow-hidden bg-white rounded-2xl">
       <AnimatePresence initial={false} custom={direction}>
         <motion.div
           key={currentIndex}

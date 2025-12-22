@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trash2, Plus, Minus, ShoppingCart, ArrowRight } from 'lucide-react';
+import { Trash2, Plus, Minus, ShoppingCart, ArrowRight, MessageCircle, Package, X, Sparkles, CheckCircle2 } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { COMPANY_INFO } from '@/constants/categories';
 import { stripHtml } from '@/utils/textHelpers';
@@ -37,177 +37,290 @@ export default function CartPage() {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-[70vh] flex items-center justify-center">
-        <div className="text-center">
+      <div className="min-h-[70vh] flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-50" style={{ paddingTop: '7.5rem' }}>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center max-w-lg px-4"
+        >
           <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="w-32 h-32 bg-gray-100 rounded-full mx-auto mb-6 flex items-center justify-center"
+            initial={{ scale: 0, rotate: -180 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+            className="relative w-40 h-40 mx-auto mb-8"
           >
-            <ShoppingCart className="w-16 h-16 text-gray-400" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#FF6B35]/20 via-[#FF7A45]/20 to-[#F7931E]/20 rounded-full blur-2xl"></div>
+            <div className="relative w-full h-full bg-gradient-to-br from-[#FF6B35] to-[#F7931E] rounded-full flex items-center justify-center shadow-2xl">
+              <ShoppingCart className="w-20 h-20 text-white" />
+            </div>
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+              className="absolute -top-2 -right-2"
+            >
+              <Sparkles className="w-8 h-8 text-[#FF6B35]" />
+            </motion.div>
           </motion.div>
-          <h2 className="text-3xl font-bold mb-4">Список запросов пуст</h2>
-          <p className="text-gray-600 mb-8">
-            Добавьте товары из каталога для запроса цены
-          </p>
-          <Link
-            href="/catalog"
-            className="inline-flex items-center space-x-2 px-8 py-4 bg-gradient-to-r from-[#FF6B35] to-[#F7931E] text-white font-semibold rounded-full hover:shadow-lg transform hover:scale-105 transition-all"
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="text-4xl font-bold mb-4 text-gray-900"
           >
-            <span>Перейти в каталог</span>
-            <ArrowRight className="w-5 h-5" />
-          </Link>
-        </div>
+            Список запросов пуст
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="text-gray-600 mb-10 text-lg leading-relaxed"
+          >
+            Добавьте товары из каталога для запроса цены и наличия
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <Link
+              href="/catalog"
+              className="inline-flex items-center space-x-3 px-10 py-5 bg-gradient-to-r from-[#FF6B35] via-[#FF7A45] to-[#F7931E] text-white font-bold rounded-2xl hover:shadow-2xl transform hover:scale-105 transition-all text-lg"
+            >
+              <span>Перейти в каталог</span>
+              <ArrowRight className="w-6 h-6" />
+            </Link>
+          </motion.div>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            <span className="gradient-text">Список запросов</span>
-          </h1>
-          <p className="text-gray-600 text-lg">
-            Товаров в списке: <span className="font-semibold">{getTotalItems()}</span>
-          </p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50" style={{ paddingTop: '7.5rem' }}>
+      <div className="container mx-auto px-4 py-8" style={{ paddingLeft: '32px', paddingRight: '32px' }}>
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-10"
+        >
+          <div className="flex items-center justify-between flex-wrap gap-6">
+            <div className="flex items-center" style={{ gap: '10px' }}>
+              <div className="w-16 h-16 bg-gradient-to-br from-[#FF6B35] to-[#F7931E] rounded-2xl flex items-center justify-center shadow-lg">
+                <ShoppingCart className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-4xl md:text-5xl font-bold mb-2 text-gray-900">
+                  Список запросов
+                </h1>
+                <div className="flex items-center space-x-3">
+                  <p className="text-gray-600 text-lg">
+                    Товаров в списке:
+                  </p>
+                  <span className="px-4 py-1.5 bg-gradient-to-r from-[#FF6B35]/10 to-[#F7931E]/10 text-[#FF6B35] rounded-full font-bold text-lg border-2 border-[#FF6B35]/20">
+                    {getTotalItems()}
+                  </span>
+                </div>
+              </div>
+            </div>
+            {items.length > 0 && (
+              <motion.button
+                onClick={clearCart}
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.95 }}
+                className="flex items-center space-x-2 px-5 py-3 text-red-600 hover:text-white hover:bg-gradient-to-r hover:from-red-500 hover:to-rose-500 font-semibold transition-all border-2 border-red-300 hover:border-red-500 rounded-xl shadow-sm hover:shadow-lg"
+              >
+                <X className="w-5 h-5" />
+                <span>Очистить список</span>
+              </motion.button>
+            )}
+          </div>
+        </motion.div>
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Cart Items */}
-          <div className="lg:col-span-2 space-y-4">
-            <AnimatePresence>
-              {items.map((item) => (
+          <div className="lg:col-span-2 space-y-5">
+            <AnimatePresence mode="popLayout">
+              {items.map((item, index) => (
                 <motion.div
                   key={item.product.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, x: -100 }}
-                  className="card p-6 flex flex-col sm:flex-row gap-6"
+                  layout
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: -100, scale: 0.9, rotate: -5 }}
+                  transition={{ delay: index * 0.05, type: "spring", stiffness: 300 }}
+                  className="group bg-white rounded-2xl shadow-lg border-2 border-gray-200 overflow-hidden hover:shadow-2xl hover:border-[#FF6B35]/30 transition-all duration-300"
                 >
-                  {/* Product Image */}
-                  <div className="w-full sm:w-32 h-32 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                    {item.product.images && item.product.images[0] ? (
-                      <img
-                        src={item.product.images[0]}
-                        alt={item.product.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-4xl">
-                        📦
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Product Info */}
-                  <div className="flex-1">
-                    <h3 className="text-xl font-semibold mb-2">
-                      {item.product.name}
-                    </h3>
-                    <p className="text-gray-600 text-sm mb-2 line-clamp-2">
-                      {stripHtml(item.product.description)}
-                    </p>
-                    <div className="inline-block px-3 py-1 bg-gray-100 rounded-full text-sm font-medium">
-                      {item.product.manufacturer}
-                    </div>
-                  </div>
-
-                  {/* Quantity Controls */}
-                  <div className="flex sm:flex-col items-center justify-between sm:justify-center gap-4">
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() =>
-                          updateQuantity(item.product.id, item.quantity - 1)
-                        }
-                        className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
-                      >
-                        <Minus className="w-4 h-4" />
-                      </button>
-                      <span className="w-12 text-center font-semibold">
-                        {item.quantity}
-                      </span>
-                      <button
-                        onClick={() =>
-                          updateQuantity(item.product.id, item.quantity + 1)
-                        }
-                        className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
-                      >
-                        <Plus className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    <button
-                      onClick={() => removeItem(item.product.id)}
-                      className="w-10 h-10 bg-red-50 hover:bg-red-100 text-red-500 rounded-full flex items-center justify-center transition-colors"
-                      title="Удалить из списка"
+                  <div className="p-6 flex flex-col sm:flex-row gap-6">
+                    {/* Product Image */}
+                    <Link
+                      href={`/catalog/${encodeURIComponent(item.product.id)}`}
+                      className="relative w-full sm:w-48 h-48 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl overflow-hidden flex-shrink-0 group/image"
                     >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
+                      {item.product.images && item.product.images[0] ? (
+                        <>
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover/image:opacity-100 transition-opacity z-10"></div>
+                          <img
+                            src={item.product.images[0]}
+                            alt={item.product.name}
+                            className="w-full h-full object-cover group-hover/image:scale-110 transition-transform duration-500"
+                          />
+                        </>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Package className="w-20 h-20 text-gray-300" />
+                        </div>
+                      )}
+                      <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-lg">
+                        <span className="text-sm font-bold text-[#FF6B35]">×{item.quantity}</span>
+                      </div>
+                    </Link>
+
+                    {/* Product Info */}
+                    <div className="flex-1 min-w-0 flex flex-col">
+                      <Link href={`/catalog/${encodeURIComponent(item.product.id)}`}>
+                        <h3 className="text-2xl font-bold mb-3 text-gray-900 hover:text-[#FF6B35] transition-colors line-clamp-2 group-hover:underline">
+                          {item.product.name}
+                        </h3>
+                      </Link>
+                      <p className="text-gray-600 text-sm mb-4 line-clamp-3 leading-relaxed flex-grow">
+                        {stripHtml(item.product.description)}
+                      </p>
+                      <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-[#FF6B35]/10 to-[#F7931E]/10 text-[#FF6B35] rounded-xl text-sm font-bold border-2 border-[#FF6B35]/20 w-fit">
+                        <Package className="w-4 h-4 mr-2" />
+                        {item.product.manufacturer}
+                      </div>
+                    </div>
+
+                    {/* Quantity Controls & Remove */}
+                    <div className="flex sm:flex-col items-center justify-between sm:justify-start gap-4">
+                      {/* Quantity Controls */}
+                      <div className="flex items-center space-x-3 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-3 border-2 border-gray-200">
+                        <motion.button
+                          onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                          whileHover={{ scale: 1.15, backgroundColor: '#FF6B35' }}
+                          whileTap={{ scale: 0.9 }}
+                          className="w-11 h-11 bg-white hover:bg-[#FF6B35] hover:text-white text-gray-700 rounded-xl flex items-center justify-center transition-all shadow-md hover:shadow-lg"
+                        >
+                          <Minus className="w-5 h-5" />
+                        </motion.button>
+                        <span className="w-16 text-center font-bold text-xl text-gray-900 bg-white px-3 py-2 rounded-lg shadow-sm">
+                          {item.quantity}
+                        </span>
+                        <motion.button
+                          onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                          whileHover={{ scale: 1.15, backgroundColor: '#FF6B35' }}
+                          whileTap={{ scale: 0.9 }}
+                          className="w-11 h-11 bg-white hover:bg-[#FF6B35] hover:text-white text-gray-700 rounded-xl flex items-center justify-center transition-all shadow-md hover:shadow-lg"
+                        >
+                          <Plus className="w-5 h-5" />
+                        </motion.button>
+                      </div>
+
+                      {/* Remove Button */}
+                      <motion.button
+                        onClick={() => removeItem(item.product.id)}
+                        whileHover={{ scale: 1.15, rotate: 15, backgroundColor: '#ef4444' }}
+                        whileTap={{ scale: 0.9 }}
+                        className="w-12 h-12 bg-red-50 hover:bg-red-500 hover:text-white text-red-600 rounded-xl flex items-center justify-center transition-all shadow-md hover:shadow-lg border-2 border-red-200 hover:border-red-500"
+                        title="Удалить из списка"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </motion.button>
+                    </div>
                   </div>
                 </motion.div>
               ))}
             </AnimatePresence>
-
-            {/* Clear Cart Button */}
-            <button
-              onClick={clearCart}
-              className="text-red-500 hover:text-red-600 font-medium transition-colors"
-            >
-              Очистить список
-            </button>
           </div>
 
-          {/* Summary */}
+          {/* Summary Sidebar */}
           <div className="lg:col-span-1">
-            <div className="card p-6 sticky top-24">
-              <h2 className="text-2xl font-bold mb-6">Итого</h2>
-
-              <div className="space-y-4 mb-6">
-                <div className="flex justify-between items-center pb-4 border-b">
-                  <span className="text-gray-600">Всего позиций:</span>
-                  <span className="font-semibold text-lg">{items.length}</span>
-                </div>
-                <div className="flex justify-between items-center pb-4 border-b">
-                  <span className="text-gray-600">Количество товаров:</span>
-                  <span className="font-semibold text-lg">
-                    {getTotalItems()} шт.
-                  </span>
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+              className="bg-white rounded-2xl shadow-2xl border border-gray-400 overflow-hidden sticky top-24"
+            >
+              {/* Header */}
+              <div className="bg-gradient-to-r from-[#FF6B35] via-[#FF7A45] to-[#F7931E] p-12">
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                    <CheckCircle2 className="w-6 h-6 text-white" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-white">Итого</h2>
                 </div>
               </div>
 
-              <div className="bg-gradient-to-r from-[#FFE66D]/20 to-[#FFA07A]/20 rounded-lg p-4 mb-6">
-                <p className="text-sm text-gray-700">
-                  <strong>💬 Уточнение цены:</strong> После отправки запроса наш менеджер свяжется с вами для уточнения цены и деталей.
-                </p>
-              </div>
+              <div className="px-12 py-4">
+                <div className="space-y-8" style={{ marginBottom: '24px' }}>
+                  <div className="flex justify-between items-center py-4 px-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl border border-gray-200">
+                    <div className="flex items-center space-x-2">
+                      <Package className="w-5 h-5 text-gray-600" />
+                      <span className="text-gray-700 font-semibold">Позиций в списке:</span>
+                    </div>
+                    <span className="font-bold text-xl text-gray-900 bg-white px-4 py-1.5 rounded-lg shadow-sm">
+                      {items.length}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-4 px-4 bg-gradient-to-r from-[#FF6B35]/10 to-[#F7931E]/10 rounded-xl border-2 border-[#FF6B35]/20">
+                    <div className="flex items-center space-x-2">
+                      <ShoppingCart className="w-5 h-5 text-[#FF6B35]" />
+                      <span className="text-gray-700 font-semibold">Общее количество:</span>
+                    </div>
+                    <span className="font-bold text-2xl text-[#FF6B35] bg-white px-4 py-1.5 rounded-lg shadow-sm">
+                      {getTotalItems()} шт.
+                    </span>
+                  </div>
+                </div>
 
-              <button
-                onClick={handleCheckout}
-                className="w-full py-4 bg-gradient-to-r from-[#FF6B35] to-[#F7931E] text-white font-semibold rounded-lg hover:shadow-lg transform hover:scale-105 transition-all flex items-center justify-center space-x-2"
-              >
-                <span>Отправить запрос</span>
-                <ArrowRight className="w-5 h-5" />
-              </button>
+                {/* Info Box */}
+                <div className="bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-50 rounded-2xl p-7 border-2 border-blue-200 shadow-sm" style={{ marginBottom: '24px' }}>
+                  <div className="flex items-start" style={{ gap: '10px' }}>
+                    <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <MessageCircle className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-700 leading-relaxed">
+                        <strong className="text-gray-900 block mb-1">Уточнение цены:</strong>
+                        После отправки запроса наш менеджер свяжется с вами для уточнения цены и деталей заказа.
+                      </p>
+                    </div>
+                  </div>
+                </div>
 
-              <p className="text-xs text-gray-500 text-center mt-4">
-                Нажимая кнопку, вы будете перенаправлены в WhatsApp
-              </p>
-
-              <div className="mt-6 pt-6 border-t">
-                <Link
-                  href="/catalog"
-                  className="text-[#FF6B35] hover:underline font-medium flex items-center justify-center space-x-2"
+                {/* Checkout Button */}
+                <motion.button
+                  onClick={handleCheckout}
+                  whileHover={{ scale: 1.02, y: -3 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full py-6 bg-gradient-to-r from-[#FF6B35] via-[#FF7A45] to-[#F7931E] text-white font-bold rounded-2xl hover:shadow-2xl transition-all flex items-center justify-center space-x-3 text-lg mb-8 relative overflow-hidden group"
                 >
-                  <span>← Продолжить покупки</span>
-                </Link>
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+                  <MessageCircle className="w-6 h-6 relative z-10" />
+                  <span className="relative z-10">Отправить запрос в WhatsApp</span>
+                  <ArrowRight className="w-6 h-6 relative z-10 group-hover:translate-x-1 transition-transform" />
+                </motion.button>
+
+                <p className="text-xs text-gray-500 text-center mb-12">
+                  Нажимая кнопку, вы будете перенаправлены в WhatsApp
+                </p>
+
+                {/* Continue Shopping */}
+                <div className="pt-16 border-t-2 border-gray-200">
+                  <Link
+                    href="/catalog"
+                    className="flex items-center justify-center space-x-2 text-[#FF6B35] hover:text-[#F7931E] font-bold transition-colors group py-3 px-4 rounded-xl hover:bg-gradient-to-r hover:from-[#FF6B35]/10 hover:to-[#F7931E]/10"
+                  >
+                    <ArrowRight className="w-5 h-5 rotate-180 group-hover:-translate-x-2 transition-transform" />
+                    <span>Продолжить покупки</span>
+                  </Link>
+                </div>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </div>
     </div>
   );
 }
-

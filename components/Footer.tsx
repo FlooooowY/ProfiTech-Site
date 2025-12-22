@@ -8,7 +8,7 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-gradient-to-br from-gray-900 to-gray-800 text-white" style={{ paddingTop: '80px', paddingBottom: '40px', marginTop: '40px', paddingLeft: '32px', paddingRight: '32px' }}>
+    <footer className="bg-gradient-to-br from-gray-900 to-gray-800 text-white" style={{ paddingTop: '80px', paddingBottom: '40px', marginTop: '0', paddingLeft: '32px', paddingRight: '32px' }}>
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
           {/* О компании */}
@@ -99,7 +99,7 @@ export default function Footer() {
               <li className="flex items-start space-x-3">
                 <MapPin className="w-5 h-5 text-[#FF6B35] mt-1 flex-shrink-0" />
                 <div>
-                  <p className="text-gray-400">Москва, Россия</p>
+                  <p className="text-gray-400">{COMPANY_INFO.address}</p>
                 </div>
               </li>
             </ul>
@@ -111,33 +111,33 @@ export default function Footer() {
             <div className="flex space-x-4">
               <a
                 href="#"
-                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-[#FF6B35] transition-colors"
+                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-[#1877F2] transition-all hover:scale-110 group"
                 aria-label="Facebook"
               >
-                <Facebook className="w-5 h-5" />
+                <Facebook className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
               </a>
               <a
                 href="#"
-                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-[#FF6B35] transition-colors"
+                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-gradient-to-br hover:from-[#E4405F] hover:to-[#FCAF45] transition-all hover:scale-110 group"
                 aria-label="Instagram"
               >
-                <Instagram className="w-5 h-5" />
+                <Instagram className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
               </a>
               <a
                 href={`https://wa.me/${COMPANY_INFO.defaultWhatsApp.replace(/\D/g, '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-green-500 transition-colors"
+                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-[#25D366] transition-all hover:scale-110 group"
                 aria-label="WhatsApp"
               >
-                <Phone className="w-5 h-5" />
+                <Phone className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
               </a>
               <a
                 href="#"
-                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-[#FF6B35] transition-colors"
+                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-[#0088CC] transition-all hover:scale-110 group"
                 aria-label="Telegram"
               >
-                <Send className="w-5 h-5" />
+                <Send className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
               </a>
             </div>
             <div className="mt-6">

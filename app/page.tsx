@@ -60,7 +60,7 @@ const features = [
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-hidden">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-white">
       {/* Hero Section with Carousel */}
       <section className="container mx-auto px-4" style={{ marginBottom: '40px', paddingLeft: '32px', paddingRight: '32px', paddingTop: '64px', paddingBottom: '20px' }}>
         <Carousel images={carouselImages} />
@@ -109,7 +109,7 @@ export default function HomePage() {
       </section>
 
       {/* Categories Section */}
-      <section style={{ paddingTop: '40px', paddingBottom: '100px', marginTop: '40px', marginBottom: '40px', paddingLeft: '32px', paddingRight: '32px' }}>
+      <section className="bg-white" style={{ paddingTop: '40px', paddingBottom: '100px', marginTop: '40px', marginBottom: '40px', paddingLeft: '32px', paddingRight: '32px' }}>
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -119,7 +119,7 @@ export default function HomePage() {
             style={{ marginBottom: '60px' }}
           >
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold" style={{ marginBottom: '16px' }}>
-              <span className="text-white-categories" style={{ color: '#ffffff' }}>Наши</span> <span className="gradient-text">категории</span>
+              <span style={{ color: '#FF6B35' }}>Наши</span> <span className="gradient-text">категории</span>
             </h2>
             <p className="text-gray-600 text-lg md:text-xl max-w-3xl mx-auto font-semibold">
               Найдите именно то, что нужно для вашего бизнеса
@@ -185,7 +185,7 @@ export default function HomePage() {
           >
             <Link
               href="/catalog"
-              className="inline-flex items-center space-x-2 text-white font-semibold rounded-full hover:shadow-lg transform hover:scale-105 transition-all"
+              className="inline-flex items-center space-x-2 text-[#FF6B35] font-semibold rounded-full hover:shadow-lg transform hover:scale-105 transition-all"
               style={{ padding: '16px 32px' }}
             >
               <span>Смотреть весь каталог</span>
@@ -196,7 +196,7 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-gradient-to-r from-[#FF6B35] via-[#F7931E] to-[#FF8C42] relative overflow-hidden" style={{ paddingTop: '80px', paddingBottom: '120px', marginTop: '40px', marginBottom: '40px', paddingLeft: '32px', paddingRight: '32px' }}>
+      <section className="bg-gradient-to-r from-[#FF6B35] via-[#F7931E] to-[#FF8C42] relative overflow-hidden" style={{ paddingTop: '80px', paddingBottom: '120px', marginTop: '40px', marginBottom: '0', paddingLeft: '32px', paddingRight: '32px' }}>
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
         <div className="container mx-auto px-4 text-center text-white relative z-10">
           <motion.div
@@ -204,7 +204,7 @@ export default function HomePage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold" style={{ marginBottom: '40px' }}>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white" style={{ marginBottom: '40px', color: '#ffffff' }}>
               Готовы начать?
             </h2>
             <p className="text-xl md:text-2xl max-w-3xl mx-auto opacity-95 leading-relaxed" style={{ marginBottom: '48px' }}>

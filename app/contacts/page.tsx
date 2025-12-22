@@ -83,7 +83,7 @@ export default function ContactsPage() {
     {
       icon: MapPin,
       title: 'Адрес',
-      content: 'Москва, Россия',
+      content: COMPANY_INFO.address,
       link: '#',
     },
     {
