@@ -5,7 +5,7 @@ const dbConfig = {
   host: process.env.DB_HOST || 'localhost',
   user: process.env.DB_USER || 'admin_db',
   password: process.env.DB_PASSWORD || 'admin_db',
-  database: process.env.DB_NAME || 'u3364352_default',
+  database: process.env.DB_NAME || 'profitech_db',
   waitForConnections: true,
   connectionLimit: 20, // Увеличено для лучшей производительности
   queueLimit: 0,

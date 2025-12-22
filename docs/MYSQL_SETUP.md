@@ -94,9 +94,9 @@ npm run db:import-products
 
 ```env
 DB_HOST=localhost
-DB_USER=u3364352_default
+DB_USER=profitech_db
 DB_PASSWORD=nDpDE4luD7G84uk3!@#
-DB_NAME=u3364352_default
+DB_NAME=profitech_db
 ```
 
 ## Обновление данных
@@ -110,6 +110,6 @@ DB_NAME=u3364352_default
 Рекомендуется регулярно делать бэкап базы данных:
 
 ```bash
-mysqldump -u u3364352_default -p u3364352_default > backup.sql
+mysqldump -u profitech_db -p profitech_db > backup.sql
 ```
 

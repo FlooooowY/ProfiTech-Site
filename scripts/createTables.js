@@ -25,7 +25,7 @@ async function createTables() {
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'u3364352_default',
     password: process.env.DB_PASSWORD || 'nDpDE4luD7G84uk3',
-    database: process.env.DB_NAME || 'u3364352_default',
+    database: process.env.DB_NAME || 'profitech_db',
   };
 
   const pool = mysql.createPool({
