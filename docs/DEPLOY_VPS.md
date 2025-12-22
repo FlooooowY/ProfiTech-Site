@@ -850,6 +850,118 @@ pm2 status
 
 ## Решение проблем
 
+### Ошибка "Application error: a client-side exception has occurred":
+
+**Эта ошибка обычно означает проблему с:**
+1. Подключением к базе данных
+2. Переменными окружения
+3. API роутами
+4. Сборкой приложения
+
+**Диагностика:**
+
+1. **Проверьте логи приложения:**
+   ```bash
+   pm2 logs profitech --lines 50
+   # Ищите ошибки подключения к БД или другие ошибки
+   ```
+
+2. **Проверьте подключение к базе данных:**
+   ```bash
+   # Попробуйте подключиться к MySQL
+   mysql -u u3364352_default -p
+   # Введите пароль: nDpDE4luD7G84uk3!@#
+   
+   # Проверьте, что база данных существует
+   SHOW DATABASES;
+   USE u3364352_default;
+   SHOW TABLES;
+   ```
+
+3. **Проверьте переменные окружения:**
+   ```bash
+   cd ~/ProfiTech-Site
+   cat .env.local
+   # Убедитесь, что все переменные правильные:
+   # DB_HOST=localhost
+   # DB_USER=u3364352_default
+   # DB_PASSWORD=nDpDE4luD7G84uk3!@#
+   # DB_NAME=u3364352_default
+   ```
+
+4. **Проверьте API напрямую:**
+   ```bash
+   # С сервера попробуйте:
+   curl http://localhost:3000/api/catalog?page=1&limit=24
+   # Должен вернуть JSON с товарами
+   
+   # Проверьте API статистики:
+   curl http://localhost:3000/api/catalog/stats
+   ```
+
+5. **Проверьте, что таблицы созданы:**
+   ```bash
+   cd ~/ProfiTech-Site
+   # Проверьте таблицы
+   mysql -u u3364352_default -p -e "SHOW TABLES;" u3364352_default
+   # Должны быть: categories, subcategories, products, product_characteristics, filter_cache
+   ```
+
+6. **Перезапустите приложение:**
+   ```bash
+   pm2 restart profitech
+   pm2 logs profitech --lines 20
+   ```
+
+7. **Если проблема в базе данных, пересоздайте таблицы:**
+   ```bash
+   cd ~/ProfiTech-Site
+   npm run db:create
+   npm run db:import-categories
+   ```
+
+8. **Проверьте консоль браузера:**
+   - Откройте DevTools (F12)
+   - Перейдите на вкладку Console
+   - Посмотрите, какие ошибки там есть
+   - Перейдите на вкладку Network
+   - Проверьте, какие запросы падают
+
+### Не могу зайти в админ панель:
+
+1. **Проверьте, что страница существует:**
+   ```bash
+   curl http://localhost:3000/admin
+   # Должен вернуть HTML страницу
+   ```
+
+2. **Проверьте логи при загрузке админ панели:**
+   ```bash
+   pm2 logs profitech --lines 100
+   # Попробуйте зайти в админ панель и посмотрите логи
+   ```
+
+3. **Проверьте права доступа к файлам:**
+   ```bash
+   cd ~/ProfiTech-Site
+   ls -la app/admin/
+   # Убедитесь, что файлы доступны
+   ```
+
+4. **Проверьте, что сборка прошла успешно:**
+   ```bash
+   cd ~/ProfiTech-Site
+   ls -la .next/
+   # Должна быть папка .next с собранными файлами
+   ```
+
+5. **Пересоберите приложение:**
+   ```bash
+   cd ~/ProfiTech-Site
+   npm run build
+   pm2 restart profitech
+   ```
+
 ### Приложение не запускается:
 
 1. Проверьте логи: `pm2 logs profitech`
