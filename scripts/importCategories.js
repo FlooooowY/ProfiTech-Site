@@ -2,9 +2,23 @@ const mysql = require('mysql2/promise');
 const fs = require('fs');
 const path = require('path');
 
-// Импортируем категории из constants/categories.ts
-// Так как это JS файл, нужно прочитать и распарсить TS файл или создать JSON версию
-// Для простоты создадим данные напрямую
+// Загружаем переменные окружения из .env.local
+const envPath = path.join(process.cwd(), '.env.local');
+if (fs.existsSync(envPath)) {
+  const envFile = fs.readFileSync(envPath, 'utf-8');
+  envFile.split('\n').forEach(line => {
+    const match = line.match(/^([^=:#]+)=(.*)$/);
+    if (match) {
+      const key = match[1].trim();
+      const value = match[2].trim().replace(/^["']|["']$/g, '');
+      if (!process.env[key]) {
+        process.env[key] = value;
+      }
+    }
+  });
+}
+
+// Импортируем категории из constants/categories.json
 const CATEGORIES = require('../constants/categories.json');
 
 async function importCategories() {
