@@ -149,36 +149,7 @@ npm run db:import-categories
 
 ---
 
-## Шаг 8: Импорт товаров
-
-### Вариант A: Импорт из существующего JSON файла
-
-1. **Убедитесь, что файл существует:**
-   - Файл должен быть по пути: `public/data/products.json`
-   - Если его нет, сначала запустите импорт через админ-панель на сайте
-
-2. **Импортируйте товары:**
-```bash
-npm run db:import-products
-```
-
-**Ожидаемый результат:**
-```
-✓ Imported 126000/126000 products
-✓ Imported X characteristics
-✅ All products imported successfully!
-```
-
-### Вариант B: Импорт через админ-панель
-
-1. Откройте сайт: `https://profitech.store/admin`
-2. Нажмите "Запустить импорт каталога"
-3. Дождитесь завершения импорта
-4. Затем выполните `npm run db:import-products` для синхронизации с MySQL
-
----
-
-## Шаг 9: Сборка проекта
+## Шаг 8: Сборка проекта
 
 ```bash
 npm run build
@@ -197,7 +168,7 @@ npm run build
 
 ---
 
-## Шаг 10: Настройка Node.js приложения в ISPmanager
+## Шаг 9: Настройка Node.js приложения в ISPmanager
 
 ### В панели ISPmanager:
 
@@ -240,18 +211,57 @@ npm start
 
 ---
 
-## Шаг 12: Проверка работы
+## Шаг 12: Загрузка каталога товаров через админ-панель
+
+**Важно:** Сначала нужно запустить сайт и загрузить каталог через админ-панель, чтобы создать файл `public/data/products.json`.
+
+1. **Откройте админ-панель:** `https://profitech.store/admin`
+2. **Нажмите "Запустить импорт каталога"**
+3. **Дождитесь завершения импорта** (это может занять несколько минут)
+4. **Проверьте, что файл создан:** `public/data/products.json` должен появиться
+
+---
+
+## Шаг 13: Импорт товаров в MySQL
+
+После того, как каталог загружен через админ-панель и файл `public/data/products.json` создан:
+
+```bash
+cd domains/profitech.store/public_html
+npm run db:import-products
+```
+
+**Ожидаемый результат:**
+```
+Connected to MySQL database
+Reading products from JSON...
+Found X products to import
+Clearing existing data...
+✓ Existing data cleared
+✓ Imported X/X products
+✓ Imported Y characteristics
+✅ All products imported successfully!
+```
+
+**Важно:** 
+- Этот шаг нужно выполнять **после** загрузки каталога через `/admin`
+- Импорт может занять несколько минут для большого количества товаров
+
+---
+
+## Шаг 14: Проверка работы
 
 1. **Откройте сайт:** `https://profitech.store`
-2. **Проверьте каталог:** `https://profitech.store/catalog`
-3. **Проверьте админ-панель:** `https://profitech.store/admin`
-4. **Проверьте API:**
+2. **Проверьте каталог:** `https://profitech.store/catalog` - товары должны отображаться
+3. **Проверьте фильтрацию:** попробуйте выбрать категорию, производителя
+4. **Проверьте поиск:** введите название товара в поиск
+5. **Проверьте API:**
    - `https://profitech.store/api/catalog?page=1&limit=24`
    - `https://profitech.store/api/catalog/stats`
 
 ---
 
-## Шаг 13: Настройка автоматического запуска (опционально)
+## Шаг 15: Настройка автоматического запуска (опционально)
 
 ### Если используется PM2:
 
