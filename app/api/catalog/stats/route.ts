@@ -1,50 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Product } from '@/types';
-import { CATEGORIES } from '@/constants/categories';
+import { query } from '@/lib/db';
 
-// Импортируем функцию загрузки из основного файла
-// Для оптимизации используем тот же кэш
-let productsCache: Product[] | null = null;
-let categoryIndex: Map<string, Product[]> | null = null;
-let cacheTimestamp = 0;
-const CACHE_TTL = 5 * 60 * 1000;
+// Кэш для статистики
+const statsCache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_TTL = 2 * 60 * 1000; // 2 минуты
 
-function loadProductsFromFile(): Product[] {
-  const fs = require('fs');
-  const path = require('path');
-  const now = Date.now();
-  
-  if (productsCache && (now - cacheTimestamp) < CACHE_TTL) {
-    return productsCache;
+function getCached(key: string) {
+  const cached = statsCache.get(key);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.data;
   }
+  return null;
+}
 
-  const productsPath = path.join(process.cwd(), 'public/data/products.json');
-  
-  if (!fs.existsSync(productsPath)) {
-    return [];
-  }
-
-  const productsData = JSON.parse(fs.readFileSync(productsPath, 'utf-8')) as Product[];
-  const validProducts = productsData.filter(p => p && p.id);
-  
-  productsCache = validProducts;
-  cacheTimestamp = now;
-  
-  categoryIndex = new Map();
-  validProducts.forEach(product => {
-    if (product.categoryId) {
-      if (!categoryIndex!.has(product.categoryId)) {
-        categoryIndex!.set(product.categoryId, []);
-      }
-      categoryIndex!.get(product.categoryId)!.push(product);
-    }
-  });
-  
-  return validProducts;
+function setCache(key: string, data: any) {
+  statsCache.set(key, { data, timestamp: Date.now() });
 }
 
 /**
- * GET /api/catalog/stats - Получить статистику каталога (производители, характеристики)
+ * GET /api/catalog/stats - Получить статистику для фильтров (оптимизированная версия с MySQL)
+ * Использует UNION логику для подкатегорий
  */
 export async function GET(request: NextRequest) {
   try {
@@ -53,155 +28,153 @@ export async function GET(request: NextRequest) {
     const subcategoriesParam = searchParams.get('subcategories');
     const manufacturersParam = searchParams.get('manufacturers');
 
-    console.log('[API Stats] Request params:', {
-      categoryId,
-      subcategories: subcategoriesParam,
-      manufacturers: manufacturersParam
-    });
-
-    const allProducts = loadProductsFromFile();
-    
-    if (allProducts.length === 0) {
-      return NextResponse.json(
-        { error: 'Каталог не найден' },
-        { status: 404 }
-      );
-    }
-    
-    // Используем индекс для быстрой фильтрации по категории
-    let products: Product[];
-    if (categoryId && categoryIndex && categoryIndex.has(categoryId)) {
-      products = categoryIndex.get(categoryId)!;
-    } else if (categoryId) {
-      // Если индекс не построен, фильтруем вручную
-      products = allProducts.filter(p => p.categoryId === categoryId);
-    } else {
-      products = allProducts;
+    // Создаем ключ кэша
+    const cacheKey = `stats_${categoryId || 'all'}_${subcategoriesParam || 'none'}_${manufacturersParam || 'none'}`;
+    const cached = getCached(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached, {
+        headers: {
+          'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=300'
+        }
+      });
     }
 
-    // Фильтр по подкатегориям
-    // Проверяем, выбраны ли все подкатегории категории
-    let shouldIgnoreSubcategories = false;
-    if (categoryId && subcategoriesParam && products.length > 0) {
-      const category = CATEGORIES.find(c => c.id === categoryId);
-      const allSubcategories = category?.subcategories || [];
-      const selectedSubcategories = subcategoriesParam.split(',').filter(Boolean);
-      
-      // Если количество выбранных подкатегорий равно общему количеству подкатегорий
-      if (allSubcategories.length > 0 && selectedSubcategories.length === allSubcategories.length) {
-        const allSubcategoryIds = new Set(allSubcategories.map(s => s.id));
-        const selectedSubcategoryIds = new Set(selectedSubcategories);
-        
-        // Проверяем, что все подкатегории выбраны
-        shouldIgnoreSubcategories = allSubcategoryIds.size === selectedSubcategoryIds.size &&
-                                    Array.from(allSubcategoryIds).every(id => selectedSubcategoryIds.has(id));
-        
-        if (shouldIgnoreSubcategories) {
-          console.log('[API Stats] All subcategories selected, ignoring subcategories filter');
+    // Строим условия для фильтрации товаров
+    let whereConditions: string[] = [];
+    const queryParams: any[] = [];
+
+    // Фильтр по категории
+    if (categoryId) {
+      whereConditions.push('p.category_id = ?');
+      queryParams.push(categoryId);
+    }
+
+    // Фильтр по подкатегориям (UNION логика)
+    if (subcategoriesParam) {
+      const subcategories = subcategoriesParam.split(',').filter(Boolean);
+      if (subcategories.length > 0) {
+        // Проверяем, выбраны ли все подкатегории категории
+        if (categoryId) {
+          const [subCountResult] = await query(
+            'SELECT COUNT(*) as total FROM subcategories WHERE category_id = ?',
+            [categoryId]
+          ) as any[];
+          const totalSubs = (subCountResult as any).total;
+          
+          // Если выбраны не все подкатегории, фильтруем по выбранным
+          if (subcategories.length !== totalSubs) {
+            whereConditions.push('p.subcategory_id IN (' + subcategories.map(() => '?').join(',') + ')');
+            queryParams.push(...subcategories);
+          }
+          // Если все подкатегории выбраны, не добавляем фильтр (работаем как с категорией)
+        } else {
+          whereConditions.push('p.subcategory_id IN (' + subcategories.map(() => '?').join(',') + ')');
+          queryParams.push(...subcategories);
         }
       }
     }
 
-    // Фильтр по подкатегориям (только если не все подкатегории выбраны)
-    // Используем UNION (объединение) - товары из любой из выбранных подкатегорий
-    if (!shouldIgnoreSubcategories && subcategoriesParam && products.length > 0) {
-      const subcategories = subcategoriesParam.split(',').filter(Boolean);
-      if (subcategories.length > 0) {
-        const subcategorySet = new Set(subcategories);
-        const productsBeforeFilter = products.length;
-        // UNION логика: товары, у которых subcategoryId есть в множестве выбранных подкатегорий
-        products = products.filter(p => {
-          const hasSubcategory = p.subcategoryId && subcategorySet.has(p.subcategoryId);
-          return hasSubcategory;
-        });
-        
-        console.log('[API Stats] Subcategories filter:', {
-          selectedSubcategories: subcategories,
-          productsBefore: productsBeforeFilter,
-          productsAfter: products.length,
-          sampleProductSubcategories: products.slice(0, 5).map(p => p.subcategoryId)
-        });
-      }
-    }
-
     // Фильтр по производителям (для обратной синхронизации)
-    if (manufacturersParam && products.length > 0) {
+    if (manufacturersParam) {
       const manufacturers = manufacturersParam.split(',').filter(Boolean);
       if (manufacturers.length > 0) {
-        const manufacturerSet = new Set(manufacturers);
-        products = products.filter(p => p.manufacturer && manufacturerSet.has(p.manufacturer));
+        whereConditions.push('p.manufacturer IN (' + manufacturers.map(() => '?').join(',') + ')');
+        queryParams.push(...manufacturers);
       }
     }
 
-    // Получаем уникальных производителей (UNION - все производители из выбранных подкатегорий)
-    const manufacturers = Array.from(
-      new Set(products.filter(p => p.manufacturer && p.manufacturer.trim() !== '').map(p => p.manufacturer))
-    ).filter(Boolean).sort() as string[];
+    const whereClause = whereConditions.length > 0 ? 'WHERE ' + whereConditions.join(' AND ') : '';
 
-    console.log('[API Stats] Manufacturers extraction:', {
-      totalProducts: products.length,
-      productsWithManufacturer: products.filter(p => p.manufacturer && p.manufacturer.trim() !== '').length,
-      uniqueManufacturers: manufacturers.length,
-      sampleManufacturers: manufacturers.slice(0, 10)
-    });
+    // Получаем уникальных производителей (UNION логика - все производители из выбранных подкатегорий)
+    const manufacturersQuery = `
+      SELECT DISTINCT p.manufacturer
+      FROM products p
+      ${whereClause}
+      AND p.manufacturer IS NOT NULL 
+      AND p.manufacturer != ''
+      AND p.manufacturer != 'Не указан'
+      ORDER BY p.manufacturer
+      LIMIT 1000
+    `;
 
-    // Получаем уникальные характеристики (UNION - все значения из выбранных подкатегорий)
-    const characteristicsMap: { [key: string]: Set<string> } = {};
-    let productsWithCharacteristics = 0;
-    products.forEach(product => {
-      if (product.characteristics && Array.isArray(product.characteristics) && product.characteristics.length > 0) {
-        productsWithCharacteristics++;
-        product.characteristics.forEach(char => {
-          if (char && char.name && char.value && char.name.trim() !== '' && char.value.trim() !== '') {
-            if (!characteristicsMap[char.name]) {
-              characteristicsMap[char.name] = new Set();
-            }
-            characteristicsMap[char.name].add(char.value);
-          }
-        });
-      }
-    });
-    
-    console.log('[API Stats] Characteristics extraction:', {
-      totalProducts: products.length,
-      productsWithCharacteristics,
-      characteristicsCount: Object.keys(characteristicsMap).length,
-      sampleCharacteristics: Object.keys(characteristicsMap).slice(0, 5)
-    });
-
-    const characteristics: { [key: string]: string[] } = {};
-    Object.keys(characteristicsMap).sort().forEach(key => {
-      characteristics[key] = Array.from(characteristicsMap[key]).sort();
-    });
+    // Получаем характеристики (UNION логика - все характеристики из выбранных подкатегорий)
+    const characteristicsQuery = `
+      SELECT DISTINCT 
+        pc.name,
+        pc.value
+      FROM product_characteristics pc
+      INNER JOIN products p ON pc.product_id = p.id
+      ${whereClause}
+      ORDER BY pc.name, pc.value
+      LIMIT 10000
+    `;
 
     // Получаем доступные категории (для обратной синхронизации)
-    const availableCategories = Array.from(
-      new Set(products.filter(p => p.categoryId).map(p => p.categoryId))
-    ).filter(Boolean) as string[];
+    let availableCategories: string[] = [];
+    if (manufacturersParam) {
+      const categoriesQuery = `
+        SELECT DISTINCT p.category_id
+        FROM products p
+        ${whereClause}
+        AND p.category_id IS NOT NULL
+      `;
+      const [categoriesResult] = await query(categoriesQuery, queryParams) as any[];
+      availableCategories = (categoriesResult as any[]).map((row: any) => row.category_id);
+    }
 
-    console.log('[API Stats] Response:', {
-      manufacturersCount: manufacturers.length,
-      characteristicsCount: Object.keys(characteristics).length,
-      productsCount: products.length,
-      ignoredSubcategories: shouldIgnoreSubcategories
+    // Выполняем запросы параллельно для максимальной производительности
+    const [manufacturersResult, characteristicsResult] = await Promise.all([
+      query(manufacturersQuery, queryParams),
+      query(characteristicsQuery, queryParams)
+    ]);
+
+    // Формируем список производителей
+    const manufacturers = (manufacturersResult as any[])
+      .map((row: any) => row.manufacturer)
+      .filter(Boolean)
+      .sort();
+
+    // Группируем характеристики по имени
+    const characteristics: { [key: string]: string[] } = {};
+    (characteristicsResult as any[]).forEach((row: any) => {
+      if (!characteristics[row.name]) {
+        characteristics[row.name] = [];
+      }
+      if (!characteristics[row.name].includes(row.value)) {
+        characteristics[row.name].push(row.value);
+      }
     });
 
-    return NextResponse.json({
+    // Сортируем значения характеристик
+    Object.keys(characteristics).forEach(key => {
+      characteristics[key].sort();
+    });
+
+    const result = {
       manufacturers,
       characteristics,
-      categories: availableCategories,
-      totalProducts: products.length,
-    }, {
+      availableCategories
+    };
+
+    // Кэшируем результат
+    setCache(cacheKey, result);
+
+    return NextResponse.json(result, {
       headers: {
-        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
-      },
+        'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=300'
+      }
     });
+
   } catch (error) {
-    console.error('Ошибка получения статистики:', error);
+    console.error('[API Catalog Stats] Error:', error);
     return NextResponse.json(
-      { error: 'Ошибка получения статистики' },
+      { 
+        manufacturers: [],
+        characteristics: {},
+        availableCategories: [],
+        error: error instanceof Error ? error.message : String(error)
+      },
       { status: 500 }
     );
   }
 }
-
