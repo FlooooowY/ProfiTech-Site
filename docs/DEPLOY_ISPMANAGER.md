@@ -15,12 +15,12 @@
 ### Через ISPmanager:
 1. Войдите в панель ISPmanager
 2. Перейдите в раздел **"Файлы"** или **"File Manager"**
-3. Найдите папку для вашего домена (обычно `domains/ваш-домен.ru/public_html`)
+3. Найдите папку для вашего домена (обычно `domains/profitech.store/public_html`)
 
 ### Через SSH (рекомендуется):
 ```bash
 ssh ваш-пользователь@ваш-хостинг.ru
-cd domains/ваш-домен.ru/public_html
+cd domains/profitech.store/public_html
 ```
 
 ---
@@ -31,13 +31,13 @@ cd domains/ваш-домен.ru/public_html
 
 1. **Клонируйте репозиторий:**
 ```bash
-cd domains/ваш-домен.ru/public_html
+cd domains/profitech.store/public_html
 git clone https://github.com/FlooooowY/ProfiTech-Site.git .
 ```
 
 2. **Или если папка уже существует:**
 ```bash
-cd domains/ваш-домен.ru/public_html
+cd domains/profitech.store/public_html
 git pull origin main
 ```
 
@@ -52,7 +52,7 @@ git pull origin main
 
 ### Через SSH:
 ```bash
-cd domains/ваш-домен.ru/public_html
+cd domains/profitech.store/public_html
 npm install --production
 ```
 
@@ -71,21 +71,20 @@ npm install --production
 
 ### Через SSH:
 ```bash
-cd domains/ваш-домен.ru/public_html
+cd domains/profitech.store/public_html
 cp env.template .env.local
 ```
 
-Затем откройте `.env.local` и замените `ваш-домен.ru` на ваш реальный домен.
+Готово! Файл уже настроен с правильным доменом profitech.store.
 
 ### Через ISPmanager:
 1. В файловом менеджере найдите файл `env.template`
 2. Скопируйте его и переименуйте в `.env.local`
-3. Откройте `.env.local` и замените `ваш-домен.ru` на ваш реальный домен
-4. Сохраните файл
+3. Готово! Файл уже содержит все нужные настройки
 
 **Важно:** 
-- Файл `.env.local` уже содержит все нужные настройки БД
-- Только замените `ваш-домен.ru` на ваш реальный домен
+- Файл `.env.local` уже содержит все нужные настройки БД и домен profitech.store
+- Ничего редактировать не нужно!
 
 ---
 
@@ -112,7 +111,7 @@ cp env.template .env.local
 ### Через SSH (рекомендуется):
 
 ```bash
-cd domains/ваш-домен.ru/public_html
+cd domains/profitech.store/public_html
 npm run db:create
 ```
 
@@ -172,7 +171,7 @@ npm run db:import-products
 
 ### Вариант B: Импорт через админ-панель
 
-1. Откройте сайт: `https://ваш-домен.ru/admin`
+1. Откройте сайт: `https://profitech.store/admin`
 2. Нажмите "Запустить импорт каталога"
 3. Дождитесь завершения импорта
 4. Затем выполните `npm run db:import-products` для синхронизации с MySQL
@@ -207,9 +206,9 @@ npm run build
 3. **Настройте Node.js:**
    - Включите поддержку Node.js
    - Укажите версию Node.js (18 или выше)
-   - **Путь к приложению:** `domains/ваш-домен.ru/public_html`
+   - **Путь к приложению:** `domains/profitech.store/public_html`
    - **Команда запуска:** `npm start`
-   - **Рабочая директория:** `domains/ваш-домен.ru/public_html`
+   - **Рабочая директория:** `domains/profitech.store/public_html`
 
 4. **Настройте домен:**
    - Убедитесь, что домен указывает на правильную папку
@@ -243,12 +242,12 @@ npm start
 
 ## Шаг 12: Проверка работы
 
-1. **Откройте сайт:** `https://ваш-домен.ru`
-2. **Проверьте каталог:** `https://ваш-домен.ru/catalog`
-3. **Проверьте админ-панель:** `https://ваш-домен.ru/admin`
+1. **Откройте сайт:** `https://profitech.store`
+2. **Проверьте каталог:** `https://profitech.store/catalog`
+3. **Проверьте админ-панель:** `https://profitech.store/admin`
 4. **Проверьте API:**
-   - `https://ваш-домен.ru/api/catalog?page=1&limit=24`
-   - `https://ваш-домен.ru/api/catalog/stats`
+   - `https://profitech.store/api/catalog?page=1&limit=24`
+   - `https://profitech.store/api/catalog/stats`
 
 ---
 
@@ -275,7 +274,7 @@ pm2 startup
 ### Когда нужно обновить код:
 
 ```bash
-cd domains/ваш-домен.ru/public_html
+cd domains/profitech.store/public_html
 git pull origin main
 npm install --production
 npm run build
@@ -314,7 +313,7 @@ npm run build
 ### Товары не отображаются:
 
 1. Проверьте, что товары импортированы: `npm run db:import-products`
-2. Проверьте API: `https://ваш-домен.ru/api/catalog`
+2. Проверьте API: `https://profitech.store/api/catalog`
 3. Проверьте логи приложения
 
 ---
@@ -322,7 +321,7 @@ npm run build
 ## Структура файлов на хостинге
 
 ```
-domains/ваш-домен.ru/public_html/
+domains/profitech.store/public_html/
 ├── .env.local                    # Переменные окружения (ВАЖНО!)
 ├── .next/                        # Собранное приложение (создается после build)
 ├── app/                          # Next.js страницы
