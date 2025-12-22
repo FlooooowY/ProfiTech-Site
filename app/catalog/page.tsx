@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -14,7 +14,7 @@ import { Product } from '@/types';
 
 const PRODUCTS_PER_PAGE = 24;
 
-export default function CatalogPage() {
+function CatalogPageContent() {
   const searchParams = useSearchParams();
   const [showFilters, setShowFilters] = useState(false);
   // Примененные фильтры (используются для загрузки товаров)
@@ -1074,6 +1074,18 @@ export default function CatalogPage() {
         </motion.div>
       )}
     </div>
+  );
+}
+
+export default function CatalogPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[#FF6B35]" />
+      </div>
+    }>
+      <CatalogPageContent />
+    </Suspense>
   );
 }
 

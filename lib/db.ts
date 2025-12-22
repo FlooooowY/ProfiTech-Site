@@ -17,8 +17,6 @@ const dbConfig = {
   dateStrings: false,
   // Таймауты
   connectTimeout: 10000,
-  acquireTimeout: 10000,
-  timeout: 10000,
 };
 
 // Создаем пул соединений
