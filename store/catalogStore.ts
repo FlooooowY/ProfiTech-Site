@@ -26,7 +26,13 @@ export const useCatalogStore = create<CatalogStore>((set, get) => ({
   isLoading: false,
   
   setProducts: (products: Product[]) => {
-    set({ products, filteredProducts: products });
+    const validProducts = products.filter(p => p && p.id);
+    set({ products: validProducts, filteredProducts: validProducts, isLoading: false });
+    // Применяем фильтры только если они установлены
+    const { filter } = get();
+    if (filter.categoryId || filter.subcategoryId || (filter.manufacturers && filter.manufacturers.length > 0) || Object.keys(filter.characteristics || {}).length > 0) {
+      get().applyFilters();
+    }
   },
   
   setFilter: (newFilter: Partial<Filter>) => {
@@ -42,53 +48,61 @@ export const useCatalogStore = create<CatalogStore>((set, get) => ({
   },
   
   applyFilters: () => {
-    const { products, filter, searchQuery } = get();
-    
-    let filtered = [...products];
-    
-    // Фильтр по категории
-    if (filter.categoryId) {
-      filtered = filtered.filter((p) => p.categoryId === filter.categoryId);
-    }
-    
-    // Фильтр по подкатегории
-    if (filter.subcategoryId) {
-      filtered = filtered.filter((p) => p.subcategoryId === filter.subcategoryId);
-    }
-    
-    // Фильтр по производителю
-    if (filter.manufacturers.length > 0) {
-      filtered = filtered.filter((p) =>
-        filter.manufacturers.includes(p.manufacturer)
-      );
-    }
-    
-    // Фильтр по характеристикам
-    Object.entries(filter.characteristics).forEach(([key, values]) => {
-      if (values.length > 0) {
+    try {
+      const { products, filter, searchQuery } = get();
+      
+      // Фильтруем только валидные продукты
+      let filtered = products.filter(p => p && p.id);
+      
+      // Фильтр по категории
+      if (filter.categoryId) {
+        filtered = filtered.filter((p) => p.categoryId === filter.categoryId);
+      }
+      
+      // Фильтр по подкатегории
+      if (filter.subcategoryId) {
+        filtered = filtered.filter((p) => p.subcategoryId === filter.subcategoryId);
+      }
+      
+      // Фильтр по производителю
+      if (filter.manufacturers && filter.manufacturers.length > 0) {
         filtered = filtered.filter((p) =>
-          p.characteristics.some(
-            (char) => char.name === key && values.includes(char.value)
-          )
+          p.manufacturer && filter.manufacturers.includes(p.manufacturer)
         );
       }
-    });
-    
-    // Поиск
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (p) =>
-          p.name.toLowerCase().includes(query) ||
-          p.description.toLowerCase().includes(query) ||
-          p.manufacturer.toLowerCase().includes(query) ||
-          p.characteristics.some((char) =>
-            char.value.toLowerCase().includes(query)
-          )
-      );
+      
+      // Фильтр по характеристикам
+      if (filter.characteristics) {
+        Object.entries(filter.characteristics).forEach(([key, values]) => {
+          if (values && values.length > 0) {
+            filtered = filtered.filter((p) =>
+              p.characteristics && Array.isArray(p.characteristics) && p.characteristics.some(
+                (char) => char && char.name === key && values.includes(char.value)
+              )
+            );
+          }
+        });
+      }
+      
+      // Поиск
+      if (searchQuery && searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        filtered = filtered.filter(
+          (p) =>
+            (p.name && p.name.toLowerCase().includes(query)) ||
+            (p.description && p.description.toLowerCase().includes(query)) ||
+            (p.manufacturer && p.manufacturer.toLowerCase().includes(query)) ||
+            (p.characteristics && Array.isArray(p.characteristics) && p.characteristics.some((char) =>
+              char && char.value && char.value.toLowerCase().includes(query)
+            ))
+        );
+      }
+      
+      set({ filteredProducts: filtered });
+    } catch (error) {
+      console.error('Ошибка при применении фильтров:', error);
+      set({ filteredProducts: get().products.filter(p => p && p.id) });
     }
-    
-    set({ filteredProducts: filtered });
   },
   
   clearFilters: () => {

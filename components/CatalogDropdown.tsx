@@ -51,10 +51,10 @@ export default function CatalogDropdown({ categories, isOpen, onToggle, onClose 
       {/* Catalog Button */}
       <button
         onClick={onToggle}
-        className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-semibold transition-all ${
+        className={`flex items-center space-x-1 md:space-x-2 px-3 md:px-4 xl:px-6 py-2 md:py-2.5 xl:py-3 rounded-lg font-semibold transition-all text-xs md:text-sm xl:text-base ${
           isOpen
             ? 'bg-gradient-to-r from-[#FF6B35] to-[#F7931E] text-white shadow-lg'
-            : 'bg-white text-gray-700 hover:bg-gray-50 border-2 border-gray-200'
+            : 'bg-white text-gray-900 hover:bg-gray-50 border-2 border-gray-200'
         }`}
       >
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -72,13 +72,13 @@ export default function CatalogDropdown({ categories, isOpen, onToggle, onClose 
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
-            className="absolute top-full left-0 mt-2 w-[900px] bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden z-50"
+            className="absolute top-full left-0 mt-2 w-[calc(100vw-2rem)] sm:w-[90vw] max-w-[900px] bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden z-50"
           >
             <div className="flex">
               {/* Categories List */}
               <div className="w-72 bg-gray-50 border-r border-gray-200">
                 <div className="p-4">
-                  <h3 className="text-sm font-semibold text-gray-500 mb-3">КАТЕГОРИИ</h3>
+                  <h3 className="text-sm font-semibold text-gray-700 mb-3">КАТЕГОРИИ</h3>
                   <div className="space-y-1">
                     {categories.map((category) => (
                       <Link
@@ -94,11 +94,11 @@ export default function CatalogDropdown({ categories, isOpen, onToggle, onClose 
                       >
                         <div className="flex items-center space-x-3">
                           <span className="text-2xl">{category.icon}</span>
-                          <span className="text-sm font-medium text-gray-700 group-hover:text-[#FF6B35]">
+                          <span className="text-sm font-medium text-gray-900 group-hover:text-[#FF6B35]">
                             {category.name}
                           </span>
                         </div>
-                        <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-[#FF6B35]" />
+                        <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-[#FF6B35]" />
                       </Link>
                     ))}
                   </div>
@@ -120,11 +120,11 @@ export default function CatalogDropdown({ categories, isOpen, onToggle, onClose 
                           onClick={onClose}
                           className="flex items-center justify-between px-4 py-2.5 rounded-lg hover:bg-orange-50 transition-colors group"
                         >
-                          <span className="text-sm text-gray-700 group-hover:text-[#FF6B35] font-medium">
+                          <span className="text-sm text-gray-900 group-hover:text-[#FF6B35] font-medium">
                             {sub.name}
                           </span>
                           {sub.count && (
-                            <span className="text-xs text-gray-400 group-hover:text-[#FF6B35]">
+                            <span className="text-xs text-gray-600 group-hover:text-[#FF6B35]">
                               {sub.count}
                             </span>
                           )}
@@ -133,7 +133,7 @@ export default function CatalogDropdown({ categories, isOpen, onToggle, onClose 
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-center h-full text-gray-400">
+                  <div className="flex items-center justify-center h-full text-gray-600">
                     <div className="text-center">
                       <span className="text-5xl mb-2 block">📦</span>
                       <p>Наведите на категорию</p>

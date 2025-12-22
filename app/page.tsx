@@ -12,10 +12,26 @@ const carouselImages: CarouselImage[] = [
   {
     id: '1',
     url: '/uploads/carousel/slide1.svg',
-    alt: 'Профессиональное оборудование ProfiTech',
-    title: 'Оборудование для вашего бизнеса',
-    description: 'Широкий выбор профессионального оборудования для любых задач',
+    alt: 'Профессиональное оборудование',
+    title: 'Профессиональное оборудование',
+    description: 'Более 126,000 позиций профессионального оборудования для вашего бизнеса',
     link: '/catalog',
+  },
+  {
+    id: '2',
+    url: '/uploads/carousel/slide1.svg',
+    alt: 'Кофейное оборудование',
+    title: 'Кофейное оборудование',
+    description: 'Кофемашины, кофемолки и аксессуары для идеального кофе',
+    link: '/catalog?category=kofevarki-i-kofemashini',
+  },
+  {
+    id: '3',
+    url: '/uploads/carousel/slide1.svg',
+    alt: 'Холодильное оборудование',
+    title: 'Холодильное оборудование',
+    description: 'Промышленные холодильники и морозильные камеры для ресторанов и магазинов',
+    link: '/catalog?category=profoborudovanie',
   },
 ];
 
@@ -44,25 +60,26 @@ const features = [
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden">
       {/* Hero Section with Carousel */}
-      <section className="container mx-auto px-4 py-8 md:py-12">
+      <section className="container mx-auto px-4" style={{ marginBottom: '40px', paddingLeft: '32px', paddingRight: '32px', paddingTop: '64px', paddingBottom: '20px' }}>
         <Carousel images={carouselImages} />
       </section>
 
       {/* Features Section */}
-      <section className="py-16 md:py-24 bg-gradient-to-br from-gray-50 via-white to-gray-50">
+      <section className="bg-gradient-to-br from-gray-50 via-white to-gray-50" style={{ paddingTop: '40px', paddingBottom: '80px', marginTop: '40px', marginBottom: '40px', paddingLeft: '32px', paddingRight: '32px' }}>
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center"
+            style={{ marginBottom: '80px' }}
           >
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-              Почему выбирают <span className="gradient-text">ProfiTech</span>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold" style={{ color: '#000000', marginBottom: '32px' }}>
+              <span style={{ color: '#000000' }}>Почему выбирают</span> <span className="gradient-text">ProfiTech</span>
             </h2>
-            <p className="text-gray-600 text-lg md:text-xl max-w-3xl mx-auto">
+            <p className="text-gray-600 text-lg md:text-xl max-w-3xl mx-auto font-semibold">
               Мы предлагаем комплексные решения для вашего бизнеса
             </p>
           </motion.div>
@@ -75,13 +92,16 @@ export default function HomePage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="card p-8 text-center group hover:shadow-2xl cursor-pointer"
+                className="card p-10 text-center group hover:shadow-2xl cursor-pointer flex flex-col"
+                style={{ minHeight: '280px' }}
               >
-                <div className="w-20 h-20 bg-gradient-to-br from-[#FF6B35] to-[#F7931E] rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform shadow-lg">
-                  <feature.icon className="w-10 h-10 text-white" />
+                <div className="flex-shrink-0" style={{ height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: '20px', marginBottom: '32px' }}>
+                  <div className="w-20 h-20 bg-gradient-to-br from-[#FF6B35] to-[#F7931E] rounded-3xl flex items-center justify-center mx-auto group-hover:scale-110 transition-transform shadow-lg">
+                    <feature.icon className="w-10 h-10 text-white" />
+                  </div>
                 </div>
-                <h3 className="text-xl md:text-2xl font-semibold mb-3">{feature.title}</h3>
-                <p className="text-gray-600 leading-relaxed">{feature.description}</p>
+                <h3 className="text-xl md:text-2xl font-semibold mb-4" style={{ color: '#000000' }}>{feature.title}</h3>
+                <p className="text-gray-600 leading-relaxed font-semibold">{feature.description}</p>
               </motion.div>
             ))}
           </div>
@@ -89,18 +109,19 @@ export default function HomePage() {
       </section>
 
       {/* Categories Section */}
-      <section className="py-16 md:py-24">
+      <section style={{ paddingTop: '40px', paddingBottom: '100px', marginTop: '40px', marginBottom: '40px', paddingLeft: '32px', paddingRight: '32px' }}>
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center"
+            style={{ marginBottom: '60px' }}
           >
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-              Наши <span className="gradient-text">категории</span>
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold" style={{ marginBottom: '16px' }}>
+              <span className="text-white-categories" style={{ color: '#ffffff' }}>Наши</span> <span className="gradient-text">категории</span>
             </h2>
-            <p className="text-gray-600 text-lg md:text-xl max-w-3xl mx-auto">
+            <p className="text-gray-600 text-lg md:text-xl max-w-3xl mx-auto font-semibold">
               Найдите именно то, что нужно для вашего бизнеса
             </p>
           </motion.div>
@@ -116,30 +137,31 @@ export default function HomePage() {
               >
                 <Link
                   href={`/catalog?category=${category.slug}`}
-                  className="card p-8 md:p-10 block group hover:shadow-2xl transition-all duration-300 h-full"
+                  className="card block group hover:shadow-2xl transition-all duration-300 h-full"
+                  style={{ padding: '32px' }}
                 >
-                  <div className="flex items-start space-x-6 mb-6">
+                  <div className="flex items-start mb-6" style={{ gap: '32px' }}>
                     <div className="w-20 h-20 bg-gradient-to-br from-[#FF6B35] to-[#F7931E] rounded-3xl flex items-center justify-center text-4xl group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg flex-shrink-0">
                       {category.icon}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-2xl font-bold group-hover:text-[#FF6B35] transition-colors mb-2">
+                      <h3 className="text-2xl font-bold text-gray-950 group-hover:text-[#FF6B35] transition-colors mb-2">
                         {category.name}
                       </h3>
-                      <p className="text-sm text-gray-500 font-medium">
+                      <p className="text-sm text-gray-600 font-semibold">
                         {category.subcategories?.length} подкатегорий
                       </p>
                     </div>
-                    <ArrowRight className="w-7 h-7 text-gray-400 group-hover:text-[#FF6B35] group-hover:translate-x-2 transition-all duration-300 flex-shrink-0" />
+                    <ArrowRight className="w-7 h-7 text-gray-900 group-hover:text-[#FF6B35] group-hover:translate-x-2 transition-all duration-300 flex-shrink-0" />
                   </div>
-                  <p className="text-gray-600 mb-6 leading-relaxed">
+                  <p className="text-gray-600 mb-6 leading-relaxed font-semibold">
                     {category.description}
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {category.subcategories?.slice(0, 3).map((sub) => (
                       <span
                         key={sub.id}
-                        className="px-4 py-2 bg-gradient-to-r from-gray-100 to-gray-50 rounded-full text-sm text-gray-700 font-medium hover:from-[#FFE66D]/20 hover:to-[#FFA07A]/20 transition-all"
+                        className="px-4 py-2 bg-gradient-to-r from-gray-100 to-gray-50 rounded-full text-sm text-gray-900 font-medium hover:from-[#FFE66D]/20 hover:to-[#FFA07A]/20 transition-all"
                       >
                         {sub.name}
                       </span>
@@ -159,11 +181,12 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mt-12"
+            className="text-center mt-16 md:mt-20"
           >
             <Link
               href="/catalog"
-              className="inline-flex items-center space-x-2 px-8 py-4 bg-gradient-to-r from-[#FF6B35] to-[#F7931E] text-white font-semibold rounded-full hover:shadow-lg transform hover:scale-105 transition-all"
+              className="inline-flex items-center space-x-2 text-white font-semibold rounded-full hover:shadow-lg transform hover:scale-105 transition-all"
+              style={{ padding: '16px 32px' }}
             >
               <span>Смотреть весь каталог</span>
               <ArrowRight className="w-5 h-5" />
@@ -173,7 +196,7 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 md:py-32 bg-gradient-to-r from-[#FF6B35] via-[#F7931E] to-[#FF8C42] relative overflow-hidden">
+      <section className="bg-gradient-to-r from-[#FF6B35] via-[#F7931E] to-[#FF8C42] relative overflow-hidden" style={{ paddingTop: '80px', paddingBottom: '120px', marginTop: '40px', marginBottom: '40px', paddingLeft: '32px', paddingRight: '32px' }}>
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
         <div className="container mx-auto px-4 text-center text-white relative z-10">
           <motion.div
@@ -181,17 +204,18 @@ export default function HomePage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-8">
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold" style={{ marginBottom: '40px' }}>
               Готовы начать?
             </h2>
-            <p className="text-xl md:text-2xl mb-12 max-w-3xl mx-auto opacity-95 leading-relaxed">
+            <p className="text-xl md:text-2xl max-w-3xl mx-auto opacity-95 leading-relaxed" style={{ marginBottom: '48px' }}>
               Свяжитесь с нами прямо сейчас и получите индивидуальное
               коммерческое предложение
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <Link
                 href="/catalog"
-                className="px-10 py-5 bg-white text-[#FF6B35] font-bold text-lg rounded-full hover:shadow-2xl transform hover:scale-105 transition-all"
+                className="bg-white text-[#FF6B35] font-bold text-lg rounded-full hover:shadow-2xl transform hover:scale-105 transition-all"
+                style={{ padding: '20px 40px' }}
               >
                 Перейти в каталог
               </Link>
@@ -199,7 +223,8 @@ export default function HomePage() {
                 href="https://wa.me/79000000000"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-10 py-5 bg-white/20 backdrop-blur-sm border-2 border-white text-white font-bold text-lg rounded-full hover:bg-white/30 transition-all"
+                className="bg-white/20 backdrop-blur-sm border-2 border-white text-white font-bold text-lg rounded-full hover:bg-white/30 transition-all"
+                style={{ padding: '20px 40px' }}
               >
                 Написать в WhatsApp
               </a>

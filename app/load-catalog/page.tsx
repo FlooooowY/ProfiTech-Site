@@ -28,7 +28,7 @@ export default function LoadCatalogPage() {
         setProducts(productsData);
         setStats({
           products: productsData.length,
-          categories: new Set(productsData.map((p: any) => p.categoryId)).size,
+          categories: new Set(productsData.map((p: { categoryId: string }) => p.categoryId)).size,
         });
         
         setStatus('success');

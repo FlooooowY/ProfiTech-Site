@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Image from 'next/image';
+import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { CarouselImage } from '@/types';
@@ -15,6 +15,16 @@ export default function Carousel({ images, autoPlayInterval = 5000 }: CarouselPr
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
 
+  const handleNext = useCallback(() => {
+    setDirection(1);
+    setCurrentIndex((prev) => (prev + 1) % images.length);
+  }, [images.length]);
+
+  const handlePrev = useCallback(() => {
+    setDirection(-1);
+    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+  }, [images.length]);
+
   useEffect(() => {
     if (!images || images.length === 0) return;
 
@@ -23,17 +33,7 @@ export default function Carousel({ images, autoPlayInterval = 5000 }: CarouselPr
     }, autoPlayInterval);
 
     return () => clearInterval(timer);
-  }, [currentIndex, images, autoPlayInterval]);
-
-  const handleNext = () => {
-    setDirection(1);
-    setCurrentIndex((prev) => (prev + 1) % images.length);
-  };
-
-  const handlePrev = () => {
-    setDirection(-1);
-    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
-  };
+  }, [images, autoPlayInterval, handleNext]);
 
   const handleDotClick = (index: number) => {
     setDirection(index > currentIndex ? 1 : -1);
@@ -45,14 +45,13 @@ export default function Carousel({ images, autoPlayInterval = 5000 }: CarouselPr
       <div className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] bg-gradient-to-br from-[#FF6B35] via-[#F7931E] to-[#FF8C42] flex items-center justify-center rounded-2xl overflow-hidden">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
         <div className="text-center text-white z-10 px-4">
-          <h2 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-4 animate-fade-in">ProfiTech</h2>
           <p className="text-xl md:text-2xl lg:text-3xl mb-8 animate-fade-in opacity-90">От идеи до воплощения</p>
-          <a
+          <Link
             href="/catalog"
             className="inline-block px-8 py-4 bg-white text-[#FF6B35] font-semibold rounded-full hover:shadow-2xl transform hover:scale-105 transition-all"
           >
             Смотреть каталог
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -76,7 +75,7 @@ export default function Carousel({ images, autoPlayInterval = 5000 }: CarouselPr
   };
 
   return (
-    <div className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] overflow-hidden bg-gray-900 rounded-2xl">
+    <div className="carousel-container relative w-full h-[400px] md:h-[500px] lg:h-[600px] overflow-hidden bg-gray-900 rounded-2xl">
       <AnimatePresence initial={false} custom={direction}>
         <motion.div
           key={currentIndex}
@@ -91,35 +90,36 @@ export default function Carousel({ images, autoPlayInterval = 5000 }: CarouselPr
           }}
           className="absolute inset-0"
         >
-          {/* Gradient Background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#FF6B35] via-[#F7931E] to-[#FF8C42]" />
+          {/* Gradient Background - разные для каждого слайда */}
+          <div 
+            className={`absolute inset-0 ${
+              currentIndex === 0 
+                ? 'bg-gradient-to-br from-[#FF6B35] via-[#F7931E] to-[#FF8C42]'
+                : currentIndex === 1
+                ? 'bg-gradient-to-br from-[#4ECDC4] via-[#44A08D] to-[#06D6A0]'
+                : 'bg-gradient-to-br from-[#667eea] via-[#764ba2] to-[#f093fb]'
+            }`}
+          />
           
-          {/* Image */}
-          {images[currentIndex].url && (
-            <div className="absolute inset-0">
-              <Image
-                src={images[currentIndex].url}
-                alt={images[currentIndex].alt}
-                fill
-                className="object-cover mix-blend-overlay opacity-30"
-                priority
-                onError={(e) => {
-                  // Hide image if it fails to load
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-            </div>
-          )}
+          {/* Декоративные элементы */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
+            <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
+          </div>
+          
+          {/* Image - убрано, чтобы не показывать фоновый текст ProfiTech */}
           
           {/* Overlay with text */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-center justify-center">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent flex items-center justify-center">
             <div className="container mx-auto px-4 text-center">
               {images[currentIndex].title && (
                 <motion.h2
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
-                  className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 drop-shadow-lg"
+                  className="carousel-text text-4xl md:text-6xl lg:text-7xl font-bold mb-6 text-white"
+                  style={{ color: '#ffffff', textShadow: '0 2px 4px rgba(0, 0, 0, 0.2)' }}
                 >
                   {images[currentIndex].title}
                 </motion.h2>
@@ -129,21 +129,31 @@ export default function Carousel({ images, autoPlayInterval = 5000 }: CarouselPr
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="text-xl md:text-2xl lg:text-3xl text-white/95 max-w-3xl mx-auto mb-8 drop-shadow-lg"
+                  className="carousel-text text-xl md:text-2xl lg:text-3xl max-w-3xl mx-auto mb-8 text-white"
+                  style={{ color: '#ffffff', textShadow: '0 1px 3px rgba(0, 0, 0, 0.2)' }}
                 >
                   {images[currentIndex].description}
                 </motion.p>
               )}
               {images[currentIndex].link && (
-                <motion.a
+                <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
-                  href={images[currentIndex].link}
-                  className="inline-block px-10 py-4 bg-white text-[#FF6B35] font-bold text-lg rounded-full hover:shadow-2xl transform hover:scale-105 transition-all"
                 >
-                  Подробнее →
-                </motion.a>
+                  <Link
+                    href={images[currentIndex].link}
+                    className={`inline-block px-10 py-4 font-bold text-lg rounded-full hover:shadow-2xl transform hover:scale-105 transition-all ${
+                      currentIndex === 0
+                        ? 'bg-white text-[#FF6B35]'
+                        : currentIndex === 1
+                        ? 'bg-white text-[#4ECDC4]'
+                        : 'bg-white text-[#667eea]'
+                    }`}
+                  >
+                    Подробнее →
+                  </Link>
+                </motion.div>
               )}
             </div>
           </div>

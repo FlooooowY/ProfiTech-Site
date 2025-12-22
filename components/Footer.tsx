@@ -8,7 +8,7 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-gradient-to-br from-gray-900 to-gray-800 text-white pt-16 pb-8">
+    <footer className="bg-gradient-to-br from-gray-900 to-gray-800 text-white" style={{ paddingTop: '80px', paddingBottom: '40px', marginTop: '40px', paddingLeft: '32px', paddingRight: '32px' }}>
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
           {/* О компании */}
@@ -89,10 +89,10 @@ export default function Footer() {
                 <Mail className="w-5 h-5 text-[#FF6B35] mt-1 flex-shrink-0" />
                 <div>
                   <a
-                    href="mailto:info@profitech.ru"
+                    href={`mailto:${COMPANY_INFO.email}`}
                     className="text-gray-400 hover:text-white transition-colors"
                   >
-                    info@profitech.ru
+                    {COMPANY_INFO.email}
                   </a>
                 </div>
               </li>

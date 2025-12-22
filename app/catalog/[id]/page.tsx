@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { ArrowLeft, ShoppingCart, Share2, Heart, Phone } from 'lucide-react';
 import { useCatalogStore } from '@/store/catalogStore';
@@ -22,20 +21,28 @@ export default function ProductPage() {
   useEffect(() => {
     const loadData = async () => {
       try {
+        if (!params.id) {
+          setProduct(null);
+          return;
+        }
+
+        // Декодируем ID из URL
+        const decodedId = decodeURIComponent(String(params.id));
+
         // Всегда загружаем данные если их нет в store
         if (products.length === 0) {
           const response = await fetch('/data/products.json');
           if (response.ok) {
             const data = await response.json();
             useCatalogStore.getState().setProducts(data);
-            const foundProduct = data.find((p: Product) => p.id === params.id);
+            const foundProduct = data.find((p: Product) => p.id === decodedId || p.id === params.id);
             setProduct(foundProduct || null);
           } else {
             setProduct(null);
           }
         } else {
           // Если данные уже есть, просто ищем продукт
-          const foundProduct = products.find(p => p.id === params.id);
+          const foundProduct = products.find(p => p.id === decodedId || p.id === params.id);
           setProduct(foundProduct || null);
         }
       } catch (error) {
@@ -106,11 +113,9 @@ export default function ProductPage() {
               className="aspect-square bg-white rounded-lg overflow-hidden shadow-lg"
             >
               {product.images && product.images[selectedImage] ? (
-                <Image
+                <img
                   src={product.images[selectedImage]}
                   alt={product.name}
-                  width={800}
-                  height={800}
                   className="w-full h-full object-contain"
                 />
               ) : (
@@ -133,11 +138,9 @@ export default function ProductPage() {
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
-                    <Image
+                    <img
                       src={image}
                       alt={`${product.name} - ${index + 1}`}
-                      width={100}
-                      height={100}
                       className="w-full h-full object-cover"
                     />
                   </button>

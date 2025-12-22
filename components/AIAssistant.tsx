@@ -87,7 +87,7 @@ export default function AIAssistant() {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
             onClick={toggleChat}
-            className="fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-r from-[#FF6B35] to-[#F7931E] text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform z-40"
+            className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-16 h-16 bg-gradient-to-r from-[#FF6B35] to-[#F7931E] text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-transform z-40"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -104,7 +104,7 @@ export default function AIAssistant() {
             initial={{ opacity: 0, y: 100, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 100, scale: 0.9 }}
-            className="fixed bottom-6 right-6 w-96 h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden"
+            className="fixed bottom-6 right-6 w-[calc(100vw-3rem)] max-w-96 sm:w-96 h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden"
           >
             {/* Header */}
             <div className="bg-gradient-to-r from-[#FF6B35] to-[#F7931E] p-4 flex items-center justify-between">

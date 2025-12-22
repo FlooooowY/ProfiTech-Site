@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, products } = await request.json();
+    const { message } = await request.json();
 
     // Простая логика ответа на основе ключевых слов (заглушка)
     // В реальном приложении здесь будет вызов OpenAI API

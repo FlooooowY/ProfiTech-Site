@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Upload, Download, Database, CheckCircle, XCircle, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+import { Upload, Database, CheckCircle, XCircle, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 
 interface ImportStats {
   totalFiles?: number;
@@ -80,7 +80,7 @@ export default function AdminPage() {
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             <span className="gradient-text">Панель администратора</span>
           </h1>
-          <p className="text-gray-600 text-lg">
+          <p className="text-gray-900 text-lg">
             Управление импортом каталога товаров (126к+ позиций)
           </p>
         </div>
@@ -95,7 +95,7 @@ export default function AdminPage() {
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold">Импорт каталога</h2>
-                  <p className="text-sm text-gray-600">Загрузка товаров из CSV файлов</p>
+                  <p className="text-sm text-gray-900">Загрузка товаров из CSV файлов</p>
                 </div>
               </div>
 
@@ -108,7 +108,7 @@ export default function AdminPage() {
                       <ol className="list-decimal list-inside space-y-1">
                         <li>CSV файлы уже в папке <code className="bg-blue-100 px-1 rounded">public/uploads/csv/</code></li>
                         <li>Найдено <strong>431 файл</strong> по категориям</li>
-                        <li>Нажмите "Запустить импорт" ниже</li>
+                        <li>Нажмите &quot;Запустить импорт&quot; ниже</li>
                         <li>Дождитесь завершения (может занять несколько минут)</li>
                       </ol>
                     </div>

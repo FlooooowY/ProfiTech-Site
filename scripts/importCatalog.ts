@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { parse } from 'csv-parse/sync';
-import { Product } from '@/types';
+import type { Product } from '@/types';
 import { CATEGORY_MAPPING } from '@/utils/categoryMapping';
 
 interface CSVRow {
@@ -247,20 +247,42 @@ function extractCategoryNameFromId(categoryId: string): string {
 /**
  * Сохраняет импортированные продукты в JSON файл
  */
-export function saveProductsToJSON(products: Product[], outputPath: string = 'public/data/products.json') {
+export function saveProductsToJSON(products: Product[], outputPath?: string) {
   try {
+    // Используем абсолютный путь через process.cwd()
+    const defaultPath = path.join(process.cwd(), 'public/data/products.json');
+    const finalPath = outputPath ? (path.isAbsolute(outputPath) ? outputPath : path.join(process.cwd(), outputPath)) : defaultPath;
+    
+    console.log(`💾 Сохранение продуктов в: ${finalPath}`);
+    console.log(`📦 Количество продуктов: ${products.length}`);
+    
     // Создаем директорию если не существует
-    const dir = path.dirname(outputPath);
+    const dir = path.dirname(finalPath);
     if (!fs.existsSync(dir)) {
+      console.log(`📁 Создание директории: ${dir}`);
       fs.mkdirSync(dir, { recursive: true });
     }
 
     // Сохраняем продукты
-    fs.writeFileSync(outputPath, JSON.stringify(products, null, 2), 'utf-8');
-    console.log(`\nПродукты сохранены в: ${outputPath}`);
+    const jsonContent = JSON.stringify(products, null, 2);
+    fs.writeFileSync(finalPath, jsonContent, 'utf-8');
+    
+    // Проверяем, что файл действительно создан
+    if (!fs.existsSync(finalPath)) {
+      throw new Error(`Файл не был создан: ${finalPath}`);
+    }
+    
+    const stats = fs.statSync(finalPath);
+    console.log(`✅ Продукты успешно сохранены в: ${finalPath}`);
+    console.log(`📊 Размер файла: ${(stats.size / 1024 / 1024).toFixed(2)} MB`);
     return true;
   } catch (error) {
-    console.error(`Ошибка сохранения: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(`❌ Ошибка сохранения продуктов:`);
+    console.error(`   Путь: ${outputPath || 'default'}`);
+    console.error(`   Ошибка: ${error instanceof Error ? error.message : String(error)}`);
+    if (error instanceof Error && error.stack) {
+      console.error(`   Stack: ${error.stack}`);
+    }
     return false;
   }
 }
@@ -270,10 +292,14 @@ export function saveProductsToJSON(products: Product[], outputPath: string = 'pu
  */
 export function saveCategoriesToJSON(
   categories: Map<string, { name: string; subcategories: Set<string> }>,
-  outputPath: string = 'public/data/categories.json'
+  outputPath?: string
 ) {
   try {
-    const dir = path.dirname(outputPath);
+    // Используем абсолютный путь через process.cwd()
+    const defaultPath = path.join(process.cwd(), 'public/data/categories.json');
+    const finalPath = outputPath ? (path.isAbsolute(outputPath) ? outputPath : path.join(process.cwd(), outputPath)) : defaultPath;
+    
+    const dir = path.dirname(finalPath);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
@@ -291,11 +317,28 @@ export function saveCategoriesToJSON(
       })),
     }));
 
-    fs.writeFileSync(outputPath, JSON.stringify(categoriesArray, null, 2), 'utf-8');
-    console.log(`Категории сохранены в: ${outputPath}`);
+    console.log(`💾 Сохранение категорий в: ${finalPath}`);
+    console.log(`📦 Количество категорий: ${categoriesArray.length}`);
+    
+    const jsonContent = JSON.stringify(categoriesArray, null, 2);
+    fs.writeFileSync(finalPath, jsonContent, 'utf-8');
+    
+    // Проверяем, что файл действительно создан
+    if (!fs.existsSync(finalPath)) {
+      throw new Error(`Файл не был создан: ${finalPath}`);
+    }
+    
+    const stats = fs.statSync(finalPath);
+    console.log(`✅ Категории успешно сохранены в: ${finalPath}`);
+    console.log(`📊 Размер файла: ${(stats.size / 1024).toFixed(2)} KB`);
     return true;
   } catch (error) {
-    console.error(`Ошибка сохранения категорий: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(`❌ Ошибка сохранения категорий:`);
+    console.error(`   Путь: ${outputPath || 'default'}`);
+    console.error(`   Ошибка: ${error instanceof Error ? error.message : String(error)}`);
+    if (error instanceof Error && error.stack) {
+      console.error(`   Stack: ${error.stack}`);
+    }
     return false;
   }
 }

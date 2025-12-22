@@ -1,7 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trash2, Plus, Minus, ShoppingCart, ArrowRight } from 'lucide-react';
@@ -91,11 +89,9 @@ export default function CartPage() {
                   {/* Product Image */}
                   <div className="w-full sm:w-32 h-32 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                     {item.product.images && item.product.images[0] ? (
-                      <Image
+                      <img
                         src={item.product.images[0]}
                         alt={item.product.name}
-                        width={128}
-                        height={128}
                         className="w-full h-full object-cover"
                       />
                     ) : (

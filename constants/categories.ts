@@ -110,6 +110,15 @@ export const CATEGORIES: Category[] = [
 export const COMPANY_INFO = {
   name: 'ProfiTech',
   slogan: 'От идеи до воплощения',
-  defaultWhatsApp: '+79389000059',
+  defaultWhatsApp: '89389000059',
+  telegram: '89389000059',
+  telegramChannel: 'https://t.me/profitech_channel',
+  email: 'saaev2019@bk.ru',
+  workingHours: {
+    weekdays: 'Пн-Пт: 9:00 - 20:00',
+    saturday: 'Сб: до 15:00',
+    sunday: 'Вс: выходной',
+    full: 'Пн-Пт: 9:00 - 20:00, Сб: до 15:00, Вс: выходной',
+  },
 };
 

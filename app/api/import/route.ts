@@ -1,11 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { importAllCatalogs, saveProductsToJSON, saveCategoriesToJSON } from '@/scripts/importCatalog';
+import fs from 'fs';
+import path from 'path';
 
 /**
  * API endpoint для импорта каталога из CSV файлов
  * POST /api/import
  */
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     console.log('📦 Начинаем импорт каталога...');
 
@@ -67,8 +69,6 @@ export async function POST(request: NextRequest) {
  */
 export async function GET() {
   try {
-    const fs = require('fs');
-    const path = require('path');
 
     const productsPath = path.join(process.cwd(), 'public/data/products.json');
     const categoriesPath = path.join(process.cwd(), 'public/data/categories.json');

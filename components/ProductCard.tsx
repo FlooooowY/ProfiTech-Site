@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ShoppingCart, Eye, Heart } from 'lucide-react';
@@ -39,8 +38,15 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
     setIsFavorite(!isFavorite);
   };
 
+  if (!product || !product.id) {
+    return null;
+  }
+
+  // Безопасное кодирование ID для URL
+  const productId = encodeURIComponent(product.id);
+
   return (
-    <Link href={`/catalog/${product.id}`}>
+    <Link href={`/catalog/${productId}`}>
       <motion.div
         className="card overflow-hidden group cursor-pointer"
         initial={{ opacity: 0, y: 20 }}
@@ -52,15 +58,11 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
       {/* Image Container */}
       <div className="relative aspect-square bg-gray-100 overflow-hidden">
         {product.images && product.images.length > 0 ? (
-          <Image
+          <img
             src={product.images[0]}
             alt={product.name}
-            fill
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
             loading="lazy"
-            placeholder="blur"
-            blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgZmlsbD0iI2YzZjRmNiIvPjwvc3ZnPg=="
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            className="object-cover group-hover:scale-110 transition-transform duration-500"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
               target.style.display = 'none';
@@ -111,13 +113,13 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
         >
           <Heart
             className={`w-5 h-5 ${
-              isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-600'
+              isFavorite ? 'fill-red-500 text-red-500' : 'text-gray-800'
             }`}
           />
         </button>
 
         {/* Manufacturer Badge */}
-        <div className="absolute top-3 left-3 px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-medium text-gray-700">
+        <div className="absolute top-3 left-3 px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-medium text-gray-900">
           {product.manufacturer}
         </div>
       </div>
@@ -128,7 +130,7 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
           {product.name}
         </h3>
         
-        <p className="text-sm text-gray-600 line-clamp-2 mb-3">
+        <p className="text-sm text-gray-800 line-clamp-2 mb-3">
           {getShortDescription(product.description, 100)}
         </p>
 
@@ -136,9 +138,9 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
         {product.characteristics && product.characteristics.length > 0 && (
           <div className="mb-3 space-y-1">
             {product.characteristics.slice(0, 2).map((char, index) => (
-              <div key={index} className="flex items-center text-xs text-gray-500">
+              <div key={index} className="flex items-center text-xs text-gray-700">
                 <span className="font-medium mr-2">{char.name}:</span>
-                <span className="text-gray-700">{char.value}</span>
+                <span className="text-gray-900">{char.value}</span>
               </div>
             ))}
           </div>
