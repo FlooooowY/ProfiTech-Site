@@ -871,20 +871,7 @@ export default function CatalogPage() {
                   <div className="text-center py-12">
                     <p className="text-gray-600">Товары не найдены по выбранным фильтрам</p>
                     <button
-                      onClick={() => {
-                        setPendingFilters({
-                          category: '',
-                          subcategories: [],
-                          manufacturers: [],
-                          characteristics: {}
-                        });
-                        setAppliedCategory('');
-                        setAppliedSubcategories([]);
-                        setAppliedManufacturers([]);
-                        setAppliedCharacteristics({});
-                        setCurrentPage(1);
-                        clearFilters();
-                      }}
+                      onClick={handleResetFilters}
                       className="mt-4 px-6 py-3 bg-gradient-to-r from-[#FF6B35] to-[#F7931E] text-white font-semibold rounded-full hover:shadow-lg transition-all"
                     >
                       Сбросить фильтры
