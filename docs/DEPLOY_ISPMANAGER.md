@@ -96,16 +96,25 @@ node --version
 
 ## Шаг 4: Установка зависимостей
 
+**Важно:** Для сборки Next.js нужны devDependencies (TypeScript и др.), поэтому используем полную установку, но с увеличенным лимитом памяти.
+
 ### Через SSH:
 ```bash
 cd domains/profitech.store/public_html
-npm install --production
+
+# Увеличьте лимит памяти Node.js и установите зависимости
+NODE_OPTIONS="--max-old-space-size=4096" npm install
+
+# Или если памяти все равно не хватает, используйте:
+NODE_OPTIONS="--max-old-space-size=2048" npm install --legacy-peer-deps
 ```
 
 ### Через ISPmanager:
 1. Откройте терминал в панели ISPmanager
 2. Перейдите в папку проекта
-3. Выполните `npm install --production`
+3. Выполните: `NODE_OPTIONS="--max-old-space-size=4096" npm install`
+
+**Примечание:** Если все равно не хватает памяти, см. раздел "Решение проблем" → "Нехватка памяти при установке зависимостей"
 
 ---
 
