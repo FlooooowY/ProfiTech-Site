@@ -185,10 +185,10 @@ sudo mysql -u root -p
 CREATE DATABASE u3364352_default CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- Создайте пользователя
-CREATE USER 'u3364352_default'@'localhost' IDENTIFIED BY 'nDpDE4luD7G84uk3!@#';
+CREATE USER 'admin_db'@'localhost' IDENTIFIED BY 'admin_db';
 
 -- Выдайте права
-GRANT ALL PRIVILEGES ON u3364352_default.* TO 'u3364352_default'@'localhost';
+GRANT ALL PRIVILEGES ON u3364352_default.* TO 'admin_db'@'localhost';
 
 -- Примените изменения
 FLUSH PRIVILEGES;
@@ -292,8 +292,8 @@ cat .env.local
 Должно быть:
 ```env
 DB_HOST=localhost
-DB_USER=u3364352_default
-DB_PASSWORD=nDpDE4luD7G84uk3!@#
+DB_USER=admin_db
+DB_PASSWORD=admin_db
 DB_NAME=u3364352_default
 NODE_ENV=production
 NEXT_PUBLIC_SITE_URL=https://profitech.store
@@ -735,13 +735,13 @@ pm2 monit
 
 ```bash
 # Войти в MySQL
-mysql -u u3364352_default -p
+mysql -u admin_db -p
 
 # Проверить размер базы данных
-mysql -u u3364352_default -p -e "SELECT table_schema AS 'Database', ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS 'Size (MB)' FROM information_schema.tables WHERE table_schema = 'u3364352_default' GROUP BY table_schema;"
+mysql -u admin_db -p -e "SELECT table_schema AS 'Database', ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS 'Size (MB)' FROM information_schema.tables WHERE table_schema = 'u3364352_default' GROUP BY table_schema;"
 
 # Проверить количество товаров
-mysql -u u3364352_default -p -e "SELECT COUNT(*) as total_products FROM products;" u3364352_default
+mysql -u admin_db -p -e "SELECT COUNT(*) as total_products FROM products;" u3364352_default
 ```
 
 ### Управление Nginx:
@@ -801,10 +801,10 @@ pm2 restart profitech
 mkdir -p ~/backups
 
 # Создайте бэкап
-mysqldump -u u3364352_default -p u3364352_default > ~/backups/db_backup_$(date +%Y%m%d_%H%M%S).sql
+mysqldump -u admin_db -p u3364352_default > ~/backups/db_backup_$(date +%Y%m%d_%H%M%S).sql
 
 # Создайте сжатый бэкап
-mysqldump -u u3364352_default -p u3364352_default | gzip > ~/backups/db_backup_$(date +%Y%m%d_%H%M%S).sql.gz
+mysqldump -u admin_db -p u3364352_default | gzip > ~/backups/db_backup_$(date +%Y%m%d_%H%M%S).sql.gz
 ```
 
 ### Автоматическое резервное копирование (cron):
@@ -814,7 +814,7 @@ mysqldump -u u3364352_default -p u3364352_default | gzip > ~/backups/db_backup_$
 crontab -e
 
 # Добавьте задачу (каждый день в 3:00)
-0 3 * * * mysqldump -u u3364352_default -pnDpDE4luD7G84uk3 u3364352_default | gzip > ~/backups/db_backup_$(date +\%Y\%m\%d).sql.gz
+0 3 * * * mysqldump -u admin_db -pnDpDE4luD7G84uk3 u3364352_default | gzip > ~/backups/db_backup_$(date +\%Y\%m\%d).sql.gz
 ```
 
 ---
@@ -869,7 +869,7 @@ pm2 status
 2. **Проверьте подключение к базе данных:**
    ```bash
    # Попробуйте подключиться к MySQL
-   mysql -u u3364352_default -p
+   mysql -u admin_db -p
    # Введите пароль: nDpDE4luD7G84uk3!@#
    
    # Проверьте, что база данных существует
@@ -903,7 +903,7 @@ pm2 status
    ```bash
    cd ~/ProfiTech-Site
    # Проверьте таблицы
-   mysql -u u3364352_default -p -e "SHOW TABLES;" u3364352_default
+   mysql -u admin_db -p -e "SHOW TABLES;" u3364352_default
    # Должны быть: categories, subcategories, products, product_characteristics, filter_cache
    ```
 
@@ -974,7 +974,7 @@ pm2 status
 1. Проверьте `.env.local` файл
 2. Проверьте, что MySQL запущен: `sudo systemctl status mysql`
 3. Проверьте права пользователя БД
-4. Проверьте подключение: `mysql -u u3364352_default -p`
+4. Проверьте подключение: `mysql -u admin_db -p`
 
 ### Медленная работа:
 
