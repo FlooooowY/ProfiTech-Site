@@ -10,7 +10,8 @@
     "import": "tsx scripts/importCatalog.ts",
     "db:create": "node scripts/createTables.js",
     "db:import-categories": "node scripts/importCategories.js",
-    "db:import-products": "node scripts/importToMySQL.js"
+    "db:import-products": "node scripts/importToMySQL.js",
+    "db:check": "node scripts/checkDatabase.js"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.12",
