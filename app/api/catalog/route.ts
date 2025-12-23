@@ -232,18 +232,36 @@ export async function GET(request: NextRequest) {
     }
 
     // Формируем результат
-    const formattedProducts: Product[] = products.map((p: any) => ({
-      id: p.id,
-      name: p.name,
-      description: p.description || '',
-      categoryId: p.categoryId,
-      subcategoryId: p.subcategoryId || undefined,
-      manufacturer: p.manufacturer || 'Не указан',
-      characteristics: characteristicsMap.get(p.id) || [],
-      images: p.images ? JSON.parse(p.images) : [],
-      createdAt: p.createdAt ? new Date(p.createdAt).toISOString() : new Date().toISOString(),
-      updatedAt: p.updatedAt ? new Date(p.updatedAt).toISOString() : new Date().toISOString()
-    }));
+    const formattedProducts: Product[] = products.map((p: any) => {
+      // Обрабатываем images - может быть уже массивом, строкой JSON или null
+      let images: string[] = [];
+      if (p.images) {
+        if (Array.isArray(p.images)) {
+          images = p.images;
+        } else if (typeof p.images === 'string') {
+          try {
+            const parsed = JSON.parse(p.images);
+            images = Array.isArray(parsed) ? parsed : [];
+          } catch (e) {
+            console.error('[API Catalog] Error parsing images for product', p.id, ':', e);
+            images = [];
+          }
+        }
+      }
+
+      return {
+        id: p.id,
+        name: p.name,
+        description: p.description || '',
+        categoryId: p.categoryId,
+        subcategoryId: p.subcategoryId || undefined,
+        manufacturer: p.manufacturer || 'Не указан',
+        characteristics: characteristicsMap.get(p.id) || [],
+        images,
+        createdAt: p.createdAt ? new Date(p.createdAt).toISOString() : new Date().toISOString(),
+        updatedAt: p.updatedAt ? new Date(p.updatedAt).toISOString() : new Date().toISOString()
+      };
+    });
 
     const totalPages = Math.ceil(total / limit);
     const queryTime = performance.now() - startTime;
