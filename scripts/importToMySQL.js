@@ -51,7 +51,27 @@ async function importProducts() {
     const productsData = JSON.parse(fs.readFileSync(productsPath, 'utf-8'));
     const validProducts = productsData.filter(p => p && p.id);
     
-    console.log(`Found ${validProducts.length} products to import`);
+    console.log(`Found ${validProducts.length} products in JSON`);
+    
+    // Удаляем дубликаты по ID (оставляем последний)
+    const uniqueProductsMap = new Map();
+    let duplicatesCount = 0;
+    
+    for (const product of validProducts) {
+      if (uniqueProductsMap.has(product.id)) {
+        duplicatesCount++;
+        // Заменяем на последний найденный (или можно оставить первый - заменить на has)
+      }
+      uniqueProductsMap.set(product.id, product);
+    }
+    
+    const uniqueProducts = Array.from(uniqueProductsMap.values());
+    
+    if (duplicatesCount > 0) {
+      console.log(`⚠️  Found ${duplicatesCount} duplicate product IDs, keeping unique entries`);
+    }
+    
+    console.log(`Importing ${uniqueProducts.length} unique products`);
 
     // Проверяем, что категории уже импортированы
     const [categoryCheck] = await connection.query('SELECT COUNT(*) as count FROM categories');
@@ -63,7 +83,7 @@ async function importProducts() {
     // Собираем все уникальные подкатегории из товаров
     console.log('Analyzing subcategories...');
     const subcategoryMap = new Map(); // subcategoryId -> { categoryId, name }
-    for (const product of validProducts) {
+    for (const product of uniqueProducts) {
       if (product.subcategoryId && product.categoryId) {
         if (!subcategoryMap.has(product.subcategoryId)) {
           // Извлекаем название подкатегории из ID (например, "бытовая-техника-встраиваемая-техника" -> "Встраиваемая техника")
@@ -129,8 +149,8 @@ async function importProducts() {
     const batchSize = 1000;
     let imported = 0;
 
-    for (let i = 0; i < validProducts.length; i += batchSize) {
-      const batch = validProducts.slice(i, i + batchSize);
+    for (let i = 0; i < uniqueProducts.length; i += batchSize) {
+      const batch = uniqueProducts.slice(i, i + batchSize);
       
       // Подготавливаем данные для батча
       const productsValues = [];
@@ -162,15 +182,15 @@ async function importProducts() {
         }
       }
 
-      // Вставляем товары
+      // Вставляем товары (используем INSERT IGNORE для пропуска дубликатов на случай, если они все же есть)
       if (productsValues.length > 0) {
         const productsSql = `
-          INSERT INTO products (id, name, description, category_id, subcategory_id, manufacturer, images)
+          INSERT IGNORE INTO products (id, name, description, category_id, subcategory_id, manufacturer, images)
           VALUES ?
         `;
         await connection.query(productsSql, [productsValues]);
         imported += productsValues.length;
-        console.log(`✓ Imported ${imported}/${validProducts.length} products`);
+        console.log(`✓ Imported ${imported}/${uniqueProducts.length} products`);
       }
 
       // Вставляем характеристики батчами
