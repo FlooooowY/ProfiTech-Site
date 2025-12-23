@@ -28,7 +28,7 @@ async function importCategories() {
     }));
     
     if (categoriesDocs.length > 0) {
-      await categoriesCollection.insertMany(categoriesDocs);
+      await categoriesCollection.insertMany(categoriesDocs as any);
       console.log(`✓ Imported ${categoriesDocs.length} categories`);
     }
 
@@ -53,7 +53,7 @@ async function importCategories() {
     });
 
     if (subcategoriesDocs.length > 0) {
-      await subcategoriesCollection.insertMany(subcategoriesDocs);
+      await subcategoriesCollection.insertMany(subcategoriesDocs as any);
       console.log(`✓ Imported ${subcategoriesDocs.length} subcategories`);
     }
 
