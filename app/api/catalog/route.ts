@@ -256,9 +256,23 @@ export async function GET(request: NextRequest) {
         const subcategories = subcategoriesParam.split(',').filter(Boolean);
         if (subcategories.length > 0) {
           // Проверяем реальные subcategoryId в базе
-          const sampleProduct = await productsCollection.findOne({ categoryId }, { maxTimeMS: 5000 });
-          console.log('[API Catalog] Sample product subcategoryId:', sampleProduct?.subcategoryId);
+          const sampleProducts = await productsCollection
+            .find({ categoryId }, { maxTimeMS: 5000 })
+            .limit(10)
+            .toArray();
+          
+          console.log('[API Catalog] Sample products subcategoryIds:');
+          sampleProducts.forEach((prod: any, idx: number) => {
+            console.log(`  [${idx + 1}] subcategoryId: ${prod.subcategoryId}`);
+          });
+          
+          // Проверяем уникальные форматы subcategoryId в базе для этой категории
+          const uniqueSubcategoryIds = await productsCollection
+            .distinct('subcategoryId', { categoryId }, { maxTimeMS: 5000 });
+          console.log('[API Catalog] Unique subcategoryIds in DB for category', categoryId, ':', uniqueSubcategoryIds.slice(0, 10));
+          
           console.log('[API Catalog] Looking for subcategoryId:', subcategories[0]);
+          console.log('[API Catalog] Filter subcategoryId values:', filter.subcategoryId);
           
           // Проверяем, есть ли товары с таким subcategoryId
           const subCount = await productsCollection.countDocuments({ 
