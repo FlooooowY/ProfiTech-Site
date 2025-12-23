@@ -46,6 +46,8 @@ async function fixSubcategoryIds() {
     let updated = 0;
     let skipped = 0;
     let errors = 0;
+    let debugCount = 0;
+    const debugSamples: any[] = [];
 
     // Обрабатываем товары батчами
     const batchSize = 1000;
@@ -92,6 +94,20 @@ async function fixSubcategoryIds() {
             // Уже правильный формат - совпадает со slug из констант
             skipped++;
             continue;
+          }
+          
+          // Если не совпадает, собираем информацию для отладки
+          if (debugCount < 5) {
+            const categorySubs = subcategories.filter((sub: any) => sub.categoryId === prod.categoryId);
+            debugSamples.push({
+              productId: prod._id,
+              categoryId: prod.categoryId,
+              categorySlug,
+              currentSubcategoryId,
+              subcategoryPart,
+              availableSubSlugs: categorySubs.map((s: any) => s.slug || s._id).slice(0, 5)
+            });
+            debugCount++;
           }
           // Если не совпадает, нужно исправить
         }
@@ -212,6 +228,19 @@ async function fixSubcategoryIds() {
     console.log(`✅ Обновлено: ${updated}`);
     console.log(`⏭️  Пропущено (уже правильный формат): ${skipped}`);
     console.log(`❌ Ошибок: ${errors}`);
+    
+    if (debugSamples.length > 0) {
+      console.log('\n🔍 Примеры товаров для отладки:');
+      debugSamples.forEach((sample, idx) => {
+        console.log(`\n  Пример ${idx + 1}:`);
+        console.log(`    Товар ID: ${sample.productId}`);
+        console.log(`    Категория ID: ${sample.categoryId}, slug: ${sample.categorySlug}`);
+        console.log(`    Текущий subcategoryId: ${sample.currentSubcategoryId}`);
+        console.log(`    Часть после категории: ${sample.subcategoryPart}`);
+        console.log(`    Доступные slug подкатегорий: ${sample.availableSubSlugs.join(', ')}`);
+      });
+    }
+    
     console.log(`\n🎉 Миграция завершена!`);
 
   } catch (error) {
