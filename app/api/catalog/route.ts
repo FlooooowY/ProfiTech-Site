@@ -197,7 +197,50 @@ export async function GET(request: NextRequest) {
               { subcategoryId: { $in: allSubcategoryValues } }
             ];
             
-            // Добавляем regex паттерны для каждого slug
+            // Для категории 2 (кофеварки) добавляем кириллические варианты
+            // так как в базе товары имеют кириллический формат subcategoryId
+            if (categoryId === '2') {
+              for (const subDoc of subcategoryDocs) {
+                const subId = String(subDoc._id || subDoc.id);
+                const categoryFromConstants = CATEGORIES.find(cat => cat.id === categoryId);
+                const subFromConstants = categoryFromConstants?.subcategories?.find(sub => sub.id === subId);
+                
+                if (subFromConstants) {
+                  // Генерируем кириллический slug из названия подкатегории
+                  // Формат в базе: кофеварки-и-кофемашины-{название}
+                  const cyrillicSlug = subFromConstants.name
+                    .toLowerCase()
+                    .replace(/\s+/g, '-')
+                    .replace(/[^a-zа-яё0-9-]/gi, '')
+                    .replace(/-+/g, '-')
+                    .trim();
+                  
+                  const cyrillicFormat = `кофеварки-и-кофемашины-${cyrillicSlug}`;
+                  
+                  // Добавляем точное совпадение с кириллическим форматом
+                  orConditions.push({ subcategoryId: cyrillicFormat });
+                  
+                  // Добавляем простой regex для поиска по окончанию
+                  // Ищем строки, которые начинаются с "кофеварки-и-кофемашины-" и содержат ключевые слова из названия
+                  const keyWords = subFromConstants.name
+                    .toLowerCase()
+                    .split(/\s+/)
+                    .filter(w => w.length > 2 && !['для', 'и', 'или', 'с', 'на', 'в'].includes(w))
+                    .map(w => w.replace(/[^a-zа-яё0-9]/gi, ''));
+                  
+                  if (keyWords.length > 0) {
+                    // Простой паттерн: кофеварки-и-кофемашины- + любое из ключевых слов
+                    keyWords.forEach(word => {
+                      orConditions.push({
+                        subcategoryId: { $regex: `^кофеварки-и-кофемашины-.*${word}`, $options: 'i' }
+                      });
+                    });
+                  }
+                }
+              }
+            }
+            
+            // Добавляем regex паттерны для каждого латинского slug
             for (const subSlug of subcategorySlugs) {
               orConditions.push({
                 subcategoryId: { $regex: `-${subSlug}$`, $options: 'i' }
