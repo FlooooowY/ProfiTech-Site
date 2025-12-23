@@ -172,39 +172,12 @@ export async function GET(request: NextRequest) {
         // Используем только slug формат из констант
         const allSubcategoryValues = [...new Set(subcategoryValues)];
         
-        // Перед тем как применять фильтр, проверяем, есть ли в базе товары
-        // с такими subcategoryId для текущей категории.
-        let finalSubcategoryValues = allSubcategoryValues;
+        // Применяем фильтр по подкатегориям
         if (allSubcategoryValues.length > 0 && categoryId) {
-          const existingSubIds = await productsCollection.distinct(
-            'subcategoryId',
-            { categoryId },
-            { maxTimeMS: 5000 }
-          );
-          const existingSet = new Set(existingSubIds as string[]);
-          const intersection = allSubcategoryValues.filter(v => existingSet.has(v));
-
-          if (intersection.length === 0) {
-            // В базе нет товаров с выбранными подкатегориями — НЕ применяем фильтр,
-            // чтобы пользователь видел товары категории, а не пустой список.
-            console.log(
-              '[API Catalog] No products for selected subcategories, skipping subcategory filter. allSubcategoryValues=',
-              allSubcategoryValues,
-              'existingSubIds=',
-              existingSubIds
-            );
-            finalSubcategoryValues = [];
-          } else {
-            finalSubcategoryValues = intersection;
-          }
-        }
-
-        // Применяем фильтр по подкатегориям (только если есть реальные товары)
-        if (finalSubcategoryValues.length > 0 && categoryId) {
           const totalSubs = await subcategoriesCollection.countDocuments({ categoryId }, { maxTimeMS: 5000 });
           
           // Если выбраны не все подкатегории, применяем фильтр
-          if (finalSubcategoryValues.length !== totalSubs && finalSubcategoryValues.length > 0) {
+          if (allSubcategoryValues.length !== totalSubs && allSubcategoryValues.length > 0) {
             // Создаем список всех возможных slug подкатегорий для regex поиска
             const subcategorySlugs: string[] = [];
             
@@ -220,7 +193,7 @@ export async function GET(request: NextRequest) {
             
             // Используем $or для поиска: точное совпадение ИЛИ regex (заканчивается на нужный slug)
             const orConditions: any[] = [
-              { subcategoryId: { $in: finalSubcategoryValues } }
+              { subcategoryId: { $in: allSubcategoryValues } }
             ];
             
             // Для категории 2 (кофеварки) добавляем поддержку разных форматов
@@ -274,14 +247,14 @@ export async function GET(request: NextRequest) {
             console.log('[API Catalog] Applied subcategory filter with', orConditions.length, 'conditions');
           }
           // Если все подкатегории выбраны, не добавляем фильтр (работаем как с категорией)
-        } else if (finalSubcategoryValues.length > 0) {
+        } else if (allSubcategoryValues.length > 0) {
           // Если нет categoryId, но есть подкатегории, применяем простой фильтр
-          filter.subcategoryId = { $in: finalSubcategoryValues };
+          filter.subcategoryId = { $in: allSubcategoryValues };
         }
         
         console.log('[API Catalog] Subcategory IDs:', subcategories);
         console.log('[API Catalog] Category slug:', categorySlug);
-        console.log('[API Catalog] Subcategory values for filter:', finalSubcategoryValues);
+        console.log('[API Catalog] Subcategory values for filter:', allSubcategoryValues);
         console.log('[API Catalog] Filter after subcategory processing:', JSON.stringify(filter, null, 2));
       }
     }
