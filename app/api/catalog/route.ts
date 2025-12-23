@@ -209,12 +209,16 @@ export async function GET(request: NextRequest) {
          WHERE product_id IN (${placeholders})
          ORDER BY product_id, name`,
         productIds
-      ) as any[];
+      );
 
       // Убеждаемся, что результат - массив
-      const characteristics = Array.isArray(characteristicsResult) 
-        ? characteristicsResult 
-        : (Array.isArray(characteristicsResult[0]) ? characteristicsResult[0] : []);
+      let characteristics: any[] = [];
+      if (Array.isArray(characteristicsResult)) {
+        characteristics = characteristicsResult;
+      } else if (characteristicsResult && typeof characteristicsResult === 'object' && '0' in characteristicsResult) {
+        const firstElement = (characteristicsResult as any)[0];
+        characteristics = Array.isArray(firstElement) ? firstElement : [];
+      }
 
       characteristics.forEach((row: any) => {
         if (!characteristicsMap.has(row.product_id)) {
