@@ -63,8 +63,20 @@ export async function GET(request: NextRequest) {
     const productsCollection = await getCollection<Product>('products');
     
     // Проверяем подключение и количество товаров
-    const totalProducts = await productsCollection.countDocuments({}, { maxTimeMS: 5000 });
-    console.log('[API Catalog] Total products in DB:', totalProducts);
+    try {
+      const totalProducts = await productsCollection.countDocuments({}, { maxTimeMS: 5000 });
+      console.log('[API Catalog] Total products in DB:', totalProducts);
+      
+      if (totalProducts === 0) {
+        console.warn('[API Catalog] WARNING: No products found in database!');
+      }
+    } catch (dbError) {
+      console.error('[API Catalog] Database connection error:', dbError);
+      return NextResponse.json(
+        { error: 'Ошибка подключения к базе данных', details: dbError instanceof Error ? dbError.message : String(dbError) },
+        { status: 500 }
+      );
+    }
     
     // Строим фильтр MongoDB
     const filter: any = {};

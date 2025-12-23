@@ -28,7 +28,9 @@ async function connect() {
     await client.connect();
     db = client.db(dbName);
     
-    console.log('[MongoDB] Connected successfully');
+    // Проверяем подключение
+    await db.admin().ping();
+    console.log('[MongoDB] Connected successfully to database:', dbName);
     return { client, db };
   } catch (error) {
     console.error('[MongoDB] Connection error:', error);
