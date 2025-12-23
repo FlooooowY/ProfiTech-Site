@@ -91,29 +91,52 @@ export async function GET(request: NextRequest) {
       const subcategories = subcategoriesParam.split(',').filter(Boolean);
       if (subcategories.length > 0) {
         const subcategoriesCollection = await getCollection('subcategories');
+        const categoriesCollection = await getCollection('categories');
         
-        // Преобразуем ID подкатегорий в slug (так как в товарах хранится slug)
+        // Получаем документы подкатегорий и категории
         const subcategoryDocs = await subcategoriesCollection
           .find({ _id: { $in: subcategories } } as any)
           .toArray();
         
-        // Получаем slug из документов, или используем ID как fallback
-        const subcategorySlugs = subcategoryDocs.map((doc: any) => {
-          // Проверяем, есть ли slug в документе
-          if (doc.slug) return doc.slug;
-          // Если нет slug, используем _id (может быть уже slug)
-          return doc._id || doc.id;
-        });
+        // Получаем slug категории для формирования полного формата
+        let categorySlug = null;
+        if (categoryId) {
+          const categoryDoc = await categoriesCollection.findOne({ _id: categoryId } as any);
+          categorySlug = categoryDoc?.slug || categoryDoc?._id;
+        }
         
-        // Если не нашли по ID, пробуем искать по slug напрямую (на случай, если уже передан slug)
-        const allSubcategoryValues = [...new Set([...subcategories, ...subcategorySlugs])];
+        // Формируем полный формат subcategoryId: ${categorySlug}-${subcategorySlug}
+        // Это формат, который используется в товарах
+        const subcategoryValues: string[] = [];
+        
+        for (const subDoc of subcategoryDocs) {
+          const subSlug = subDoc.slug || subDoc._id || subDoc.id;
+          if (categorySlug) {
+            // Полный формат: категория-подкатегория
+            subcategoryValues.push(`${categorySlug}-${subSlug}`);
+          } else {
+            // Если нет категории, пробуем найти её через subcategory
+            const subCategoryId = subDoc.categoryId;
+            if (subCategoryId) {
+              const catDoc = await categoriesCollection.findOne({ _id: subCategoryId } as any);
+              const catSlug = catDoc?.slug || catDoc?._id || subCategoryId;
+              subcategoryValues.push(`${catSlug}-${subSlug}`);
+            } else {
+              // Fallback: используем только slug подкатегории
+              subcategoryValues.push(subSlug);
+            }
+          }
+        }
+        
+        // Также добавляем оригинальные ID на случай, если они уже в правильном формате
+        const allSubcategoryValues = [...new Set([...subcategories, ...subcategoryValues])];
         
         // Проверяем, выбраны ли все подкатегории категории
         if (categoryId) {
           const totalSubs = await subcategoriesCollection.countDocuments({ categoryId }, { maxTimeMS: 5000 });
           
           if (allSubcategoryValues.length !== totalSubs) {
-            // Не все подкатегории выбраны - фильтруем по выбранным (используем slug)
+            // Не все подкатегории выбраны - фильтруем по выбранным
             filter.subcategoryId = { $in: allSubcategoryValues };
           }
           // Если все подкатегории выбраны, не добавляем фильтр (работаем как с категорией)
@@ -122,8 +145,8 @@ export async function GET(request: NextRequest) {
         }
         
         console.log('[API Catalog] Subcategory IDs:', subcategories);
-        console.log('[API Catalog] Subcategory slugs:', subcategorySlugs);
-        console.log('[API Catalog] All subcategory values for filter:', allSubcategoryValues);
+        console.log('[API Catalog] Category slug:', categorySlug);
+        console.log('[API Catalog] Subcategory values for filter:', allSubcategoryValues);
       }
     }
 

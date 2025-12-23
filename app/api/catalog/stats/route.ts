@@ -65,36 +65,56 @@ export async function GET(request: NextRequest) {
     if (subcategoriesParam) {
       const subcategories = subcategoriesParam.split(',').filter(Boolean);
       if (subcategories.length > 0) {
-        // Преобразуем ID подкатегорий в slug (так как в товарах хранится slug)
+        const categoriesCollection = await getCollection('categories');
+        
+        // Получаем документы подкатегорий
         const subcategoryDocs = await subcategoriesCollection
           .find({ _id: { $in: subcategories } } as any)
           .toArray();
         
-        // Получаем slug из документов, или используем ID как fallback
-        const subcategorySlugs = subcategoryDocs.map((doc: any) => {
-          if (doc.slug) return doc.slug;
-          return doc._id || doc.id;
-        });
+        // Получаем slug категории для формирования полного формата
+        let categorySlug = null;
+        if (categoryId) {
+          const categoryDoc = await categoriesCollection.findOne({ _id: categoryId } as any);
+          categorySlug = categoryDoc?.slug || categoryDoc?._id;
+        }
         
-        // Если не нашли по ID, пробуем искать по slug напрямую
-        const allSubcategoryValues = [...new Set([...subcategories, ...subcategorySlugs])];
+        // Формируем полный формат subcategoryId: ${categorySlug}-${subcategorySlug}
+        const subcategoryValues: string[] = [];
+        
+        for (const subDoc of subcategoryDocs) {
+          const subSlug = subDoc.slug || subDoc._id || subDoc.id;
+          if (categorySlug) {
+            subcategoryValues.push(`${categorySlug}-${subSlug}`);
+          } else {
+            // Если нет категории, пробуем найти её через subcategory
+            const subCategoryId = subDoc.categoryId;
+            if (subCategoryId) {
+              const catDoc = await categoriesCollection.findOne({ _id: subCategoryId } as any);
+              const catSlug = catDoc?.slug || catDoc?._id || subCategoryId;
+              subcategoryValues.push(`${catSlug}-${subSlug}`);
+            } else {
+              subcategoryValues.push(subSlug);
+            }
+          }
+        }
+        
+        const allSubcategoryValues = [...new Set([...subcategories, ...subcategoryValues])];
         
         // Проверяем, выбраны ли все подкатегории категории
         if (categoryId) {
           const totalSubs = await subcategoriesCollection.countDocuments({ categoryId }, { maxTimeMS: 5000 });
           
-          // Если выбраны не все подкатегории, фильтруем по выбранным (используем slug)
           if (allSubcategoryValues.length !== totalSubs) {
             filter.subcategoryId = { $in: allSubcategoryValues };
           }
-          // Если все подкатегории выбраны, не добавляем фильтр (работаем как с категорией)
         } else {
           filter.subcategoryId = { $in: allSubcategoryValues };
         }
         
         console.log('[API Stats] Subcategory IDs:', subcategories);
-        console.log('[API Stats] Subcategory slugs:', subcategorySlugs);
-        console.log('[API Stats] All subcategory values for filter:', allSubcategoryValues);
+        console.log('[API Stats] Category slug:', categorySlug);
+        console.log('[API Stats] Subcategory values for filter:', allSubcategoryValues);
       }
     }
 
