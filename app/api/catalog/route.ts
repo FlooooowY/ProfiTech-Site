@@ -169,17 +169,47 @@ export async function GET(request: NextRequest) {
           }
         }
         
-        // Используем только slug формат (не добавляем ID, так как в базе только slug формат)
-        // После миграции все товары должны иметь формат: ${categorySlug}-${subcategorySlug}
+        // Используем только slug формат из констант
         const allSubcategoryValues = [...new Set(subcategoryValues)];
         
-        // Проверяем, выбраны ли все подкатегории категории
-        if (categoryId) {
+        // ВРЕМЕННО: используем $regex для поиска товаров с любым форматом subcategoryId
+        // который заканчивается на нужный slug подкатегории
+        // Это нужно до тех пор, пока все товары не будут обновлены скриптом
+        if (allSubcategoryValues.length > 0 && categoryId) {
           const totalSubs = await subcategoriesCollection.countDocuments({ categoryId }, { maxTimeMS: 5000 });
           
           if (allSubcategoryValues.length !== totalSubs && allSubcategoryValues.length > 0) {
-            // Не все подкатегории выбраны - фильтруем по выбранным
-            filter.subcategoryId = { $in: allSubcategoryValues };
+            // Создаем список всех возможных slug подкатегорий для regex поиска
+            const subcategorySlugs: string[] = [];
+            
+            for (const subDoc of subcategoryDocs) {
+              const subId = String(subDoc._id || subDoc.id);
+              const categoryFromConstants = CATEGORIES.find(cat => cat.id === categoryId);
+              const subFromConstants = categoryFromConstants?.subcategories?.find(sub => sub.id === subId);
+              
+              if (subFromConstants) {
+                subcategorySlugs.push(subFromConstants.slug);
+              }
+            }
+            
+            // Используем $or для поиска: точное совпадение ИЛИ regex (заканчивается на нужный slug)
+            const orConditions: any[] = [
+              { subcategoryId: { $in: allSubcategoryValues } }
+            ];
+            
+            // Добавляем regex паттерны для каждого slug
+            for (const subSlug of subcategorySlugs) {
+              orConditions.push({
+                subcategoryId: { $regex: `-${subSlug}$`, $options: 'i' }
+              });
+            }
+            
+            // Добавляем условие в фильтр
+            if (filter.$and) {
+              filter.$and.push({ $or: orConditions });
+            } else {
+              filter.$or = orConditions;
+            }
           }
           // Если все подкатегории выбраны, не добавляем фильтр (работаем как с категорией)
         } else {
@@ -188,9 +218,11 @@ export async function GET(request: NextRequest) {
           }
         }
         
+        const finalSubcategoryValues = allSubcategoryValues;
+        
         console.log('[API Catalog] Subcategory IDs:', subcategories);
         console.log('[API Catalog] Category slug:', categorySlug);
-        console.log('[API Catalog] Subcategory values for filter:', allSubcategoryValues);
+        console.log('[API Catalog] Subcategory values for filter:', finalSubcategoryValues);
       }
     }
 

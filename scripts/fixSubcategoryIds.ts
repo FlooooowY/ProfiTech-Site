@@ -105,12 +105,12 @@ async function fixSubcategoryIds() {
         const expectedPrefix = `${categorySlug}-`;
         
         // Проверяем, начинается ли с правильного префикса категории (латиница)
+        let needsUpdate = true;
         if (currentSubcategoryId.startsWith(expectedPrefix)) {
           // Извлекаем часть после категории
           const subcategoryPart = currentSubcategoryId.substring(expectedPrefix.length);
           
           // Проверяем, совпадает ли эта часть ТОЧНО с каким-либо slug подкатегории из КОНСТАНТ
-          // Ищем все подкатегории этой категории из констант
           const categoryFromConstants = CATEGORIES.find(cat => cat.id === prod.categoryId);
           const matchingSubFromConstants = categoryFromConstants?.subcategories?.find(
             sub => sub.slug === subcategoryPart
@@ -118,11 +118,13 @@ async function fixSubcategoryIds() {
           
           if (matchingSubFromConstants) {
             // Уже правильный формат - ТОЧНО совпадает со slug из констант (латиница)
-            skipped++;
-            continue;
+            needsUpdate = false;
           }
-          
-          // Если не совпадает точно, нужно исправить (может быть кириллица или другой формат)
+        }
+        
+        if (!needsUpdate) {
+          skipped++;
+          continue;
         }
 
         // Пытаемся найти подкатегорию в MongoDB
