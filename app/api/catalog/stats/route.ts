@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db';
+import { getCollection } from '@/lib/db';
 
 // Кэш для статистики
 const statsCache = new Map<string, { data: any; timestamp: number }>();
-const CACHE_TTL = 30 * 60 * 1000; // 30 минут (увеличено для производительности)
+const CACHE_TTL = 30 * 60 * 1000; // 30 минут
 
 function getCached(key: string) {
   const cached = statsCache.get(key);
@@ -18,7 +18,7 @@ function setCache(key: string, data: any) {
 }
 
 /**
- * GET /api/catalog/stats - Получить статистику для фильтров (оптимизированная версия с MySQL)
+ * GET /api/catalog/stats - Получить статистику для фильтров (MongoDB версия)
  * Использует UNION логику для подкатегорий
  */
 export async function GET(request: NextRequest) {
@@ -28,27 +28,26 @@ export async function GET(request: NextRequest) {
     const subcategoriesParam = searchParams.get('subcategories');
     const manufacturersParam = searchParams.get('manufacturers');
     
-    // Убрали лишние логи для производительности
-
     // Создаем ключ кэша
     const cacheKey = `stats_${categoryId || 'all'}_${subcategoriesParam || 'none'}_${manufacturersParam || 'none'}`;
     const cached = getCached(cacheKey);
     if (cached) {
       return NextResponse.json(cached, {
         headers: {
-          'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=300'
+          'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
         }
       });
     }
 
-    // Строим условия для фильтрации товаров
-    let whereConditions: string[] = [];
-    const queryParams: any[] = [];
+    const productsCollection = await getCollection('products');
+    const subcategoriesCollection = await getCollection('subcategories');
+    
+    // Строим фильтр для товаров
+    const filter: any = {};
 
     // Фильтр по категории
     if (categoryId) {
-      whereConditions.push('p.category_id = ?');
-      queryParams.push(categoryId);
+      filter.categoryId = categoryId;
     }
 
     // Фильтр по подкатегориям (UNION логика)
@@ -57,21 +56,15 @@ export async function GET(request: NextRequest) {
       if (subcategories.length > 0) {
         // Проверяем, выбраны ли все подкатегории категории
         if (categoryId) {
-          const [subCountResult] = await query(
-            'SELECT COUNT(*) as total FROM subcategories WHERE category_id = ?',
-            [categoryId]
-          ) as any[];
-          const totalSubs = (subCountResult as any).total;
+          const totalSubs = await subcategoriesCollection.countDocuments({ categoryId });
           
           // Если выбраны не все подкатегории, фильтруем по выбранным
           if (subcategories.length !== totalSubs) {
-            whereConditions.push('p.subcategory_id IN (' + subcategories.map(() => '?').join(',') + ')');
-            queryParams.push(...subcategories);
+            filter.subcategoryId = { $in: subcategories };
           }
           // Если все подкатегории выбраны, не добавляем фильтр (работаем как с категорией)
         } else {
-          whereConditions.push('p.subcategory_id IN (' + subcategories.map(() => '?').join(',') + ')');
-          queryParams.push(...subcategories);
+          filter.subcategoryId = { $in: subcategories };
         }
       }
     }
@@ -80,112 +73,98 @@ export async function GET(request: NextRequest) {
     if (manufacturersParam) {
       const manufacturers = manufacturersParam.split(',').filter(Boolean);
       if (manufacturers.length > 0) {
-        whereConditions.push('p.manufacturer IN (' + manufacturers.map(() => '?').join(',') + ')');
-        queryParams.push(...manufacturers);
+        filter.manufacturer = { $in: manufacturers };
       }
     }
 
-    const whereClause = whereConditions.length > 0 ? 'WHERE ' + whereConditions.join(' AND ') : '';
+    // Получаем уникальных производителей (UNION логика)
+    const manufacturerFilter = {
+      ...filter,
+      manufacturer: { $exists: true, $ne: '', $ne: 'Не указан' }
+    };
     
-    // Формируем WHERE для производителей
-    let manufacturerWhere: string;
-    if (whereClause) {
-      manufacturerWhere = whereClause + ' AND p.manufacturer IS NOT NULL AND p.manufacturer != \'\' AND p.manufacturer != \'Не указан\'';
-    } else {
-      manufacturerWhere = 'WHERE p.manufacturer IS NOT NULL AND p.manufacturer != \'\' AND p.manufacturer != \'Не указан\'';
-    }
+    const manufacturers = await productsCollection
+      .distinct('manufacturer', manufacturerFilter)
+      .then(results => results.filter(Boolean).sort());
 
-    // Получаем уникальных производителей (UNION логика - все производители из выбранных подкатегорий)
-    const manufacturersQuery = `
-      SELECT DISTINCT p.manufacturer
-      FROM products p
-      ${manufacturerWhere}
-      ORDER BY p.manufacturer
-      LIMIT 1000
-    `;
+    // Получаем характеристики (UNION логика)
+    // Используем агрегацию для получения уникальных пар name-value
+    const characteristicsPipeline: any[] = [
+      { $match: filter },
+      { $unwind: '$characteristics' },
+      { $group: {
+          _id: {
+            name: '$characteristics.name',
+            value: '$characteristics.value'
+          }
+        }
+      },
+      { $group: {
+          _id: '$_id.name',
+          values: { $addToSet: '$_id.value' }
+        }
+      },
+      { $project: {
+          name: '$_id',
+          values: 1,
+          _id: 0
+        }
+      },
+      { $limit: 10000 }
+    ];
+
+    const characteristicsResult = await productsCollection.aggregate(characteristicsPipeline).toArray();
     
-    // Убрали лишние логи для производительности
-
-    // Получаем характеристики (UNION логика - все характеристики из выбранных подкатегорий)
-    const characteristicsWhere = whereClause ? whereClause : '';
-    const characteristicsQuery = `
-      SELECT DISTINCT 
-        pc.name,
-        pc.value
-      FROM product_characteristics pc
-      INNER JOIN products p ON pc.product_id = p.id
-      ${characteristicsWhere}
-      ORDER BY pc.name, pc.value
-      LIMIT 10000
-    `;
+    // Формируем объект характеристик
+    const characteristics: { [key: string]: string[] } = {};
+    characteristicsResult.forEach((item: any) => {
+      if (item.name && item.values) {
+        characteristics[item.name] = item.values.sort();
+      }
+    });
 
     // Получаем доступные категории (для обратной синхронизации)
     let availableCategories: string[] = [];
     if (manufacturersParam) {
-      const categoryWhere = whereClause 
-        ? whereClause + ' AND p.category_id IS NOT NULL'
-        : 'WHERE p.category_id IS NOT NULL';
-      const categoriesQuery = `
-        SELECT DISTINCT p.category_id
-        FROM products p
-        ${categoryWhere}
-      `;
-      const [categoriesResult] = await query(categoriesQuery, queryParams) as any[];
-      availableCategories = (categoriesResult as any[]).map((row: any) => row.category_id);
+      const categories = await productsCollection
+        .distinct('categoryId', filter)
+        .then(results => results.filter(Boolean));
+      availableCategories = categories;
+    } else if (subcategoriesParam) {
+      // Если выбраны подкатегории, но не производители, показываем категории этих подкатегорий
+      const subcategories = subcategoriesParam.split(',').filter(Boolean);
+      if (subcategories.length > 0) {
+        const categories = await subcategoriesCollection
+          .distinct('categoryId', { _id: { $in: subcategories } })
+          .then(results => results.filter(Boolean));
+        availableCategories = categories;
+      }
+    } else if (categoryId) {
+      availableCategories = [categoryId];
+    } else {
+      // Если ничего не выбрано, показываем все основные категории
+      const categoriesCollection = await getCollection('categories');
+      const allCategories = await categoriesCollection.find({}).toArray();
+      availableCategories = allCategories.map(c => c._id || c.id).filter(Boolean);
     }
-
-    // Выполняем запросы параллельно для максимальной производительности
-    const [manufacturersResult, characteristicsResult] = await Promise.all([
-      query(manufacturersQuery, queryParams),
-      query(characteristicsQuery, queryParams)
-    ]);
-
-    // Формируем список производителей
-    const manufacturers = (manufacturersResult as any[])
-      .map((row: any) => row.manufacturer)
-      .filter(Boolean)
-      .sort();
-
-    // Группируем характеристики по имени
-    const characteristics: { [key: string]: string[] } = {};
-    (characteristicsResult as any[]).forEach((row: any) => {
-      if (!characteristics[row.name]) {
-        characteristics[row.name] = [];
-      }
-      if (!characteristics[row.name].includes(row.value)) {
-        characteristics[row.name].push(row.value);
-      }
-    });
-
-    // Сортируем значения характеристик
-    Object.keys(characteristics).forEach(key => {
-      characteristics[key].sort();
-    });
 
     const result = {
       manufacturers,
       characteristics,
-      availableCategories
+      categories: availableCategories,
     };
-
-    // Кэшируем результат
     setCache(cacheKey, result);
 
     return NextResponse.json(result, {
       headers: {
-        'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=300'
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
       }
     });
 
   } catch (error) {
     console.error('[API Catalog Stats] Error:', error);
     return NextResponse.json(
-      { 
-        manufacturers: [],
-        characteristics: {},
-        availableCategories: [],
-        error: error instanceof Error ? error.message : String(error)
-      },
+      { error: 'Ошибка загрузки статистики фильтров', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

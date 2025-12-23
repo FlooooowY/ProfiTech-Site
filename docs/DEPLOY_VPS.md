@@ -291,6 +291,7 @@ cat .env.local
 
 Должно быть:
 ```env
+MONGODB_URI=mongodb://admin_db:admin_db@localhost:27017/profitech_db?authSource=admin
 DB_HOST=localhost
 DB_USER=admin_db
 DB_PASSWORD=admin_db
@@ -335,7 +336,7 @@ NODE_OPTIONS="--max-old-space-size=4096" npm install
 
 # Если не хватает памяти, установите по частям:
 # Сначала основные зависимости
-NODE_OPTIONS="--max-old-space-size=2048" npm install --save next react react-dom mysql2 zustand framer-motion lucide-react react-icons papaparse csv-parse @tanstack/react-query
+NODE_OPTIONS="--max-old-space-size=2048" npm install --save next react react-dom mongodb zustand framer-motion lucide-react react-icons papaparse csv-parse @tanstack/react-query
 
 # Затем TypeScript и типы
 NODE_OPTIONS="--max-old-space-size=2048" npm install --save-dev typescript @types/node @types/react @types/react-dom @types/papaparse
@@ -346,39 +347,36 @@ NODE_OPTIONS="--max-old-space-size=2048" npm install --save-dev eslint eslint-co
 
 ---
 
-## Шаг 11: Создание таблиц в базе данных
+## Шаг 11: Создание индексов в MongoDB
 
 ```bash
-# Создайте таблицы
-npm run db:create
+# Создайте индексы для оптимизации запросов
+node -e "require('./lib/db.ts').createIndexes()"
+```
+
+Или выполните миграцию данных из MySQL (если данные уже есть в MySQL):
+
+```bash
+# Миграция данных из MySQL в MongoDB
+npm run db:migrate-mysql-to-mongo
 ```
 
 **Ожидаемый результат:**
 ```
-Connected to MySQL database
-✓ Table "categories" created
-✓ Table "subcategories" created
-✓ Table "products" created with optimized indexes
-✓ Table "product_characteristics" created with optimized indexes
-✓ Table "filter_cache" created
-✅ All tables created successfully!
+✓ Connected to MySQL
+✓ Connected to MongoDB
+📦 Migrating categories...
+✓ Migrated X categories
+📦 Migrating subcategories...
+✓ Migrated X subcategories
+📦 Migrating products...
+✓ Migrated X products
+📊 Creating indexes...
+✓ Indexes created
+✅ Migration completed successfully!
 ```
 
----
-
-## Шаг 12: Импорт категорий
-
-```bash
-# Импортируйте категории и подкатегории
-npm run db:import-categories
-```
-
-**Ожидаемый результат:**
-```
-✓ Imported 7 categories
-✓ Imported 41 subcategories
-✅ All categories and subcategories imported successfully!
-```
+**Примечание:** Если у вас еще нет данных в MySQL, пропустите миграцию и загрузите каталог через админ-панель (см. Шаг 16).
 
 ---
 
@@ -712,6 +710,25 @@ free -h
 
 ## Полезные команды
 
+### Обновление кода и пересборка:
+
+```bash
+# Перейти в директорию проекта
+cd ~/ProfiTech-Site
+
+# Получить последние изменения
+git pull
+
+# Пересобрать проект (обязательно после изменений в коде!)
+npm run build
+
+# Перезапустить приложение
+pm2 restart profitech
+
+# Проверить логи
+pm2 logs profitech --lines 50
+```
+
 ### Управление приложением:
 
 ```bash
@@ -731,17 +748,20 @@ pm2 stop profitech
 pm2 monit
 ```
 
-### Управление MySQL:
+### Управление MongoDB:
 
 ```bash
-# Войти в MySQL
-mysql -u admin_db -p
+# Войти в MongoDB
+mongosh -u admin_db -p admin_db --authenticationDatabase admin profitech_db
 
 # Проверить размер базы данных
-mysql -u admin_db -p -e "SELECT table_schema AS 'Database', ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS 'Size (MB)' FROM information_schema.tables WHERE table_schema = 'profitech_db' GROUP BY table_schema;"
+mongosh -u admin_db -p admin_db --authenticationDatabase admin profitech_db --eval "db.stats(1024*1024)"
 
 # Проверить количество товаров
-mysql -u admin_db -p -e "SELECT COUNT(*) as total_products FROM products;" profitech_db
+mongosh -u admin_db -p admin_db --authenticationDatabase admin profitech_db --eval "db.products.countDocuments()"
+
+# Проверить индексы
+mongosh -u admin_db -p admin_db --authenticationDatabase admin profitech_db --eval "db.products.getIndexes()"
 ```
 
 ### Управление Nginx:

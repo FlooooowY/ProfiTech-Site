@@ -8,17 +8,15 @@
     "start": "next start",
     "lint": "eslint",
     "import": "tsx scripts/importCatalog.ts",
-    "db:create": "node scripts/createTables.js",
-    "db:import-categories": "node scripts/importCategories.js",
-    "db:import-products": "node scripts/importToMySQL.js",
-    "db:check": "node scripts/checkDatabase.js"
+    "db:migrate-mysql-to-mongo": "node scripts/migrateToMongoDB.js",
+    "db:check": "node scripts/checkMongoDB.js"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.12",
     "csv-parse": "^6.1.0",
     "framer-motion": "^12.23.26",
     "lucide-react": "^0.562.0",
-    "mysql2": "^3.16.0",
+    "mongodb": "^6.10.0",
     "next": "16.1.0",
     "papaparse": "^5.5.3",
     "react": "19.2.3",
