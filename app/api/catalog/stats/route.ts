@@ -138,10 +138,10 @@ export async function GET(request: NextRequest) {
       const subcategories = subcategoriesParam.split(',').filter(Boolean);
       if (subcategories.length > 0) {
         const subcategoriesDocs = await subcategoriesCollection
-          .find({ _id: { $in: subcategories } })
+          .find({ _id: { $in: subcategories } } as any)
           .toArray();
         availableCategories = subcategoriesDocs
-          .map(doc => doc.categoryId || doc._id)
+          .map((doc: any) => doc.categoryId || doc._id)
           .filter(Boolean);
       }
     } else if (categoryId) {
