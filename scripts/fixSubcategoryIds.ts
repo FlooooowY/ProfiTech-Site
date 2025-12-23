@@ -101,15 +101,15 @@ async function fixSubcategoryIds() {
         const currentSubcategoryId = prod.subcategoryId;
         
         // Проверяем, нужно ли исправлять
-        // Правильный формат: ${categorySlug}-${subcategorySlug}
+        // Правильный формат: ${categorySlug}-${subcategorySlug} (латиница из констант)
         const expectedPrefix = `${categorySlug}-`;
         
-        // Проверяем, начинается ли с правильного префикса категории
+        // Проверяем, начинается ли с правильного префикса категории (латиница)
         if (currentSubcategoryId.startsWith(expectedPrefix)) {
           // Извлекаем часть после категории
           const subcategoryPart = currentSubcategoryId.substring(expectedPrefix.length);
           
-          // Проверяем, совпадает ли эта часть с каким-либо slug подкатегории из КОНСТАНТ
+          // Проверяем, совпадает ли эта часть ТОЧНО с каким-либо slug подкатегории из КОНСТАНТ
           // Ищем все подкатегории этой категории из констант
           const categoryFromConstants = CATEGORIES.find(cat => cat.id === prod.categoryId);
           const matchingSubFromConstants = categoryFromConstants?.subcategories?.find(
@@ -117,151 +117,103 @@ async function fixSubcategoryIds() {
           );
           
           if (matchingSubFromConstants) {
-            // Уже правильный формат - совпадает со slug из констант
+            // Уже правильный формат - ТОЧНО совпадает со slug из констант (латиница)
             skipped++;
             continue;
           }
           
-          // Если не совпадает с константами, нужно исправить
-          // Собираем информацию для отладки
-          if (debugCount < 5) {
-            const availableSubSlugs = categoryFromConstants?.subcategories?.map(s => s.slug) || [];
-            debugSamples.push({
-              productId: prod._id,
-              categoryId: prod.categoryId,
-              categorySlug,
-              currentSubcategoryId,
-              subcategoryPart,
-              availableSubSlugs: availableSubSlugs.slice(0, 5)
-            });
-            debugCount++;
-          }
+          // Если не совпадает точно, нужно исправить (может быть кириллица или другой формат)
         }
 
-        // Пытаемся найти подкатегорию
-        let subcategorySlug = null;
+        // Пытаемся найти подкатегорию в MongoDB
+        // Цель: найти subcategory в MongoDB, получить её _id (например, "2-2"), 
+        // затем найти этот _id в константах и взять латинский slug
         
-        // Сначала ищем в константах
-        const categoryFromConstants = CATEGORIES.find(cat => cat.id === prod.categoryId);
+        let foundSubcategoryId: string | null = null; // ID подкатегории (например, "2-2")
         
-        // Вариант 1: subcategoryId это ID подкатегории (например, "1-3")
-        const subcategoryInfo = subcategoryMap.get(currentSubcategoryId);
-        if (subcategoryInfo && subcategoryInfo.categoryId === prod.categoryId) {
-          subcategorySlug = subcategoryInfo.slug;
-        } else if (categoryFromConstants) {
-          // Вариант 1.5: Ищем по ID в константах
-          const subFromConstants = categoryFromConstants.subcategories?.find(
-            sub => sub.id === currentSubcategoryId
-          );
-          if (subFromConstants) {
-            subcategorySlug = subFromConstants.slug;
-          }
+        // Вариант 1: subcategoryId это уже ID подкатегории (например, "1-3")
+        // Проверяем, есть ли такая подкатегория в MongoDB
+        const subById = subcategories.find((sub: any) => 
+          (sub._id === currentSubcategoryId || sub.id === currentSubcategoryId) &&
+          sub.categoryId === prod.categoryId
+        );
+        if (subById) {
+          foundSubcategoryId = (subById as any)._id || (subById as any).id;
         }
         
-        // Если еще не нашли, пробуем другие варианты
-        if (!subcategorySlug) {
-          // Вариант 2: subcategoryId уже в формате category-subcategory
-          // Извлекаем часть после категории
+        // Вариант 2: subcategoryId в формате category-subcategory (может быть кириллица или латиница)
+        if (!foundSubcategoryId) {
           const parts = currentSubcategoryId.split('-');
           if (parts.length > 1) {
-            // Убираем первую часть (categorySlug) и получаем subcategory часть
+            // Пробуем найти подкатегорию по slug (часть после категории)
             const subcategoryPart = parts.slice(1).join('-');
             
-            // Ищем подкатегорию в константах по slug или по названию
-            if (categoryFromConstants) {
-              // Сначала пробуем точное совпадение slug в константах
-              let subBySlug = categoryFromConstants.subcategories?.find(
-                sub => sub.slug === subcategoryPart
-              );
-              
-              // Если не нашли, пробуем найти по названию (генерируем slug из названия)
-              if (!subBySlug) {
-                // Нормализуем subcategoryPart для сравнения
-                const normalizedPart = subcategoryPart.toLowerCase().replace(/-/g, '');
-                
-                subBySlug = categoryFromConstants.subcategories?.find((sub) => {
-                  // Нормализуем slug подкатегории
-                  const normalizedSlug = sub.slug.toLowerCase().replace(/-/g, '');
-                  
-                  // Нормализуем название подкатегории (убираем пробелы и спецсимволы)
-                  const normalizedName = sub.name.toLowerCase()
-                    .replace(/\s+/g, '')
-                    .replace(/[^a-zа-яё0-9]/gi, '');
-                  
-                  // Генерируем slug из названия подкатегории (как это делается в generateSubcategoryId)
-                  const nameAsSlug = sub.name
-                    .toLowerCase()
-                    .replace(/\s+/g, '-')
-                    .replace(/[^a-zа-яё0-9-]/gi, '')
-                    .replace(/-+/g, '-')
-                    .trim();
-                  const normalizedNameAsSlug = nameAsSlug.replace(/-/g, '');
-                  
-                  // Проверяем различные варианты совпадения
-                  return normalizedSlug === normalizedPart || 
-                         normalizedName === normalizedPart ||
-                         normalizedNameAsSlug === normalizedPart ||
-                         normalizedSlug.includes(normalizedPart) ||
-                         normalizedPart.includes(normalizedSlug) ||
-                         normalizedName.includes(normalizedPart) ||
-                         normalizedPart.includes(normalizedName);
-                });
-              }
-              
-              if (subBySlug) {
-                subcategorySlug = subBySlug.slug;
-              } else {
-                // Пробуем найти в MongoDB как fallback
-                const subByMongo = subcategories.find((sub: any) => 
-                  (sub.slug === subcategoryPart || sub._id === subcategoryPart) &&
-                  sub.categoryId === prod.categoryId
-                );
-                if (subByMongo) {
-                  subcategorySlug = (subByMongo as any).slug || (subByMongo as any)._id;
-                }
-              }
-            } else {
-              // Если категории нет в константах, ищем в MongoDB
-              const subByMongo = subcategories.find((sub: any) => 
-                (sub.slug === subcategoryPart || sub._id === subcategoryPart) &&
-                sub.categoryId === prod.categoryId
-              );
-              if (subByMongo) {
-                subcategorySlug = (subByMongo as any).slug || (subByMongo as any)._id;
-              }
-            }
-            
-            if (!subcategorySlug) {
-              // Вариант 3: subcategoryId это просто slug без категории
-              const subByDirectSlug = subcategories.find((sub: any) => 
-                (sub.slug === currentSubcategoryId || sub._id === currentSubcategoryId) &&
-                sub.categoryId === prod.categoryId
-              );
-              
-              if (subByDirectSlug) {
-                subcategorySlug = (subByDirectSlug as any).slug || (subByDirectSlug as any)._id;
-              }
-            }
-          } else {
-            // Вариант 4: subcategoryId это просто slug без категории
-            const subByDirectSlug = subcategories.find((sub: any) => 
-              (sub.slug === currentSubcategoryId || sub._id === currentSubcategoryId) &&
-              sub.categoryId === prod.categoryId
+            const subBySlug = subcategories.find((sub: any) => 
+              sub.categoryId === prod.categoryId &&
+              (sub.slug === subcategoryPart || 
+               sub._id === subcategoryPart ||
+               sub.slug === currentSubcategoryId ||
+               sub._id === currentSubcategoryId)
             );
             
-            if (subByDirectSlug) {
-              subcategorySlug = (subByDirectSlug as any).slug || (subByDirectSlug as any)._id;
+            if (subBySlug) {
+              foundSubcategoryId = (subBySlug as any)._id || (subBySlug as any).id;
             }
           }
         }
+        
+        // Вариант 3: subcategoryId это просто slug без категории
+        if (!foundSubcategoryId) {
+          const subByDirectSlug = subcategories.find((sub: any) => 
+            sub.categoryId === prod.categoryId &&
+            (sub.slug === currentSubcategoryId || sub._id === currentSubcategoryId)
+          );
+          
+          if (subByDirectSlug) {
+            foundSubcategoryId = (subByDirectSlug as any)._id || (subByDirectSlug as any).id;
+          }
+        }
+        
+        // Вариант 4: Пробуем найти по названию (нормализация)
+        if (!foundSubcategoryId) {
+          const normalizedCurrent = currentSubcategoryId.toLowerCase().replace(/-/g, '').replace(/\s+/g, '');
+          
+          const subByName = subcategories.find((sub: any) => {
+            if (sub.categoryId !== prod.categoryId) return false;
+            
+            const subSlug = (sub.slug || '').toLowerCase().replace(/-/g, '');
+            const subName = (sub.name || '').toLowerCase().replace(/\s+/g, '').replace(/[^a-zа-яё0-9]/gi, '');
+            const subId = (sub._id || '').toLowerCase();
+            
+            return subSlug === normalizedCurrent ||
+                   subName === normalizedCurrent ||
+                   subId === normalizedCurrent ||
+                   normalizedCurrent.includes(subSlug) ||
+                   subSlug.includes(normalizedCurrent);
+          });
+          
+          if (subByName) {
+            foundSubcategoryId = (subByName as any)._id || (subByName as any).id;
+          }
+        }
 
-        if (!subcategorySlug) {
+        if (!foundSubcategoryId) {
           console.warn(`⚠️  Не удалось найти подкатегорию для товара ${prod._id}: subcategoryId=${currentSubcategoryId}, categoryId=${prod.categoryId}`);
           errors++;
           continue;
         }
 
-        // Формируем правильный subcategoryId
+        // Теперь ищем латинский slug из констант по найденному ID
+        const subcategoryInfo = subcategoryMap.get(foundSubcategoryId);
+        if (!subcategoryInfo || subcategoryInfo.categoryId !== prod.categoryId) {
+          console.warn(`⚠️  Подкатегория ${foundSubcategoryId} не найдена в константах для категории ${prod.categoryId}`);
+          errors++;
+          continue;
+        }
+
+        const subcategorySlug = subcategoryInfo.slug; // Латинский slug из констант
+
+        // Формируем правильный subcategoryId (латинский формат)
         const correctSubcategoryId = `${categorySlug}-${subcategorySlug}`;
 
         // Добавляем операцию обновления
