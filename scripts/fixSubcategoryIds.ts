@@ -90,31 +90,66 @@ async function fixSubcategoryIds() {
         if (subcategoryInfo) {
           subcategorySlug = subcategoryInfo.slug;
         } else {
-          // Вариант 2: subcategoryId это уже slug (например, "elektromehanicheskoe")
-          // Проверяем, есть ли такой slug в подкатегориях
-          const subBySlug = subcategories.find((sub: any) => 
-            (sub.slug === currentSubcategoryId || sub._id === currentSubcategoryId) &&
-            sub.categoryId === prod.categoryId
-          );
-          
-          if (subBySlug) {
-            subcategorySlug = (subBySlug as any).slug || (subBySlug as any)._id;
-          } else {
-            // Вариант 3: subcategoryId уже в формате category-subcategory, но с другой категорией
-            // Извлекаем slug из конца
-            const parts = currentSubcategoryId.split('-');
-            if (parts.length > 1) {
-              // Возможно, это уже правильный формат, но с другим slug категории
-              // Пробуем найти подкатегорию по последним частям
-              const possibleSubSlug = parts.slice(1).join('-');
-              const subByPartialSlug = subcategories.find((sub: any) => 
-                (sub.slug === possibleSubSlug || sub._id === possibleSubSlug) &&
+          // Вариант 2: subcategoryId уже в формате category-subcategory
+          // Извлекаем часть после категории
+          const parts = currentSubcategoryId.split('-');
+          if (parts.length > 1) {
+            // Убираем первую часть (categorySlug) и получаем subcategory часть
+            const subcategoryPart = parts.slice(1).join('-');
+            
+            // Ищем подкатегорию по slug или по частичному совпадению
+            // Сначала пробуем точное совпадение slug
+            let subBySlug = subcategories.find((sub: any) => 
+              (sub.slug === subcategoryPart || sub._id === subcategoryPart) &&
+              sub.categoryId === prod.categoryId
+            );
+            
+            // Если не нашли, пробуем найти по названию (normalize для сравнения)
+            if (!subBySlug) {
+              // Нормализуем subcategoryPart для сравнения (убираем дефисы, приводим к lowercase)
+              const normalizedPart = subcategoryPart.toLowerCase().replace(/-/g, '');
+              
+              subBySlug = subcategories.find((sub: any) => {
+                if (sub.categoryId !== prod.categoryId) return false;
+                
+                // Нормализуем slug подкатегории
+                const normalizedSlug = (sub.slug || sub._id || '').toLowerCase().replace(/-/g, '');
+                
+                // Нормализуем название подкатегории
+                const normalizedName = (sub.name || '').toLowerCase()
+                  .replace(/\s+/g, '')
+                  .replace(/[^a-zа-яё0-9]/gi, '');
+                
+                // Проверяем совпадение с нормализованными значениями
+                return normalizedSlug === normalizedPart || 
+                       normalizedName === normalizedPart ||
+                       normalizedSlug.includes(normalizedPart) ||
+                       normalizedPart.includes(normalizedSlug);
+              });
+            }
+            
+            if (subBySlug) {
+              subcategorySlug = (subBySlug as any).slug || (subBySlug as any)._id;
+            } else {
+              // Вариант 3: subcategoryId это просто slug без категории
+              const subByDirectSlug = subcategories.find((sub: any) => 
+                (sub.slug === currentSubcategoryId || sub._id === currentSubcategoryId) &&
                 sub.categoryId === prod.categoryId
               );
               
-              if (subByPartialSlug) {
-                subcategorySlug = (subByPartialSlug as any).slug || (subByPartialSlug as any)._id;
+              if (subByDirectSlug) {
+                subcategorySlug = (subByDirectSlug as any).slug || (subByDirectSlug as any)._id;
               }
+            }
+          } else {
+            // Вариант 4: subcategoryId это просто slug без категории
+            const subByDirectSlug = subcategories.find((sub: any) => 
+              (sub.slug === currentSubcategoryId || sub._id === currentSubcategoryId) &&
+              sub.categoryId === prod.categoryId
+            );
+            
+            if (subByDirectSlug) {
+              subcategorySlug = (subByDirectSlug as any).slug || (subByDirectSlug as any)._id;
             }
           }
         }
