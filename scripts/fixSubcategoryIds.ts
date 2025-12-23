@@ -76,10 +76,24 @@ async function fixSubcategoryIds() {
         // Правильный формат: ${categorySlug}-${subcategorySlug}
         const expectedPrefix = `${categorySlug}-`;
         
+        // Проверяем, начинается ли с правильного префикса категории
         if (currentSubcategoryId.startsWith(expectedPrefix)) {
-          // Уже правильный формат
-          skipped++;
-          continue;
+          // Извлекаем часть после категории
+          const subcategoryPart = currentSubcategoryId.substring(expectedPrefix.length);
+          
+          // Проверяем, совпадает ли эта часть с каким-либо slug подкатегории из констант
+          const matchingSub = subcategories.find((sub: any) => {
+            if (sub.categoryId !== prod.categoryId) return false;
+            const subSlug = sub.slug || sub._id;
+            return subSlug === subcategoryPart;
+          });
+          
+          if (matchingSub) {
+            // Уже правильный формат - совпадает со slug из констант
+            skipped++;
+            continue;
+          }
+          // Если не совпадает, нужно исправить
         }
 
         // Пытаемся найти подкатегорию
