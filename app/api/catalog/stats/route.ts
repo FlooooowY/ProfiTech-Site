@@ -65,18 +65,36 @@ export async function GET(request: NextRequest) {
     if (subcategoriesParam) {
       const subcategories = subcategoriesParam.split(',').filter(Boolean);
       if (subcategories.length > 0) {
+        // Преобразуем ID подкатегорий в slug (так как в товарах хранится slug)
+        const subcategoryDocs = await subcategoriesCollection
+          .find({ _id: { $in: subcategories } } as any)
+          .toArray();
+        
+        // Получаем slug из документов, или используем ID как fallback
+        const subcategorySlugs = subcategoryDocs.map((doc: any) => {
+          if (doc.slug) return doc.slug;
+          return doc._id || doc.id;
+        });
+        
+        // Если не нашли по ID, пробуем искать по slug напрямую
+        const allSubcategoryValues = [...new Set([...subcategories, ...subcategorySlugs])];
+        
         // Проверяем, выбраны ли все подкатегории категории
         if (categoryId) {
           const totalSubs = await subcategoriesCollection.countDocuments({ categoryId }, { maxTimeMS: 5000 });
           
-          // Если выбраны не все подкатегории, фильтруем по выбранным
-          if (subcategories.length !== totalSubs) {
-            filter.subcategoryId = { $in: subcategories };
+          // Если выбраны не все подкатегории, фильтруем по выбранным (используем slug)
+          if (allSubcategoryValues.length !== totalSubs) {
+            filter.subcategoryId = { $in: allSubcategoryValues };
           }
           // Если все подкатегории выбраны, не добавляем фильтр (работаем как с категорией)
         } else {
-          filter.subcategoryId = { $in: subcategories };
+          filter.subcategoryId = { $in: allSubcategoryValues };
         }
+        
+        console.log('[API Stats] Subcategory IDs:', subcategories);
+        console.log('[API Stats] Subcategory slugs:', subcategorySlugs);
+        console.log('[API Stats] All subcategory values for filter:', allSubcategoryValues);
       }
     }
 

@@ -90,19 +90,40 @@ export async function GET(request: NextRequest) {
     if (subcategoriesParam) {
       const subcategories = subcategoriesParam.split(',').filter(Boolean);
       if (subcategories.length > 0) {
+        const subcategoriesCollection = await getCollection('subcategories');
+        
+        // Преобразуем ID подкатегорий в slug (так как в товарах хранится slug)
+        const subcategoryDocs = await subcategoriesCollection
+          .find({ _id: { $in: subcategories } } as any)
+          .toArray();
+        
+        // Получаем slug из документов, или используем ID как fallback
+        const subcategorySlugs = subcategoryDocs.map((doc: any) => {
+          // Проверяем, есть ли slug в документе
+          if (doc.slug) return doc.slug;
+          // Если нет slug, используем _id (может быть уже slug)
+          return doc._id || doc.id;
+        });
+        
+        // Если не нашли по ID, пробуем искать по slug напрямую (на случай, если уже передан slug)
+        const allSubcategoryValues = [...new Set([...subcategories, ...subcategorySlugs])];
+        
         // Проверяем, выбраны ли все подкатегории категории
         if (categoryId) {
-          const subcategoriesCollection = await getCollection('subcategories');
           const totalSubs = await subcategoriesCollection.countDocuments({ categoryId }, { maxTimeMS: 5000 });
           
-          if (subcategories.length !== totalSubs) {
-            // Не все подкатегории выбраны - фильтруем по выбранным
-            filter.subcategoryId = { $in: subcategories };
+          if (allSubcategoryValues.length !== totalSubs) {
+            // Не все подкатегории выбраны - фильтруем по выбранным (используем slug)
+            filter.subcategoryId = { $in: allSubcategoryValues };
           }
           // Если все подкатегории выбраны, не добавляем фильтр (работаем как с категорией)
         } else {
-          filter.subcategoryId = { $in: subcategories };
+          filter.subcategoryId = { $in: allSubcategoryValues };
         }
+        
+        console.log('[API Catalog] Subcategory IDs:', subcategories);
+        console.log('[API Catalog] Subcategory slugs:', subcategorySlugs);
+        console.log('[API Catalog] All subcategory values for filter:', allSubcategoryValues);
       }
     }
 
