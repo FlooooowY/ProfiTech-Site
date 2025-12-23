@@ -39,9 +39,19 @@ async function checkDatabase() {
     const characteristicsCount = characteristicsResult[0].count;
     console.log(`🔧 Характеристик: ${characteristicsCount.toLocaleString()}`);
 
-    // 5. Количество изображений
-    const [imagesResult] = await connection.execute('SELECT COUNT(*) as count FROM product_images');
-    const imagesCount = imagesResult[0].count;
+    // 5. Количество изображений (из JSON поля в products)
+    let imagesCount = 0;
+    try {
+      const [imagesResult] = await connection.execute(`
+        SELECT SUM(JSON_LENGTH(images)) as total 
+        FROM products 
+        WHERE images IS NOT NULL AND images != '[]' AND images != 'null'
+      `);
+      imagesCount = imagesResult[0].total || 0;
+    } catch (error) {
+      // Если ошибка, просто пропускаем
+      imagesCount = 0;
+    }
     console.log(`🖼️  Изображений: ${imagesCount.toLocaleString()}`);
 
     console.log('\n' + '═'.repeat(60));
@@ -116,10 +126,12 @@ async function checkDatabase() {
 
     // Проверка товаров без изображений
     const [noImages] = await connection.execute(`
-      SELECT COUNT(DISTINCT p.id) as count
-      FROM products p
-      LEFT JOIN product_images pi ON p.id = pi.product_id
-      WHERE pi.id IS NULL
+      SELECT COUNT(*) as count
+      FROM products
+      WHERE images IS NULL 
+         OR images = '[]' 
+         OR images = 'null'
+         OR JSON_LENGTH(images) = 0
     `);
     if (noImages[0].count > 0) {
       console.log(`⚠️  Товаров без изображений: ${noImages[0].count}`);
