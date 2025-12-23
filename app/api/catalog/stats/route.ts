@@ -99,17 +99,20 @@ export async function GET(request: NextRequest) {
           }
         }
         
-        const allSubcategoryValues = [...new Set([...subcategories, ...subcategoryValues])];
+        // Используем только slug формат (не добавляем ID, так как в базе только slug формат)
+        const allSubcategoryValues = [...new Set(subcategoryValues)];
         
         // Проверяем, выбраны ли все подкатегории категории
         if (categoryId) {
           const totalSubs = await subcategoriesCollection.countDocuments({ categoryId }, { maxTimeMS: 5000 });
           
-          if (allSubcategoryValues.length !== totalSubs) {
+          if (allSubcategoryValues.length !== totalSubs && allSubcategoryValues.length > 0) {
             filter.subcategoryId = { $in: allSubcategoryValues };
           }
         } else {
-          filter.subcategoryId = { $in: allSubcategoryValues };
+          if (allSubcategoryValues.length > 0) {
+            filter.subcategoryId = { $in: allSubcategoryValues };
+          }
         }
         
         console.log('[API Stats] Subcategory IDs:', subcategories);

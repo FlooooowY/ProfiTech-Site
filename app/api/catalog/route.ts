@@ -128,20 +128,23 @@ export async function GET(request: NextRequest) {
           }
         }
         
-        // Также добавляем оригинальные ID на случай, если они уже в правильном формате
-        const allSubcategoryValues = [...new Set([...subcategories, ...subcategoryValues])];
+        // Используем только slug формат (не добавляем ID, так как в базе только slug формат)
+        // После миграции все товары должны иметь формат: ${categorySlug}-${subcategorySlug}
+        const allSubcategoryValues = [...new Set(subcategoryValues)];
         
         // Проверяем, выбраны ли все подкатегории категории
         if (categoryId) {
           const totalSubs = await subcategoriesCollection.countDocuments({ categoryId }, { maxTimeMS: 5000 });
           
-          if (allSubcategoryValues.length !== totalSubs) {
+          if (allSubcategoryValues.length !== totalSubs && allSubcategoryValues.length > 0) {
             // Не все подкатегории выбраны - фильтруем по выбранным
             filter.subcategoryId = { $in: allSubcategoryValues };
           }
           // Если все подкатегории выбраны, не добавляем фильтр (работаем как с категорией)
         } else {
-          filter.subcategoryId = { $in: allSubcategoryValues };
+          if (allSubcategoryValues.length > 0) {
+            filter.subcategoryId = { $in: allSubcategoryValues };
+          }
         }
         
         console.log('[API Catalog] Subcategory IDs:', subcategories);
