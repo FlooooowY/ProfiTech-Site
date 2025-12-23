@@ -150,7 +150,10 @@ export async function GET(request: NextRequest) {
       // Если ничего не выбрано, показываем все основные категории
       const categoriesCollection = await getCollection('categories');
       const allCategories = await categoriesCollection.find({}).toArray();
-      availableCategories = allCategories.map(c => c._id || c.id).filter(Boolean);
+      availableCategories = allCategories.map((c: any) => {
+        const id = c._id || c.id;
+        return typeof id === 'string' ? id : String(id);
+      }).filter(Boolean);
     }
 
     const result = {
