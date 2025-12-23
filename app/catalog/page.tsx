@@ -332,10 +332,10 @@ function CatalogPageContent() {
     return { main, other };
   }, [availableCharacteristics]);
 
-  // Сброс на первую страницу при изменении примененных фильтров
+  // Сброс курсора при изменении примененных фильтров
   useEffect(() => {
-    if (currentPage !== 1) {
-      setNextCursor(null); // Сбрасываем курсор при изменении фильтров
+    if (nextCursor !== null) {
+      setNextCursor(null);
     }
   }, [appliedCategory, appliedSubcategories, appliedManufacturers, appliedCharacteristics]);
 
@@ -422,87 +422,37 @@ function CatalogPageContent() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Загрузка следующей страницы при курсорной пагинации
+  const handleLoadMore = () => {
+    if (nextCursor && !isLoading) {
+      loadProducts();
+    }
+  };
+
   const renderPagination = () => {
-    if (totalPages <= 1) return null;
-
-    const pages = [];
-    const showPages = 5; // Количество отображаемых кнопок страниц
-    
-    let startPage = Math.max(1, currentPage - Math.floor(showPages / 2));
-    const endPage = Math.min(totalPages, startPage + showPages - 1);
-    
-    if (endPage - startPage < showPages - 1) {
-      startPage = Math.max(1, endPage - showPages + 1);
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
+    // Курсорная пагинация: показываем кнопку "Загрузить еще" вместо номеров страниц
+    if (!nextCursor) return null;
 
     return (
-      <div className="flex items-center justify-center space-x-2" style={{ marginTop: '60px', marginBottom: '20px' }}>
+      <div className="flex items-center justify-center" style={{ marginTop: '60px', marginBottom: '20px' }}>
         <motion.button
-          onClick={() => handlePageChange(currentPage - 1)}
-          disabled={currentPage === 1}
-          className="w-12 h-12 flex items-center justify-center rounded-xl border-2 border-gray-200 hover:border-[#FF6B35] hover:bg-[#FF6B35] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-gray-200 disabled:hover:bg-transparent disabled:hover:text-gray-400 transition-all duration-300 shadow-sm hover:shadow-md"
-          whileHover={{ scale: currentPage === 1 ? 1 : 1.05 }}
-          whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
+          onClick={handleLoadMore}
+          disabled={isLoading || !nextCursor}
+          className="px-8 py-4 rounded-xl bg-gradient-to-r from-[#FF6B35] to-[#FF8C5A] text-white font-semibold text-lg hover:from-[#FF8C5A] hover:to-[#FF6B35] disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl"
+          whileHover={{ scale: isLoading || !nextCursor ? 1 : 1.05 }}
+          whileTap={{ scale: isLoading || !nextCursor ? 1 : 0.95 }}
         >
-          <ChevronLeft className="w-5 h-5" />
-        </motion.button>
-
-        {startPage > 1 && (
-          <>
-            <motion.button
-              onClick={() => handlePageChange(1)}
-              className="w-12 h-12 flex items-center justify-center rounded-xl border-2 border-gray-200 hover:border-[#FF6B35] hover:bg-[#FF6B35] hover:text-white transition-all duration-300 shadow-sm hover:shadow-md font-semibold"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              1
-            </motion.button>
-            {startPage > 2 && <span className="px-2 text-gray-400 font-bold">...</span>}
-          </>
-        )}
-
-        {pages.map((page) => (
-          <motion.button
-            key={page}
-            onClick={() => handlePageChange(page)}
-            className={`w-12 h-12 flex items-center justify-center rounded-xl border-2 transition-all duration-300 font-semibold shadow-sm ${
-              currentPage === page
-                ? 'bg-gradient-to-r from-[#FF6B35] to-[#F7931E] text-white border-transparent shadow-md scale-105'
-                : 'border-gray-200 hover:border-[#FF6B35] hover:bg-[#FF6B35] hover:text-white hover:shadow-md'
-            }`}
-            whileHover={{ scale: currentPage === page ? 1.05 : 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            {page}
-          </motion.button>
-        ))}
-
-        {endPage < totalPages && (
-          <>
-            {endPage < totalPages - 1 && <span className="px-2 text-gray-400 font-bold">...</span>}
-            <motion.button
-              onClick={() => handlePageChange(totalPages)}
-              className="w-12 h-12 flex items-center justify-center rounded-xl border-2 border-gray-200 hover:border-[#FF6B35] hover:bg-[#FF6B35] hover:text-white transition-all duration-300 shadow-sm hover:shadow-md font-semibold"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {totalPages}
-            </motion.button>
-          </>
-        )}
-
-        <motion.button
-          onClick={() => handlePageChange(currentPage + 1)}
-          disabled={currentPage === totalPages}
-          className="w-12 h-12 flex items-center justify-center rounded-xl border-2 border-gray-200 hover:border-[#FF6B35] hover:bg-[#FF6B35] hover:text-white disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-gray-200 disabled:hover:bg-transparent disabled:hover:text-gray-400 transition-all duration-300 shadow-sm hover:shadow-md"
-          whileHover={{ scale: currentPage === totalPages ? 1 : 1.05 }}
-          whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
-        >
-          <ChevronRight className="w-5 h-5" />
+          {isLoading ? (
+            <>
+              <Loader2 className="w-5 h-5 inline-block mr-2 animate-spin" />
+              Загрузка...
+            </>
+          ) : (
+            <>
+              Загрузить еще
+              <ChevronRight className="w-5 h-5 inline-block ml-2" />
+            </>
+          )}
         </motion.button>
       </div>
     );
