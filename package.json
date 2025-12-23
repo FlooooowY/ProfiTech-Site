@@ -9,6 +9,7 @@
     "lint": "eslint",
     "import": "tsx scripts/importCatalog.ts",
     "db:migrate-mysql-to-mongo": "node scripts/migrateToMongoDB.js",
+    "db:import-categories": "tsx scripts/importCategories.ts",
     "db:check": "node scripts/checkMongoDB.js"
   },
   "dependencies": {

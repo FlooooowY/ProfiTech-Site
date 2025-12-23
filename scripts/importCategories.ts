@@ -1,92 +1,75 @@
-import pool from '../lib/db';
+import { getCollection } from '../lib/db';
 import { CATEGORIES } from '@/constants/categories';
 
 async function importCategories() {
-  let connection;
-  
   try {
-    connection = await pool.getConnection();
-    console.log('Connected to MySQL database');
+    console.log('Connected to MongoDB');
 
-    // Начинаем транзакцию
-    await connection.beginTransaction();
+    const categoriesCollection = await getCollection('categories');
+    const subcategoriesCollection = await getCollection('subcategories');
 
-    // Очищаем существующие данные (в правильном порядке из-за внешних ключей)
+    // Очищаем существующие данные
     console.log('Clearing existing data...');
-    await connection.query('DELETE FROM product_characteristics');
-    await connection.query('DELETE FROM products');
-    await connection.query('DELETE FROM subcategories');
-    await connection.query('DELETE FROM categories');
+    await subcategoriesCollection.deleteMany({});
+    await categoriesCollection.deleteMany({});
     console.log('✓ Existing data cleared');
 
     // Импортируем категории
     console.log('Importing categories...');
-    const categoriesValues = CATEGORIES.map(cat => [
-      cat.id,
-      cat.name,
-      cat.slug,
-      cat.icon || null,
-      cat.description || null
-    ]);
-
-    if (categoriesValues.length > 0) {
-      const categoriesSql = `
-        INSERT INTO categories (id, name, slug, icon, description)
-        VALUES ?
-      `;
-      await connection.query(categoriesSql, [categoriesValues]);
-      console.log(`✓ Imported ${categoriesValues.length} categories`);
+    const categoriesDocs = CATEGORIES.map(cat => ({
+      _id: cat.id,
+      id: cat.id,
+      name: cat.name,
+      slug: cat.slug,
+      icon: cat.icon || null,
+      description: cat.description || null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }));
+    
+    if (categoriesDocs.length > 0) {
+      await categoriesCollection.insertMany(categoriesDocs);
+      console.log(`✓ Imported ${categoriesDocs.length} categories`);
     }
 
     // Импортируем подкатегории
     console.log('Importing subcategories...');
-    const subcategoriesValues: any[] = [];
+    const subcategoriesDocs: any[] = [];
     
-    for (const category of CATEGORIES) {
+    CATEGORIES.forEach(category => {
       if (category.subcategories && category.subcategories.length > 0) {
-        for (const subcat of category.subcategories) {
-          subcategoriesValues.push([
-            subcat.id,
-            subcat.name,
-            subcat.slug,
-            category.id
-          ]);
-        }
+        category.subcategories.forEach(sub => {
+          subcategoriesDocs.push({
+            _id: sub.id,
+            id: sub.id,
+            name: sub.name,
+            slug: sub.slug || sub.id,
+            categoryId: category.id,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          });
+        });
       }
+    });
+
+    if (subcategoriesDocs.length > 0) {
+      await subcategoriesCollection.insertMany(subcategoriesDocs);
+      console.log(`✓ Imported ${subcategoriesDocs.length} subcategories`);
     }
 
-    if (subcategoriesValues.length > 0) {
-      const subcategoriesSql = `
-        INSERT INTO subcategories (id, name, slug, category_id)
-        VALUES ?
-      `;
-      await connection.query(subcategoriesSql, [subcategoriesValues]);
-      console.log(`✓ Imported ${subcategoriesValues.length} subcategories`);
-    }
-
-    // Коммитим транзакцию
-    await connection.commit();
     console.log('\n✅ All categories and subcategories imported successfully!');
-
-    // Получаем статистику
-    const [categoryCount] = await connection.query('SELECT COUNT(*) as count FROM categories');
-    const [subcategoryCount] = await connection.query('SELECT COUNT(*) as count FROM subcategories');
+    
+    // Статистика
+    const categoriesCount = await categoriesCollection.countDocuments();
+    const subcategoriesCount = await subcategoriesCollection.countDocuments();
     
     console.log(`\n📊 Statistics:`);
-    console.log(`   Categories: ${(categoryCount as any[])[0].count}`);
-    console.log(`   Subcategories: ${(subcategoryCount as any[])[0].count}`);
+    console.log(`   Categories: ${categoriesCount}`);
+    console.log(`   Subcategories: ${subcategoriesCount}`);
 
   } catch (error) {
-    if (connection) {
-      await connection.rollback();
-    }
     console.error('Error importing categories:', error);
     throw error;
-  } finally {
-    if (connection) {
-      connection.release();
-    }
-    await pool.end();
   }
 }
 
@@ -99,4 +82,3 @@ importCategories()
     console.error('Import failed:', error);
     process.exit(1);
   });
-
