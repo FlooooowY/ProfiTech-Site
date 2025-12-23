@@ -30,10 +30,7 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || String(PRODUCTS_PER_PAGE), 10)));
-    // Используем курсорную пагинацию для первых 100 страниц (для производительности)
-    // Для страниц > 100 используем OFFSET (редкий случай)
-    const useCursor = page <= 100;
-    const offset = useCursor ? 0 : (page - 1) * limit;
+    const offset = (page - 1) * limit;
     
     const categoryId = searchParams.get('categoryId');
     const subcategoriesParam = searchParams.get('subcategories');
@@ -126,22 +123,9 @@ export async function GET(request: NextRequest) {
     // Строим финальный запрос
     const whereClause = whereConditions.length > 0 ? 'WHERE ' + whereConditions.join(' AND ') : '';
     const joinClause = joinConditions.length > 0 ? joinConditions.join(' ') : '';
-
-    // Курсорная пагинация: добавляем условие WHERE для курсора (вместо OFFSET)
-    let cursorCondition = '';
-    const cursorParams: any[] = [];
-    if (cursorCreatedAt && cursorId) {
-      // Используем курсор для фильтрации: (created_at, id) > (cursor_created_at, cursor_id)
-      cursorCondition = ` AND (p.created_at > ? OR (p.created_at = ? AND p.id > ?))`;
-      cursorParams.push(cursorCreatedAt, cursorCreatedAt, cursorId);
-    }
     
-    const finalWhereClause = whereClause 
-      ? whereClause + cursorCondition
-      : (cursorCondition ? 'WHERE ' + cursorCondition.substring(5) : ''); // Убираем " AND " в начале
-    
-    // Проверяем кэш (используем cursor вместо page)
-    const cacheKey = `catalog_${cursor || 'first'}_${limit}_${categoryId || 'all'}_${subcategoriesParam || 'none'}_${manufacturersParam || 'none'}_${characteristicsParam || 'none'}_${searchQuery || 'none'}`;
+    // Проверяем кэш
+    const cacheKey = `catalog_${page}_${limit}_${categoryId || 'all'}_${subcategoriesParam || 'none'}_${manufacturersParam || 'none'}_${characteristicsParam || 'none'}_${searchQuery || 'none'}`;
     const cached = getCached(cacheKey);
     if (cached) {
       return NextResponse.json(cached, {
@@ -215,9 +199,12 @@ export async function GET(request: NextRequest) {
       const emptyResult = {
         products: [],
         pagination: {
+          page,
           limit,
+          total: shouldCount ? total : 0,
+          totalPages: shouldCount ? Math.ceil(total / limit) : 0,
           hasNextPage: false,
-          nextCursor: null,
+          hasPrevPage: page > 1,
         },
       };
       setCache(cacheKey, emptyResult);
