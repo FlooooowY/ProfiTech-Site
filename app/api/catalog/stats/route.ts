@@ -27,6 +27,8 @@ export async function GET(request: NextRequest) {
     const categoryId = searchParams.get('categoryId');
     const subcategoriesParam = searchParams.get('subcategories');
     const manufacturersParam = searchParams.get('manufacturers');
+    
+    console.log('[API Catalog Stats] Запрос:', { categoryId, subcategoriesParam, manufacturersParam });
 
     // Создаем ключ кэша
     const cacheKey = `stats_${categoryId || 'all'}_${subcategoriesParam || 'none'}_${manufacturersParam || 'none'}`;

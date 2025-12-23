@@ -27,13 +27,28 @@ export default pool;
 // Утилита для выполнения запросов с обработкой ошибок
 export async function query(sql: string, params?: any[]) {
   try {
+    // Логируем запрос для отладки (только первые 200 символов SQL)
+    const sqlPreview = sql.length > 200 ? sql.substring(0, 200) + '...' : sql;
+    console.log('[DB Query] SQL:', sqlPreview.replace(/\s+/g, ' ').trim());
+    console.log('[DB Query] Params:', params?.length || 0, 'параметров');
+    
     const [results] = await pool.execute(sql, params || []);
+    const resultCount = Array.isArray(results) ? results.length : 'non-array';
+    console.log('[DB Query] Результат: успешно, записей:', resultCount);
     return results;
   } catch (error) {
-    console.error('Database query error:', error);
+    console.error('[DB Query] ОШИБКА ЗАПРОСА:');
+    console.error('[DB Query] SQL:', sql.replace(/\s+/g, ' ').trim());
+    console.error('[DB Query] Params:', params);
+    console.error('[DB Query] Error:', error);
+    if (error instanceof Error) {
+      console.error('[DB Query] Error message:', error.message);
+      console.error('[DB Query] Error code:', (error as any).code);
+      console.error('[DB Query] Error errno:', (error as any).errno);
+    }
     // Если ошибка подключения, пробуем переподключиться
     if (error instanceof Error && error.message.includes('ECONNREFUSED')) {
-      console.error('Database connection refused. Please check your database configuration.');
+      console.error('[DB Query] Database connection refused. Please check your database configuration.');
     }
     throw error;
   }

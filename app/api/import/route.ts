@@ -69,34 +69,53 @@ export async function POST() {
  */
 export async function GET() {
   try {
-
+    console.log('[API Import GET] Запрос статуса импорта');
+    
     const productsPath = path.join(process.cwd(), 'public/data/products.json');
     const categoriesPath = path.join(process.cwd(), 'public/data/categories.json');
 
+    console.log('[API Import GET] Проверка файлов:', { productsPath, categoriesPath });
+
     const productsExist = fs.existsSync(productsPath);
     const categoriesExist = fs.existsSync(categoriesPath);
+
+    console.log('[API Import GET] Файлы существуют:', { productsExist, categoriesExist });
 
     let totalProducts = 0;
     let totalCategories = 0;
 
     if (productsExist) {
-      const products = JSON.parse(fs.readFileSync(productsPath, 'utf-8'));
-      totalProducts = products.length;
+      try {
+        const products = JSON.parse(fs.readFileSync(productsPath, 'utf-8'));
+        totalProducts = Array.isArray(products) ? products.length : 0;
+        console.log('[API Import GET] Загружено продуктов:', totalProducts);
+      } catch (error) {
+        console.error('[API Import GET] Ошибка чтения products.json:', error);
+      }
     }
 
     if (categoriesExist) {
-      const categories = JSON.parse(fs.readFileSync(categoriesPath, 'utf-8'));
-      totalCategories = categories.length;
+      try {
+        const categories = JSON.parse(fs.readFileSync(categoriesPath, 'utf-8'));
+        totalCategories = Array.isArray(categories) ? categories.length : 0;
+        console.log('[API Import GET] Загружено категорий:', totalCategories);
+      } catch (error) {
+        console.error('[API Import GET] Ошибка чтения categories.json:', error);
+      }
     }
 
-    return NextResponse.json({
+    const response = {
       imported: productsExist && categoriesExist,
       totalProducts,
       totalCategories,
       productsPath: productsExist ? '/data/products.json' : null,
       categoriesPath: categoriesExist ? '/data/categories.json' : null,
-    });
+    };
+
+    console.log('[API Import GET] Ответ:', response);
+    return NextResponse.json(response);
   } catch (error) {
+    console.error('[API Import GET] Критическая ошибка:', error);
     return NextResponse.json(
       {
         error: 'Не удалось получить статус импорта',
