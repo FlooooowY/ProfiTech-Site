@@ -163,15 +163,20 @@ export async function GET(request: NextRequest) {
     ]);
 
     // Обрабатываем результаты запросов
-    // query возвращает [rows, fields], но мы уже делаем деструктуризацию в Promise.all
-    const total = Array.isArray(countResult) && countResult[0] 
+    // query возвращает результат напрямую (уже деструктурированный)
+    const total = Array.isArray(countResult) && countResult.length > 0 && countResult[0]
       ? (countResult[0] as any).total || 0 
       : 0;
     
     // Убеждаемся, что productsResult - массив
-    const products = Array.isArray(productsResult) 
-      ? productsResult 
-      : (Array.isArray(productsResult[0]) ? productsResult[0] : []);
+    let products: any[] = [];
+    if (Array.isArray(productsResult)) {
+      products = productsResult;
+    } else if (productsResult && typeof productsResult === 'object' && '0' in productsResult) {
+      // Если это объект с индексом 0 (возможно результат execute)
+      const firstElement = (productsResult as any)[0];
+      products = Array.isArray(firstElement) ? firstElement : [];
+    }
 
     // Если товаров нет, возвращаем пустой результат сразу
     if (products.length === 0) {
