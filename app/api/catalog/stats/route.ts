@@ -80,7 +80,10 @@ export async function GET(request: NextRequest) {
     // Получаем уникальных производителей (UNION логика)
     const manufacturerFilter = {
       ...filter,
-      manufacturer: { $exists: true, $ne: '', $ne: 'Не указан' }
+      manufacturer: { 
+        $exists: true, 
+        $nin: ['', 'Не указан'] // $nin = not in (не равно ни одному из значений)
+      }
     };
     
     const manufacturers = await productsCollection
