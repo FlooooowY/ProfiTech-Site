@@ -28,10 +28,17 @@ export async function GET(request: NextRequest) {
     const subcategoriesParam = searchParams.get('subcategories');
     const manufacturersParam = searchParams.get('manufacturers');
     
+    console.log('[API Stats] Request params:', {
+      categoryId,
+      subcategoriesParam,
+      manufacturersParam
+    });
+    
     // Создаем ключ кэша
     const cacheKey = `stats_${categoryId || 'all'}_${subcategoriesParam || 'none'}_${manufacturersParam || 'none'}`;
     const cached = getCached(cacheKey);
     if (cached) {
+      console.log('[API Stats] Cache hit');
       return NextResponse.json(cached, {
         headers: {
           'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
@@ -41,6 +48,10 @@ export async function GET(request: NextRequest) {
 
     const productsCollection = await getCollection('products');
     const subcategoriesCollection = await getCollection('subcategories');
+    
+    // Проверяем подключение
+    const totalProducts = await productsCollection.countDocuments({}, { maxTimeMS: 5000 });
+    console.log('[API Stats] Total products in DB:', totalProducts);
     
     // Строим фильтр для товаров
     const filter: any = {};
@@ -86,9 +97,12 @@ export async function GET(request: NextRequest) {
       }
     };
     
+    console.log('[API Stats] Manufacturer filter:', JSON.stringify(manufacturerFilter, null, 2));
+    const manufacturersStart = performance.now();
     const manufacturers = await productsCollection
       .distinct('manufacturer', manufacturerFilter)
       .then(results => results.filter(Boolean).sort());
+    console.log('[API Stats] Manufacturers query time:', `${(performance.now() - manufacturersStart).toFixed(2)}ms, found:`, manufacturers.length);
 
     // Получаем характеристики (UNION логика)
     // Используем агрегацию для получения уникальных пар name-value
@@ -116,10 +130,13 @@ export async function GET(request: NextRequest) {
       { $limit: 10000 }
     ];
 
+    console.log('[API Stats] Characteristics pipeline:', JSON.stringify(characteristicsPipeline, null, 2));
+    const characteristicsStart = performance.now();
     const characteristicsResult = await productsCollection
       .aggregate(characteristicsPipeline)
       .maxTimeMS(15000) // Таймаут 15 секунд для агрегации
       .toArray();
+    console.log('[API Stats] Characteristics query time:', `${(performance.now() - characteristicsStart).toFixed(2)}ms, found:`, characteristicsResult.length);
     
     // Формируем объект характеристик
     const characteristics: { [key: string]: string[] } = {};

@@ -38,10 +38,21 @@ export async function GET(request: NextRequest) {
     const characteristicsParam = searchParams.get('characteristics');
     const searchQuery = searchParams.get('search')?.trim();
 
+    console.log('[API Catalog] Request params:', {
+      page,
+      limit,
+      categoryId,
+      subcategoriesParam,
+      manufacturersParam,
+      characteristicsParam,
+      searchQuery
+    });
+
     // Проверяем кэш
     const cacheKey = `catalog_${page}_${limit}_${categoryId || 'all'}_${subcategoriesParam || 'none'}_${manufacturersParam || 'none'}_${characteristicsParam || 'none'}_${searchQuery || 'none'}`;
     const cached = getCached(cacheKey);
     if (cached) {
+      console.log('[API Catalog] Cache hit');
       return NextResponse.json(cached, {
         headers: {
           'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
@@ -50,6 +61,10 @@ export async function GET(request: NextRequest) {
     }
 
     const productsCollection = await getCollection<Product>('products');
+    
+    // Проверяем подключение и количество товаров
+    const totalProducts = await productsCollection.countDocuments({}, { maxTimeMS: 5000 });
+    console.log('[API Catalog] Total products in DB:', totalProducts);
     
     // Строим фильтр MongoDB
     const filter: any = {};
@@ -88,6 +103,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Фильтр по характеристикам (AND логика - товар должен иметь все выбранные характеристики)
+    const charFilters: any[] = [];
     if (characteristicsParam) {
       try {
         const characteristics = JSON.parse(characteristicsParam) as { [key: string]: string[] };
@@ -95,14 +111,14 @@ export async function GET(request: NextRequest) {
         
         if (charEntries.length > 0) {
           // Для MongoDB используем $elemMatch для проверки характеристик внутри массива
-          filter.$and = charEntries.map(([charName, charValues]) => ({
+          charFilters.push(...charEntries.map(([charName, charValues]) => ({
             characteristics: {
               $elemMatch: {
                 name: charName,
                 value: { $in: charValues }
               }
             }
-          }));
+          })));
         }
       } catch (e) {
         console.error('[API Catalog] Error parsing characteristics:', e);
@@ -114,25 +130,34 @@ export async function GET(request: NextRequest) {
       const searchWords = searchQuery.split(/\s+/).filter(w => w.length > 0);
       if (searchWords.length > 0) {
         // AND логика: все слова должны быть найдены в любом из полей
-        // Используем $and с $or для каждого слова
-        filter.$and = searchWords.map(word => ({
+        charFilters.push(...searchWords.map(word => ({
           $or: [
             { name: { $regex: word, $options: 'i' } },
             { description: { $regex: word, $options: 'i' } },
             { manufacturer: { $regex: word, $options: 'i' } }
           ]
-        }));
+        })));
       }
     }
 
+    // Объединяем все $and условия
+    if (charFilters.length > 0) {
+      filter.$and = charFilters;
+    }
+
+    console.log('[API Catalog] Filter:', JSON.stringify(filter, null, 2));
+
     // COUNT запрос только для первых 10 страниц (оптимизация)
     const shouldCount = page <= 10;
+    const countStart = performance.now();
     const total = shouldCount 
       ? await productsCollection.countDocuments(filter, { maxTimeMS: 10000 })
       : 0;
+    console.log('[API Catalog] Count query time:', `${(performance.now() - countStart).toFixed(2)}ms, total:`, total);
 
     // Запрос товаров с пагинацией
     // Используем maxTimeMS для предотвращения зависаний
+    const findStart = performance.now();
     const products = await productsCollection
       .find(filter)
       .sort({ createdAt: 1, _id: 1 }) // Сортировка для стабильной пагинации
@@ -140,6 +165,7 @@ export async function GET(request: NextRequest) {
       .limit(limit)
       .maxTimeMS(10000) // Таймаут 10 секунд
       .toArray();
+    console.log('[API Catalog] Find query time:', `${(performance.now() - findStart).toFixed(2)}ms, found:`, products.length);
 
     // Если товаров нет, возвращаем пустой результат
     if (products.length === 0) {
@@ -210,3 +236,4 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
