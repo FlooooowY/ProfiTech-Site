@@ -28,9 +28,18 @@ export async function GET(request: NextRequest) {
   
   try {
     const searchParams = request.nextUrl.searchParams;
-    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || String(PRODUCTS_PER_PAGE), 10)));
-    const offset = (page - 1) * limit;
+    
+    // Курсорная пагинация вместо OFFSET для лучшей производительности
+    const cursor = searchParams.get('cursor'); // Формат: "created_at|id" или null для первой страницы
+    let cursorCreatedAt: string | null = null;
+    let cursorId: string | null = null;
+    
+    if (cursor) {
+      const [createdAt, id] = cursor.split('|');
+      cursorCreatedAt = createdAt || null;
+      cursorId = id || null;
+    }
     
     const categoryId = searchParams.get('categoryId');
     const subcategoriesParam = searchParams.get('subcategories');
@@ -124,8 +133,21 @@ export async function GET(request: NextRequest) {
     const whereClause = whereConditions.length > 0 ? 'WHERE ' + whereConditions.join(' AND ') : '';
     const joinClause = joinConditions.length > 0 ? joinConditions.join(' ') : '';
 
-    // Проверяем кэш
-    const cacheKey = `catalog_${page}_${limit}_${categoryId || 'all'}_${subcategoriesParam || 'none'}_${manufacturersParam || 'none'}_${characteristicsParam || 'none'}_${searchQuery || 'none'}`;
+    // Курсорная пагинация: добавляем условие WHERE для курсора (вместо OFFSET)
+    let cursorCondition = '';
+    const cursorParams: any[] = [];
+    if (cursorCreatedAt && cursorId) {
+      // Используем курсор для фильтрации: (created_at, id) > (cursor_created_at, cursor_id)
+      cursorCondition = ` AND (p.created_at > ? OR (p.created_at = ? AND p.id > ?))`;
+      cursorParams.push(cursorCreatedAt, cursorCreatedAt, cursorId);
+    }
+    
+    const finalWhereClause = whereClause 
+      ? whereClause + cursorCondition
+      : (cursorCondition ? 'WHERE ' + cursorCondition.substring(5) : ''); // Убираем " AND " в начале
+    
+    // Проверяем кэш (используем cursor вместо page)
+    const cacheKey = `catalog_${cursor || 'first'}_${limit}_${categoryId || 'all'}_${subcategoriesParam || 'none'}_${manufacturersParam || 'none'}_${characteristicsParam || 'none'}_${searchQuery || 'none'}`;
     const cached = getCached(cacheKey);
     if (cached) {
       return NextResponse.json(cached, {
@@ -134,13 +156,11 @@ export async function GET(request: NextRequest) {
         }
       });
     }
-    
-    // Запрос для подсчета общего количества (оптимизированный - без DISTINCT если нет JOIN)
-    const countQuery = joinClause 
-      ? `SELECT COUNT(DISTINCT p.id) as total FROM products p ${joinClause} ${whereClause}`
-      : `SELECT COUNT(*) as total FROM products p ${whereClause}`;
 
-    // Оптимизированный запрос товаров с пагинацией (убрали DISTINCT если нет JOIN - он замедляет)
+    // Убрали COUNT запрос - он очень медленный на больших таблицах (3000ms+)
+    // Вместо этого используем курсорную пагинацию без подсчета общего количества
+    
+    // Оптимизированный запрос товаров с курсорной пагинацией (БЕЗ OFFSET!)
     const productsQuery = joinClause
       ? `
         SELECT DISTINCT 
@@ -155,9 +175,9 @@ export async function GET(request: NextRequest) {
           p.updated_at as updatedAt
         FROM products p
         ${joinClause}
-        ${whereClause}
-        ORDER BY p.id
-        LIMIT ${limit} OFFSET ${offset}
+        ${finalWhereClause}
+        ORDER BY p.created_at ASC, p.id ASC
+        LIMIT ${limit}
       `
       : `
         SELECT 
@@ -171,22 +191,16 @@ export async function GET(request: NextRequest) {
           p.created_at as createdAt,
           p.updated_at as updatedAt
         FROM products p
-        ${whereClause}
-        ORDER BY p.id
-        LIMIT ${limit} OFFSET ${offset}
+        ${finalWhereClause}
+        ORDER BY p.created_at ASC, p.id ASC
+        LIMIT ${limit}
       `;
+    
+    // Объединяем параметры запроса с параметрами курсора
+    const finalQueryParams = [...queryParams, ...cursorParams];
 
-    // Выполняем запросы параллельно для максимальной производительности
-    const [countResult, productsResult] = await Promise.all([
-      query(countQuery, queryParams),
-      query(productsQuery, queryParams) // LIMIT и OFFSET уже встроены в SQL
-    ]);
-
-    // Обрабатываем результаты запросов
-    // query возвращает результат напрямую (уже деструктурированный)
-    const total = Array.isArray(countResult) && countResult.length > 0 && countResult[0]
-      ? (countResult[0] as any).total || 0 
-      : 0;
+    // Выполняем запрос товаров (без COUNT - он очень медленный)
+    const productsResult = await query(productsQuery, finalQueryParams);
     
     // Убеждаемся, что productsResult - массив
     let products: any[] = [];
@@ -200,22 +214,27 @@ export async function GET(request: NextRequest) {
 
     // Если товаров нет, возвращаем пустой результат сразу
     if (products.length === 0) {
-      return NextResponse.json({
+      const emptyResult = {
         products: [],
         pagination: {
-          page,
           limit,
-          total: 0,
-          totalPages: 0,
           hasNextPage: false,
-          hasPrevPage: false,
+          nextCursor: null,
         },
-      }, {
+      };
+      setCache(cacheKey, emptyResult);
+      return NextResponse.json(emptyResult, {
         headers: {
-          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300'
+          'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
         }
       });
     }
+    
+    // Формируем курсор для следующей страницы (из последнего товара)
+    const lastProduct = products[products.length - 1];
+    const nextCursor = products.length === limit 
+      ? `${lastProduct.createdAt}|${lastProduct.id}`
+      : null;
 
     // Загружаем характеристики для полученных товаров (батч запрос, только для отображаемых товаров)
     const productIds = products.map(p => p.id);
@@ -284,19 +303,15 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    const totalPages = Math.ceil(total / limit);
     const queryTime = performance.now() - startTime;
     
     // Сохраняем в кэш
     const result = {
       products: formattedProducts,
       pagination: {
-        page,
         limit,
-        total,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPrevPage: page > 1,
+        hasNextPage: nextCursor !== null,
+        nextCursor,
       },
       _meta: {
         queryTime: `${queryTime.toFixed(2)}ms`

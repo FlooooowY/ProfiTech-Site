@@ -51,7 +51,10 @@ function CatalogPageContent() {
       useCatalogStore.setState({ isLoading: true });
       
       const params = new URLSearchParams();
-      params.set('page', String(currentPage));
+      // Используем курсорную пагинацию вместо page
+      if (nextCursor) {
+        params.set('cursor', nextCursor);
+      }
       params.set('limit', String(PRODUCTS_PER_PAGE));
       
       if (appliedCategory) params.set('categoryId', appliedCategory);
@@ -89,13 +92,25 @@ function CatalogPageContent() {
         const data = await response.json();
         const loadTime = performance.now() - startTime;
         
-        setProducts(data.products || []);
-        useCatalogStore.setState({ 
-          filteredProducts: data.products || [],
-          isLoading: false 
-        });
-        setTotalPages(data.pagination?.totalPages || 1);
-        setTotalProducts(data.pagination?.total || 0);
+        // Для курсорной пагинации накапливаем товары
+        const newProducts = data.products || [];
+        if (nextCursor) {
+          // Если есть курсор, добавляем к существующим товарам
+          setProducts(prev => [...prev, ...newProducts]);
+          useCatalogStore.setState({ 
+            filteredProducts: [...filteredProducts, ...newProducts],
+            isLoading: false 
+          });
+        } else {
+          // Первая загрузка - заменяем товары
+          setProducts(newProducts);
+          useCatalogStore.setState({ 
+            filteredProducts: newProducts,
+            isLoading: false 
+          });
+        }
+        setNextCursor(data.pagination?.nextCursor || null);
+        // Убрали totalPages и totalProducts - они не нужны при курсорной пагинации
       } else {
         console.error('[Catalog] Failed to load products:', response.status);
         useCatalogStore.setState({ 
@@ -110,7 +125,7 @@ function CatalogPageContent() {
         isLoading: false 
       });
     }
-  }, [currentPage, appliedCategory, appliedSubcategories, appliedManufacturers, appliedCharacteristics, searchQuery, setProducts]);
+  }, [nextCursor, appliedCategory, appliedSubcategories, appliedManufacturers, appliedCharacteristics, searchQuery, setProducts, filteredProducts]);
 
   // Загрузка статистики (производители, характеристики) - обновляется сразу при изменении pendingFilters
   const loadStats = useCallback(async () => {
@@ -207,7 +222,7 @@ function CatalogPageContent() {
   // Слушаем обновления поиска из Header
   useEffect(() => {
     const handleSearchUpdate = () => {
-      setCurrentPage(1); // Сбрасываем на первую страницу при новом поиске
+      setNextCursor(null); // Сбрасываем курсор при новом поиске
       loadProducts();
     };
 
@@ -287,7 +302,7 @@ function CatalogPageContent() {
     setAppliedSubcategories(pendingFilters.subcategories || []);
     setAppliedManufacturers(pendingFilters.manufacturers);
     setAppliedCharacteristics(pendingFilters.characteristics);
-    setCurrentPage(1);
+    setNextCursor(null); // Сбрасываем курсор при изменении фильтров
   };
 
   // Инициализация pendingFilters при монтировании
@@ -320,7 +335,7 @@ function CatalogPageContent() {
   // Сброс на первую страницу при изменении примененных фильтров
   useEffect(() => {
     if (currentPage !== 1) {
-      setCurrentPage(1);
+      setNextCursor(null); // Сбрасываем курсор при изменении фильтров
     }
   }, [appliedCategory, appliedSubcategories, appliedManufacturers, appliedCharacteristics]);
 
@@ -336,7 +351,7 @@ function CatalogPageContent() {
     setAppliedSubcategories([]);
     setAppliedManufacturers([]);
     setAppliedCharacteristics({});
-    setCurrentPage(1);
+    setNextCursor(null); // Сбрасываем курсор при изменении фильтров
     clearFilters();
   };
 
