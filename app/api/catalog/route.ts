@@ -183,7 +183,13 @@ export async function GET(request: NextRequest) {
       shouldCount ? query(countQuery, queryParams) : Promise.resolve([{ total: 0 }]),
       query(productsQuery, queryParams)
     ]);
-    
+
+    // Получаем общее количество товаров (если считали)
+    const total =
+      shouldCount && Array.isArray(countResult) && countResult.length > 0
+        ? Number((countResult[0] as any).total ?? 0)
+        : 0;
+
     // Убеждаемся, что productsResult - массив
     let products: any[] = [];
     if (Array.isArray(productsResult)) {
