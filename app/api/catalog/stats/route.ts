@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCollection } from '@/lib/db';
+import { CATEGORIES } from '@/constants/categories';
 
 // Кэш для статистики
 const statsCache = new Map<string, { data: any; timestamp: number }>();
@@ -73,28 +74,70 @@ export async function GET(request: NextRequest) {
           .toArray();
         
         // Получаем slug категории для формирования полного формата
+        // Используем константы CATEGORIES для получения правильного slug
         let categorySlug = null;
         if (categoryId) {
-          const categoryDoc = await categoriesCollection.findOne({ _id: categoryId } as any);
-          categorySlug = categoryDoc?.slug || categoryDoc?._id;
+          const categoryFromConstants = CATEGORIES.find(cat => cat.id === categoryId);
+          if (categoryFromConstants) {
+            categorySlug = categoryFromConstants.slug;
+          } else {
+            // Fallback: используем данные из MongoDB
+            const categoryDoc = await categoriesCollection.findOne({ _id: categoryId } as any);
+            categorySlug = categoryDoc?.slug || categoryDoc?._id;
+          }
         }
         
         // Формируем полный формат subcategoryId: ${categorySlug}-${subcategorySlug}
+        // Используем константы CATEGORIES для получения правильного slug
         const subcategoryValues: string[] = [];
         
         for (const subDoc of subcategoryDocs) {
-          const subSlug = subDoc.slug || subDoc._id || subDoc.id;
+          const subId = subDoc._id || subDoc.id; // ID подкатегории (например, "2-4")
+          
+          // Ищем подкатегорию в константах CATEGORIES для получения правильного slug
+          let subcategorySlug: string | null = null;
+          
+          if (categoryId) {
+            const categoryFromConstants = CATEGORIES.find(cat => cat.id === categoryId);
+            const subFromConstants = categoryFromConstants?.subcategories?.find(
+              sub => sub.id === subId
+            );
+            if (subFromConstants) {
+              subcategorySlug = subFromConstants.slug;
+            }
+          }
+          
+          // Если не нашли в константах, пробуем использовать slug из MongoDB
+          if (!subcategorySlug) {
+            subcategorySlug = subDoc.slug || null;
+          }
+          
+          // Если все еще нет slug, пропускаем эту подкатегорию
+          if (!subcategorySlug) {
+            console.warn(`[API Stats] Не удалось найти slug для подкатегории ${subId}`);
+            continue;
+          }
+          
+          // Формируем полный формат: категория-подкатегория
           if (categorySlug) {
-            subcategoryValues.push(`${categorySlug}-${subSlug}`);
+            subcategoryValues.push(`${categorySlug}-${subcategorySlug}`);
           } else {
             // Если нет категории, пробуем найти её через subcategory
             const subCategoryId = subDoc.categoryId;
             if (subCategoryId) {
-              const catDoc = await categoriesCollection.findOne({ _id: subCategoryId } as any);
-              const catSlug = catDoc?.slug || catDoc?._id || subCategoryId;
-              subcategoryValues.push(`${catSlug}-${subSlug}`);
+              const categoryFromConstants = CATEGORIES.find(cat => cat.id === subCategoryId);
+              const catSlug = categoryFromConstants?.slug || null;
+              
+              if (!catSlug) {
+                const catDoc = await categoriesCollection.findOne({ _id: subCategoryId } as any);
+                const catSlugFromMongo = catDoc?.slug || catDoc?._id || subCategoryId;
+                subcategoryValues.push(`${catSlugFromMongo}-${subcategorySlug}`);
+              } else {
+                subcategoryValues.push(`${catSlug}-${subcategorySlug}`);
+              }
             } else {
-              subcategoryValues.push(subSlug);
+              // Fallback: используем только slug подкатегории
+              subcategoryValues.push(subcategorySlug);
             }
           }
         }
