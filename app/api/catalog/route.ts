@@ -113,12 +113,15 @@ export async function GET(request: NextRequest) {
     if (searchQuery && searchQuery.length >= 2) {
       const searchWords = searchQuery.split(/\s+/).filter(w => w.length > 0);
       if (searchWords.length > 0) {
-        // Используем $or с $regex для поиска по нескольким полям
-        filter.$or = searchWords.map(word => [
-          { name: { $regex: word, $options: 'i' } },
-          { description: { $regex: word, $options: 'i' } },
-          { manufacturer: { $regex: word, $options: 'i' } }
-        ]).flat();
+        // AND логика: все слова должны быть найдены в любом из полей
+        // Используем $and с $or для каждого слова
+        filter.$and = searchWords.map(word => ({
+          $or: [
+            { name: { $regex: word, $options: 'i' } },
+            { description: { $regex: word, $options: 'i' } },
+            { manufacturer: { $regex: word, $options: 'i' } }
+          ]
+        }));
       }
     }
 
