@@ -3,7 +3,7 @@ import { query } from '@/lib/db';
 
 // Кэш для статистики
 const statsCache = new Map<string, { data: any; timestamp: number }>();
-const CACHE_TTL = 2 * 60 * 1000; // 2 минуты
+const CACHE_TTL = 30 * 60 * 1000; // 30 минут (увеличено для производительности)
 
 function getCached(key: string) {
   const cached = statsCache.get(key);
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     const subcategoriesParam = searchParams.get('subcategories');
     const manufacturersParam = searchParams.get('manufacturers');
     
-    console.log('[API Catalog Stats] Запрос:', { categoryId, subcategoriesParam, manufacturersParam });
+    // Убрали лишние логи для производительности
 
     // Создаем ключ кэша
     const cacheKey = `stats_${categoryId || 'all'}_${subcategoriesParam || 'none'}_${manufacturersParam || 'none'}`;
@@ -104,8 +104,7 @@ export async function GET(request: NextRequest) {
       LIMIT 1000
     `;
     
-    console.log('[API Catalog Stats] SQL запрос производителей:', manufacturersQuery);
-    console.log('[API Catalog Stats] Параметры:', queryParams);
+    // Убрали лишние логи для производительности
 
     // Получаем характеристики (UNION логика - все характеристики из выбранных подкатегорий)
     const characteristicsWhere = whereClause ? whereClause : '';

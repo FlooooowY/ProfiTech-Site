@@ -27,14 +27,8 @@ export default pool;
 // Утилита для выполнения запросов с обработкой ошибок
 export async function query(sql: string, params?: any[]) {
   try {
-    // Логируем запрос для отладки (только первые 200 символов SQL)
-    const sqlPreview = sql.length > 200 ? sql.substring(0, 200) + '...' : sql;
-    console.log('[DB Query] SQL:', sqlPreview.replace(/\s+/g, ' ').trim());
-    console.log('[DB Query] Params:', params?.length || 0, 'параметров');
-    
+    // Убрали лишние логи для производительности (оставляем только ошибки)
     const [results] = await pool.execute(sql, params || []);
-    const resultCount = Array.isArray(results) ? results.length : 'non-array';
-    console.log('[DB Query] Результат: успешно, записей:', resultCount);
     return results;
   } catch (error) {
     console.error('[DB Query] ОШИБКА ЗАПРОСА:');

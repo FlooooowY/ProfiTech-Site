@@ -6,7 +6,7 @@ const PRODUCTS_PER_PAGE = 24;
 
 // Кэш для часто используемых запросов
 const queryCache = new Map<string, { data: any; timestamp: number }>();
-const CACHE_TTL = 5 * 60 * 1000; // 5 минут
+const CACHE_TTL = 30 * 60 * 1000; // 30 минут (увеличено для производительности)
 
 function getCached(key: string) {
   const cached = queryCache.get(key);
@@ -28,7 +28,6 @@ export async function GET(request: NextRequest) {
   
   try {
     const searchParams = request.nextUrl.searchParams;
-    console.log('[API Catalog] Запрос:', Object.fromEntries(searchParams.entries()));
     const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || String(PRODUCTS_PER_PAGE), 10)));
     const offset = (page - 1) * limit;
@@ -197,17 +196,18 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Загружаем характеристики для полученных товаров (батч запрос)
+    // Загружаем характеристики для полученных товаров (батч запрос, только для отображаемых товаров)
     const productIds = products.map(p => p.id);
     let characteristicsMap = new Map<string, ProductCharacteristic[]>();
 
-    if (productIds.length > 0) {
+    if (productIds.length > 0 && productIds.length <= 100) { // Загружаем только если товаров не слишком много
       const placeholders = productIds.map(() => '?').join(',');
       const characteristicsResult = await query(
         `SELECT product_id, name, value 
          FROM product_characteristics 
          WHERE product_id IN (${placeholders})
-         ORDER BY product_id, name`,
+         ORDER BY product_id, name
+         LIMIT 5000`, // Ограничиваем количество характеристик
         productIds
       );
 
