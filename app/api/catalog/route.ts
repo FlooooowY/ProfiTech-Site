@@ -151,15 +151,10 @@ export async function GET(request: NextRequest) {
       LIMIT ? OFFSET ?
     `;
 
-    queryParams.push(limit, offset);
-
-    // Создаем копию параметров без limit и offset для count запроса
-    const countParams = queryParams.slice(0, -2);
-    
     // Выполняем запросы параллельно для максимальной производительности
     const [countResult, productsResult] = await Promise.all([
-      query(countQuery, countParams),
-      query(productsQuery, queryParams)
+      query(countQuery, queryParams),
+      query(productsQuery, [...queryParams, limit, offset])
     ]);
 
     const total = (countResult as any[])[0]?.total || 0;

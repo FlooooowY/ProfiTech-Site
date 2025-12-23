@@ -84,27 +84,33 @@ export async function GET(request: NextRequest) {
     }
 
     const whereClause = whereConditions.length > 0 ? 'WHERE ' + whereConditions.join(' AND ') : '';
+    
+    // Формируем WHERE для производителей
+    let manufacturerWhere: string;
+    if (whereClause) {
+      manufacturerWhere = whereClause + ' AND p.manufacturer IS NOT NULL AND p.manufacturer != \'\' AND p.manufacturer != \'Не указан\'';
+    } else {
+      manufacturerWhere = 'WHERE p.manufacturer IS NOT NULL AND p.manufacturer != \'\' AND p.manufacturer != \'Не указан\'';
+    }
 
     // Получаем уникальных производителей (UNION логика - все производители из выбранных подкатегорий)
     const manufacturersQuery = `
       SELECT DISTINCT p.manufacturer
       FROM products p
-      ${whereClause}
-      AND p.manufacturer IS NOT NULL 
-      AND p.manufacturer != ''
-      AND p.manufacturer != 'Не указан'
+      ${manufacturerWhere}
       ORDER BY p.manufacturer
       LIMIT 1000
     `;
 
     // Получаем характеристики (UNION логика - все характеристики из выбранных подкатегорий)
+    const characteristicsWhere = whereClause ? whereClause : '';
     const characteristicsQuery = `
       SELECT DISTINCT 
         pc.name,
         pc.value
       FROM product_characteristics pc
       INNER JOIN products p ON pc.product_id = p.id
-      ${whereClause}
+      ${characteristicsWhere}
       ORDER BY pc.name, pc.value
       LIMIT 10000
     `;
@@ -112,11 +118,13 @@ export async function GET(request: NextRequest) {
     // Получаем доступные категории (для обратной синхронизации)
     let availableCategories: string[] = [];
     if (manufacturersParam) {
+      const categoryWhere = whereClause 
+        ? whereClause + ' AND p.category_id IS NOT NULL'
+        : 'WHERE p.category_id IS NOT NULL';
       const categoriesQuery = `
         SELECT DISTINCT p.category_id
         FROM products p
-        ${whereClause}
-        AND p.category_id IS NOT NULL
+        ${categoryWhere}
       `;
       const [categoriesResult] = await query(categoriesQuery, queryParams) as any[];
       availableCategories = (categoriesResult as any[]).map((row: any) => row.category_id);
