@@ -40,8 +40,6 @@ function CatalogPageContent() {
   const { addItem } = useCartStore();
   const [totalPages, setTotalPages] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalProducts, setTotalProducts] = useState(0);
   const [manufacturers, setManufacturers] = useState<string[]>([]);
   const [availableCharacteristics, setAvailableCharacteristics] = useState<{ [key: string]: string[] }>({});
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
@@ -289,7 +287,7 @@ function CatalogPageContent() {
     setAppliedSubcategories(pendingFilters.subcategories || []);
     setAppliedManufacturers(pendingFilters.manufacturers);
     setAppliedCharacteristics(pendingFilters.characteristics);
-    setNextCursor(null); // Сбрасываем курсор при изменении фильтров
+    setCurrentPage(1); // Сбрасываем на первую страницу при изменении фильтров
   };
 
   // Инициализация pendingFilters при монтировании
@@ -338,7 +336,7 @@ function CatalogPageContent() {
     setAppliedSubcategories([]);
     setAppliedManufacturers([]);
     setAppliedCharacteristics({});
-    setNextCursor(null); // Сбрасываем курсор при изменении фильтров
+    setCurrentPage(1); // Сбрасываем на первую страницу при изменении фильтров
     clearFilters();
   };
 
