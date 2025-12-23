@@ -105,11 +105,44 @@ DB_NAME=profitech_db
 1. Данные сохраняются в `public/data/products.json`
 2. Запустите `npm run db:import-products` для синхронизации с MySQL
 
+## Проверка импорта
+
+После импорта проверьте данные:
+
+### Быстрая проверка через скрипт:
+
+```bash
+npm run db:check
+```
+
+Этот скрипт покажет:
+- Общее количество товаров, категорий, подкатегорий
+- Количество характеристик и изображений
+- Статистику по категориям
+- Топ-10 производителей
+- Проверку целостности данных
+
+### Ручная проверка через MySQL:
+
+```bash
+# Количество товаров
+mysql -u admin_db -p profitech_db -e "SELECT COUNT(*) as total FROM products;"
+
+# Количество по категориям
+mysql -u admin_db -p profitech_db -e "SELECT c.name, COUNT(p.id) as count FROM categories c LEFT JOIN products p ON c.id = p.category_id GROUP BY c.id, c.name ORDER BY count DESC;"
+
+# Количество характеристик
+mysql -u admin_db -p profitech_db -e "SELECT COUNT(*) as total FROM product_characteristics;"
+
+# Количество изображений
+mysql -u admin_db -p profitech_db -e "SELECT COUNT(*) as total FROM product_images;"
+```
+
 ## Резервное копирование
 
 Рекомендуется регулярно делать бэкап базы данных:
 
 ```bash
-mysqldump -u profitech_db -p profitech_db > backup.sql
+mysqldump -u admin_db -p profitech_db > backup.sql
 ```
 
