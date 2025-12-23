@@ -135,10 +135,14 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Убрали COUNT запрос - он очень медленный на больших таблицах (3000ms+)
-    // Вместо этого используем курсорную пагинацию без подсчета общего количества
-    
-    // Оптимизированный запрос товаров с курсорной пагинацией (БЕЗ OFFSET!)
+    // Запрос для подсчета общего количества (только для первых 10 страниц - оптимизация)
+    const shouldCount = page <= 10;
+    const countQuery = joinClause 
+      ? `SELECT COUNT(DISTINCT p.id) as total FROM products p ${joinClause} ${whereClause}`
+      : `SELECT COUNT(*) as total FROM products p ${whereClause}`;
+
+    // Оптимизированный запрос товаров с пагинацией
+    // Используем ORDER BY created_at, id для использования индексов
     const productsQuery = joinClause
       ? `
         SELECT DISTINCT 
@@ -153,9 +157,9 @@ export async function GET(request: NextRequest) {
           p.updated_at as updatedAt
         FROM products p
         ${joinClause}
-        ${finalWhereClause}
+        ${whereClause}
         ORDER BY p.created_at ASC, p.id ASC
-        LIMIT ${limit}
+        LIMIT ${limit} OFFSET ${offset}
       `
       : `
         SELECT 
@@ -169,19 +173,15 @@ export async function GET(request: NextRequest) {
           p.created_at as createdAt,
           p.updated_at as updatedAt
         FROM products p
-        ${finalWhereClause}
+        ${whereClause}
         ORDER BY p.created_at ASC, p.id ASC
-        LIMIT ${limit}
+        LIMIT ${limit} OFFSET ${offset}
       `;
-    
-    // Объединяем параметры запроса с параметрами курсора
-    const finalQueryParams = [...queryParams, ...cursorParams];
 
     // Выполняем запросы параллельно (COUNT только для первых 10 страниц - оптимизация)
-    const shouldCount = page <= 10;
     const [countResult, productsResult] = await Promise.all([
       shouldCount ? query(countQuery, queryParams) : Promise.resolve([{ total: 0 }]),
-      query(productsQuery, finalQueryParams)
+      query(productsQuery, queryParams)
     ]);
     
     // Убеждаемся, что productsResult - массив
@@ -214,12 +214,6 @@ export async function GET(request: NextRequest) {
         }
       });
     }
-    
-    // Формируем курсор для следующей страницы (из последнего товара)
-    const lastProduct = products[products.length - 1];
-    const nextCursor = products.length === limit 
-      ? `${lastProduct.createdAt}|${lastProduct.id}`
-      : null;
 
     // Загружаем характеристики для полученных товаров (батч запрос, только для отображаемых товаров)
     const productIds = products.map(p => p.id);
