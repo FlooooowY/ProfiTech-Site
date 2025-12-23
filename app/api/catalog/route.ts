@@ -265,8 +265,9 @@ export async function GET(request: NextRequest) {
 
     const totalPages = Math.ceil(total / limit);
     const queryTime = performance.now() - startTime;
-
-    return NextResponse.json({
+    
+    // Сохраняем в кэш
+    const result = {
       products: formattedProducts,
       pagination: {
         page,
@@ -279,9 +280,12 @@ export async function GET(request: NextRequest) {
       _meta: {
         queryTime: `${queryTime.toFixed(2)}ms`
       }
-    }, {
+    };
+    setCache(cacheKey, result);
+
+    return NextResponse.json(result, {
       headers: {
-        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300'
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
       }
     });
 
