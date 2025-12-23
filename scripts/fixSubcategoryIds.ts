@@ -155,7 +155,11 @@ async function fixSubcategoryIds() {
           );
           if (subFromConstants) {
             subcategorySlug = subFromConstants.slug;
-          } else {
+          }
+        }
+        
+        // Если еще не нашли, пробуем другие варианты
+        if (!subcategorySlug) {
           // Вариант 2: subcategoryId уже в формате category-subcategory
           // Извлекаем часть после категории
           const parts = currentSubcategoryId.split('-');
