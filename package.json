@@ -11,6 +11,7 @@
     "db:migrate-mysql-to-mongo": "node scripts/migrateToMongoDB.js",
     "db:import-categories": "tsx scripts/importCategories.ts",
     "db:import-products": "tsx scripts/importToMongoDB.ts",
+    "db:fix-subcategories": "tsx scripts/fixSubcategoryIds.ts",
     "db:check": "node scripts/checkMongoDB.js"
   },
   "dependencies": {
