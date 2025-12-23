@@ -28,18 +28,12 @@ export async function GET(request: NextRequest) {
   
   try {
     const searchParams = request.nextUrl.searchParams;
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
     const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || String(PRODUCTS_PER_PAGE), 10)));
-    
-    // Курсорная пагинация вместо OFFSET для лучшей производительности
-    const cursor = searchParams.get('cursor'); // Формат: "created_at|id" или null для первой страницы
-    let cursorCreatedAt: string | null = null;
-    let cursorId: string | null = null;
-    
-    if (cursor) {
-      const [createdAt, id] = cursor.split('|');
-      cursorCreatedAt = createdAt || null;
-      cursorId = id || null;
-    }
+    // Используем курсорную пагинацию для первых 100 страниц (для производительности)
+    // Для страниц > 100 используем OFFSET (редкий случай)
+    const useCursor = page <= 100;
+    const offset = useCursor ? 0 : (page - 1) * limit;
     
     const categoryId = searchParams.get('categoryId');
     const subcategoriesParam = searchParams.get('subcategories');
@@ -199,8 +193,12 @@ export async function GET(request: NextRequest) {
     // Объединяем параметры запроса с параметрами курсора
     const finalQueryParams = [...queryParams, ...cursorParams];
 
-    // Выполняем запрос товаров (без COUNT - он очень медленный)
-    const productsResult = await query(productsQuery, finalQueryParams);
+    // Выполняем запросы параллельно (COUNT только для первых 10 страниц - оптимизация)
+    const shouldCount = page <= 10;
+    const [countResult, productsResult] = await Promise.all([
+      shouldCount ? query(countQuery, queryParams) : Promise.resolve([{ total: 0 }]),
+      query(productsQuery, finalQueryParams)
+    ]);
     
     // Убеждаемся, что productsResult - массив
     let products: any[] = [];
@@ -303,15 +301,19 @@ export async function GET(request: NextRequest) {
       };
     });
 
+    const totalPages = shouldCount ? Math.ceil(total / limit) : 0;
     const queryTime = performance.now() - startTime;
     
     // Сохраняем в кэш
     const result = {
       products: formattedProducts,
       pagination: {
+        page,
         limit,
-        hasNextPage: nextCursor !== null,
-        nextCursor,
+        total: shouldCount ? total : 0,
+        totalPages,
+        hasNextPage: shouldCount ? page < totalPages : products.length === limit,
+        hasPrevPage: page > 1,
       },
       _meta: {
         queryTime: `${queryTime.toFixed(2)}ms`
