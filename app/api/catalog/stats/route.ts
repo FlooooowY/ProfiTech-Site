@@ -137,10 +137,12 @@ export async function GET(request: NextRequest) {
       // Если выбраны подкатегории, но не производители, показываем категории этих подкатегорий
       const subcategories = subcategoriesParam.split(',').filter(Boolean);
       if (subcategories.length > 0) {
-        const categories = await subcategoriesCollection
-          .distinct('categoryId', { _id: { $in: subcategories } })
-          .then(results => results.filter(Boolean));
-        availableCategories = categories;
+        const subcategoriesDocs = await subcategoriesCollection
+          .find({ _id: { $in: subcategories } })
+          .toArray();
+        availableCategories = subcategoriesDocs
+          .map(doc => doc.categoryId || doc._id)
+          .filter(Boolean);
       }
     } else if (categoryId) {
       availableCategories = [categoryId];
