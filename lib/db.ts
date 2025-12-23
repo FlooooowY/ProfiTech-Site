@@ -1,4 +1,4 @@
-import { MongoClient, Db, Collection } from 'mongodb';
+import { MongoClient, Db, Collection, Document } from 'mongodb';
 
 // Конфигурация подключения к MongoDB
 const uri = process.env.MONGODB_URI || 
@@ -45,7 +45,7 @@ export async function getDb(): Promise<Db> {
 }
 
 // Получить коллекцию
-export async function getCollection<T = any>(name: string): Promise<Collection<T>> {
+export async function getCollection<T extends Document = Document>(name: string): Promise<Collection<T>> {
   const database = await getDb();
   return database.collection<T>(name);
 }
