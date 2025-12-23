@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -281,21 +281,25 @@ function CatalogPageContent() {
   }, [sortedManufacturers, manufacturerSearch, showAllManufacturers]);
 
   // Автоматическое применение фильтров с debounce (без кнопки "Применить")
-  // Отслеживаем изменения через строковое представление для правильного сравнения массивов и объектов
-  const subcategoriesKey = useMemo(() => 
-    JSON.stringify([...(pendingFilters.subcategories || [])].sort()), 
-    [pendingFilters.subcategories]
-  );
-  const manufacturersKey = useMemo(() => 
-    JSON.stringify([...(pendingFilters.manufacturers || [])].sort()), 
-    [pendingFilters.manufacturers]
-  );
-  const characteristicsKey = useMemo(() => 
-    JSON.stringify(pendingFilters.characteristics || {}), 
-    [pendingFilters.characteristics]
-  );
-
+  // Используем useRef для отслеживания предыдущих значений и правильного сравнения
+  const prevFiltersRef = useRef<string>('');
+  
   useEffect(() => {
+    // Создаем строку-ключ для сравнения всех фильтров
+    const currentFiltersKey = JSON.stringify({
+      category: pendingFilters.category,
+      subcategories: [...(pendingFilters.subcategories || [])].sort(),
+      manufacturers: [...(pendingFilters.manufacturers || [])].sort(),
+      characteristics: pendingFilters.characteristics || {}
+    });
+    
+    // Если фильтры не изменились, не применяем
+    if (currentFiltersKey === prevFiltersRef.current) {
+      return;
+    }
+    
+    prevFiltersRef.current = currentFiltersKey;
+    
     const timeoutId = setTimeout(() => {
       // Применяем pending фильтры к applied фильтрам автоматически
       console.log('[Catalog] Applying filters:', {
@@ -313,7 +317,7 @@ function CatalogPageContent() {
     }, 300); // Debounce 300ms для оптимизации
 
     return () => clearTimeout(timeoutId);
-  }, [pendingFilters.category, subcategoriesKey, manufacturersKey, characteristicsKey]);
+  }, [pendingFilters]);
 
   // Инициализация pendingFilters при монтировании
   useEffect(() => {
