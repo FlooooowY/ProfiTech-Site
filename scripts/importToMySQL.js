@@ -23,8 +23,8 @@ async function importProducts() {
   
   const dbConfig = {
     host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'u3364352_default',
-    password: process.env.DB_PASSWORD || 'nDpDE4luD7G84uk3',
+    user: process.env.DB_USER || 'admin_db',
+    password: process.env.DB_PASSWORD || 'admin_db',
     database: process.env.DB_NAME || 'profitech_db',
   };
 
@@ -58,6 +58,62 @@ async function importProducts() {
     if (categoryCheck[0].count === 0) {
       console.error('❌ Categories not found! Please run "npm run db:import-categories" first.');
       process.exit(1);
+    }
+
+    // Собираем все уникальные подкатегории из товаров
+    console.log('Analyzing subcategories...');
+    const subcategoryMap = new Map(); // subcategoryId -> { categoryId, name }
+    for (const product of validProducts) {
+      if (product.subcategoryId && product.categoryId) {
+        if (!subcategoryMap.has(product.subcategoryId)) {
+          // Извлекаем название подкатегории из ID (например, "бытовая-техника-встраиваемая-техника" -> "Встраиваемая техника")
+          const subcategoryName = product.subcategoryId
+            .split('-')
+            .slice(2) // Пропускаем первые две части (categoryId)
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+          
+          subcategoryMap.set(product.subcategoryId, {
+            id: product.subcategoryId,
+            categoryId: product.categoryId,
+            name: subcategoryName || product.subcategoryId
+          });
+        }
+      }
+    }
+
+    console.log(`Found ${subcategoryMap.size} unique subcategories in products`);
+
+    // Проверяем, какие подкатегории уже существуют
+    const existingSubcategories = new Set();
+    if (subcategoryMap.size > 0) {
+      const subcategoryIds = Array.from(subcategoryMap.keys());
+      const placeholders = subcategoryIds.map(() => '?').join(',');
+      const [existing] = await connection.query(
+        `SELECT id FROM subcategories WHERE id IN (${placeholders})`,
+        subcategoryIds
+      );
+      existing.forEach(row => existingSubcategories.add(row.id));
+    }
+
+    // Создаем недостающие подкатегории
+    const missingSubcategories = Array.from(subcategoryMap.values())
+      .filter(sub => !existingSubcategories.has(sub.id));
+    
+    if (missingSubcategories.length > 0) {
+      console.log(`Creating ${missingSubcategories.length} missing subcategories...`);
+      const subcategoryValues = missingSubcategories.map(sub => [
+        sub.id,
+        sub.categoryId,
+        sub.name
+      ]);
+      
+      const insertSubcategoriesSql = `
+        INSERT IGNORE INTO subcategories (id, category_id, name)
+        VALUES ?
+      `;
+      await connection.query(insertSubcategoriesSql, [subcategoryValues]);
+      console.log(`✓ Created ${missingSubcategories.length} subcategories`);
     }
 
     // Начинаем транзакцию
