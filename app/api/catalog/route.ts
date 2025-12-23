@@ -122,38 +122,59 @@ export async function GET(request: NextRequest) {
 
     // Строим финальный запрос
     const whereClause = whereConditions.length > 0 ? 'WHERE ' + whereConditions.join(' AND ') : '';
-    const joinClause = joinConditions.join(' ');
-    
-    // Запрос для подсчета общего количества (оптимизированный)
-    const countQuery = `
-      SELECT COUNT(DISTINCT p.id) as total
-      FROM products p
-      ${joinClause}
-      ${whereClause}
-    `;
+    const joinClause = joinConditions.length > 0 ? joinConditions.join(' ') : '';
 
-    // Запрос для получения товаров с пагинацией
-    const productsQuery = `
-      SELECT DISTINCT 
-        p.id,
-        p.name,
-        p.description,
-        p.category_id as categoryId,
-        p.subcategory_id as subcategoryId,
-        p.manufacturer,
-        p.images,
-        p.created_at as createdAt,
-        p.updated_at as updatedAt
-      FROM products p
-      ${joinClause}
-      ${whereClause}
-      ORDER BY p.id
-      LIMIT ${limit} OFFSET ${offset}
-    `;
+    // Проверяем кэш
+    const cacheKey = `catalog_${page}_${limit}_${categoryId || 'all'}_${subcategoriesParam || 'none'}_${manufacturersParam || 'none'}_${characteristicsParam || 'none'}_${searchQuery || 'none'}`;
+    const cached = getCached(cacheKey);
+    if (cached) {
+      return NextResponse.json(cached, {
+        headers: {
+          'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
+        }
+      });
+    }
     
-    console.log('[API Catalog] SQL запрос товаров:', productsQuery.replace(/\s+/g, ' ').trim());
-    console.log('[API Catalog] Параметры для WHERE:', queryParams);
-    console.log('[API Catalog] LIMIT:', limit, 'OFFSET:', offset);
+    // Запрос для подсчета общего количества (оптимизированный - без DISTINCT если нет JOIN)
+    const countQuery = joinClause 
+      ? `SELECT COUNT(DISTINCT p.id) as total FROM products p ${joinClause} ${whereClause}`
+      : `SELECT COUNT(*) as total FROM products p ${whereClause}`;
+
+    // Оптимизированный запрос товаров с пагинацией (убрали DISTINCT если нет JOIN - он замедляет)
+    const productsQuery = joinClause
+      ? `
+        SELECT DISTINCT 
+          p.id,
+          p.name,
+          p.description,
+          p.category_id as categoryId,
+          p.subcategory_id as subcategoryId,
+          p.manufacturer,
+          p.images,
+          p.created_at as createdAt,
+          p.updated_at as updatedAt
+        FROM products p
+        ${joinClause}
+        ${whereClause}
+        ORDER BY p.id
+        LIMIT ${limit} OFFSET ${offset}
+      `
+      : `
+        SELECT 
+          p.id,
+          p.name,
+          p.description,
+          p.category_id as categoryId,
+          p.subcategory_id as subcategoryId,
+          p.manufacturer,
+          p.images,
+          p.created_at as createdAt,
+          p.updated_at as updatedAt
+        FROM products p
+        ${whereClause}
+        ORDER BY p.id
+        LIMIT ${limit} OFFSET ${offset}
+      `;
 
     // Выполняем запросы параллельно для максимальной производительности
     const [countResult, productsResult] = await Promise.all([
