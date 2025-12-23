@@ -172,12 +172,11 @@ export async function GET(request: NextRequest) {
         // Используем только slug формат из констант
         const allSubcategoryValues = [...new Set(subcategoryValues)];
         
-        // ВРЕМЕННО: используем $regex для поиска товаров с любым форматом subcategoryId
-        // который заканчивается на нужный slug подкатегории
-        // Это нужно до тех пор, пока все товары не будут обновлены скриптом
+        // Применяем фильтр по подкатегориям
         if (allSubcategoryValues.length > 0 && categoryId) {
           const totalSubs = await subcategoriesCollection.countDocuments({ categoryId }, { maxTimeMS: 5000 });
           
+          // Если выбраны не все подкатегории, применяем фильтр
           if (allSubcategoryValues.length !== totalSubs && allSubcategoryValues.length > 0) {
             // Создаем список всех возможных slug подкатегорий для regex поиска
             const subcategorySlugs: string[] = [];
@@ -197,8 +196,8 @@ export async function GET(request: NextRequest) {
               { subcategoryId: { $in: allSubcategoryValues } }
             ];
             
-            // Для категории 2 (кофеварки) добавляем кириллические варианты
-            // так как в базе товары имеют кириллический формат subcategoryId
+            // Для категории 2 (кофеварки) добавляем поддержку разных форматов
+            // В базе могут быть как латинские, так и кириллические форматы
             if (categoryId === '2') {
               for (const subDoc of subcategoryDocs) {
                 const subId = String(subDoc._id || subDoc.id);
@@ -206,8 +205,13 @@ export async function GET(request: NextRequest) {
                 const subFromConstants = categoryFromConstants?.subcategories?.find(sub => sub.id === subId);
                 
                 if (subFromConstants) {
-                  // Генерируем кириллический slug из названия подкатегории
-                  // Формат в базе: кофеварки-и-кофемашины-{название}
+                  // Добавляем поиск по латинскому формату (уже есть в allSubcategoryValues)
+                  // Но также добавляем regex для гибкого поиска
+                  orConditions.push({
+                    subcategoryId: { $regex: `^kofevarki-i-kofemashiny-.*${subFromConstants.slug}`, $options: 'i' }
+                  });
+                  
+                  // Добавляем кириллический формат на случай, если есть такие товары
                   const cyrillicSlug = subFromConstants.name
                     .toLowerCase()
                     .replace(/\s+/g, '-')
@@ -216,35 +220,21 @@ export async function GET(request: NextRequest) {
                     .trim();
                   
                   const cyrillicFormat = `кофеварки-и-кофемашины-${cyrillicSlug}`;
-                  
-                  // Добавляем точное совпадение с кириллическим форматом
                   orConditions.push({ subcategoryId: cyrillicFormat });
                   
-                  // Добавляем простой regex для поиска по окончанию
-                  // Ищем строки, которые начинаются с "кофеварки-и-кофемашины-" и содержат ключевые слова из названия
-                  const keyWords = subFromConstants.name
-                    .toLowerCase()
-                    .split(/\s+/)
-                    .filter(w => w.length > 2 && !['для', 'и', 'или', 'с', 'на', 'в'].includes(w))
-                    .map(w => w.replace(/[^a-zа-яё0-9]/gi, ''));
-                  
-                  if (keyWords.length > 0) {
-                    // Простой паттерн: кофеварки-и-кофемашины- + любое из ключевых слов
-                    keyWords.forEach(word => {
-                      orConditions.push({
-                        subcategoryId: { $regex: `^кофеварки-и-кофемашины-.*${word}`, $options: 'i' }
-                      });
-                    });
-                  }
+                  // Добавляем regex для кириллического формата
+                  orConditions.push({
+                    subcategoryId: { $regex: `^кофеварки-и-кофемашины-.*${cyrillicSlug}`, $options: 'i' }
+                  });
                 }
               }
-            }
-            
-            // Добавляем regex паттерны для каждого латинского slug
-            for (const subSlug of subcategorySlugs) {
-              orConditions.push({
-                subcategoryId: { $regex: `-${subSlug}$`, $options: 'i' }
-              });
+            } else {
+              // Для других категорий добавляем regex паттерны для каждого латинского slug
+              for (const subSlug of subcategorySlugs) {
+                orConditions.push({
+                  subcategoryId: { $regex: `-${subSlug}$`, $options: 'i' }
+                });
+              }
             }
             
             // Добавляем условие в фильтр
@@ -253,12 +243,13 @@ export async function GET(request: NextRequest) {
             } else {
               filter.$or = orConditions;
             }
+            
+            console.log('[API Catalog] Applied subcategory filter with', orConditions.length, 'conditions');
           }
           // Если все подкатегории выбраны, не добавляем фильтр (работаем как с категорией)
-        } else {
-          if (allSubcategoryValues.length > 0) {
-            filter.subcategoryId = { $in: allSubcategoryValues };
-          }
+        } else if (allSubcategoryValues.length > 0) {
+          // Если нет categoryId, но есть подкатегории, применяем простой фильтр
+          filter.subcategoryId = { $in: allSubcategoryValues };
         }
         
         const finalSubcategoryValues = allSubcategoryValues;
@@ -266,6 +257,7 @@ export async function GET(request: NextRequest) {
         console.log('[API Catalog] Subcategory IDs:', subcategories);
         console.log('[API Catalog] Category slug:', categorySlug);
         console.log('[API Catalog] Subcategory values for filter:', finalSubcategoryValues);
+        console.log('[API Catalog] Filter after subcategory processing:', JSON.stringify(filter, null, 2));
       }
     }
 
