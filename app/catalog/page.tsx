@@ -28,7 +28,7 @@ function CatalogPageContent() {
   const [manufacturerSearch, setManufacturerSearch] = useState('');
   const [showAllManufacturers, setShowAllManufacturers] = useState(false);
   const [expandedCharacteristics, setExpandedCharacteristics] = useState<{ [key: string]: boolean }>({ other: false });
-  // Временные фильтры (для UI, применяются только после нажатия "Применить")
+  // Фильтры (применяются автоматически с debounce)
   const [pendingFilters, setPendingFilters] = useState({
     category: '',
     subcategories: [] as string[],
@@ -280,15 +280,40 @@ function CatalogPageContent() {
     return filtered;
   }, [sortedManufacturers, manufacturerSearch, showAllManufacturers]);
 
-  // Применение фильтров по кнопке
-  const handleApplyFilters = () => {
-    // Применяем pending фильтры к applied фильтрам
-    setAppliedCategory(pendingFilters.category);
-    setAppliedSubcategories(pendingFilters.subcategories || []);
-    setAppliedManufacturers(pendingFilters.manufacturers);
-    setAppliedCharacteristics(pendingFilters.characteristics);
-    setCurrentPage(1); // Сбрасываем на первую страницу при изменении фильтров
-  };
+  // Автоматическое применение фильтров с debounce (без кнопки "Применить")
+  // Отслеживаем изменения через строковое представление для правильного сравнения массивов и объектов
+  const subcategoriesKey = useMemo(() => 
+    JSON.stringify([...(pendingFilters.subcategories || [])].sort()), 
+    [pendingFilters.subcategories]
+  );
+  const manufacturersKey = useMemo(() => 
+    JSON.stringify([...(pendingFilters.manufacturers || [])].sort()), 
+    [pendingFilters.manufacturers]
+  );
+  const characteristicsKey = useMemo(() => 
+    JSON.stringify(pendingFilters.characteristics || {}), 
+    [pendingFilters.characteristics]
+  );
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      // Применяем pending фильтры к applied фильтрам автоматически
+      console.log('[Catalog] Applying filters:', {
+        category: pendingFilters.category,
+        subcategories: pendingFilters.subcategories,
+        manufacturers: pendingFilters.manufacturers,
+        characteristics: Object.keys(pendingFilters.characteristics || {})
+      });
+      
+      setAppliedCategory(pendingFilters.category);
+      setAppliedSubcategories(pendingFilters.subcategories || []);
+      setAppliedManufacturers(pendingFilters.manufacturers || []);
+      setAppliedCharacteristics(pendingFilters.characteristics || {});
+      setCurrentPage(1); // Сбрасываем на первую страницу при изменении фильтров
+    }, 300); // Debounce 300ms для оптимизации
+
+    return () => clearTimeout(timeoutId);
+  }, [pendingFilters.category, subcategoriesKey, manufacturersKey, characteristicsKey]);
 
   // Инициализация pendingFilters при монтировании
   useEffect(() => {
@@ -815,19 +840,13 @@ function CatalogPageContent() {
                 </div>
               )}
 
-              {/* Кнопки применения и сброса */}
+              {/* Кнопка сброса */}
               <div className="sticky bottom-0 bg-white pt-4 pb-2 space-y-2 border-t border-gray-200">
-                <button
-                  onClick={handleApplyFilters}
-                  className="w-full py-3 bg-gradient-to-r from-[#FF6B35] to-[#F7931E] text-white font-semibold rounded-lg hover:shadow-lg transition-all"
-                >
-                  Применить
-                </button>
                 <button
                   onClick={handleResetFilters}
                   className="w-full py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-all"
                 >
-                  Сбросить
+                  Сбросить фильтры
                 </button>
               </div>
             </div>
