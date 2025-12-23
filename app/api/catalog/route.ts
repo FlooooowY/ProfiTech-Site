@@ -162,8 +162,16 @@ export async function GET(request: NextRequest) {
       query(productsQuery, queryParams) // LIMIT и OFFSET уже встроены в SQL
     ]);
 
-    const total = (countResult as any[])[0]?.total || 0;
-    const products = productsResult as any[];
+    // Обрабатываем результаты запросов
+    // query возвращает [rows, fields], но мы уже делаем деструктуризацию в Promise.all
+    const total = Array.isArray(countResult) && countResult[0] 
+      ? (countResult[0] as any).total || 0 
+      : 0;
+    
+    // Убеждаемся, что productsResult - массив
+    const products = Array.isArray(productsResult) 
+      ? productsResult 
+      : (Array.isArray(productsResult[0]) ? productsResult[0] : []);
 
     // Если товаров нет, возвращаем пустой результат сразу
     if (products.length === 0) {
@@ -190,7 +198,7 @@ export async function GET(request: NextRequest) {
 
     if (productIds.length > 0) {
       const placeholders = productIds.map(() => '?').join(',');
-      const [characteristicsResult] = await query(
+      const characteristicsResult = await query(
         `SELECT product_id, name, value 
          FROM product_characteristics 
          WHERE product_id IN (${placeholders})
@@ -198,7 +206,12 @@ export async function GET(request: NextRequest) {
         productIds
       ) as any[];
 
-      (characteristicsResult as any[]).forEach((row: any) => {
+      // Убеждаемся, что результат - массив
+      const characteristics = Array.isArray(characteristicsResult) 
+        ? characteristicsResult 
+        : (Array.isArray(characteristicsResult[0]) ? characteristicsResult[0] : []);
+
+      characteristics.forEach((row: any) => {
         if (!characteristicsMap.has(row.product_id)) {
           characteristicsMap.set(row.product_id, []);
         }
