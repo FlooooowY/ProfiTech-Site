@@ -97,16 +97,17 @@ async function fixSubcategoryIds() {
             // Убираем первую часть (categorySlug) и получаем subcategory часть
             const subcategoryPart = parts.slice(1).join('-');
             
-            // Ищем подкатегорию по slug или по частичному совпадению
+            // Ищем подкатегорию по slug или по названию
             // Сначала пробуем точное совпадение slug
             let subBySlug = subcategories.find((sub: any) => 
               (sub.slug === subcategoryPart || sub._id === subcategoryPart) &&
               sub.categoryId === prod.categoryId
             );
             
-            // Если не нашли, пробуем найти по названию (normalize для сравнения)
+            // Если не нашли, пробуем найти по названию подкатегории
+            // Преобразуем subcategoryPart обратно в читаемое название и сравниваем
             if (!subBySlug) {
-              // Нормализуем subcategoryPart для сравнения (убираем дефисы, приводим к lowercase)
+              // Нормализуем subcategoryPart для сравнения
               const normalizedPart = subcategoryPart.toLowerCase().replace(/-/g, '');
               
               subBySlug = subcategories.find((sub: any) => {
@@ -115,16 +116,28 @@ async function fixSubcategoryIds() {
                 // Нормализуем slug подкатегории
                 const normalizedSlug = (sub.slug || sub._id || '').toLowerCase().replace(/-/g, '');
                 
-                // Нормализуем название подкатегории
+                // Нормализуем название подкатегории (убираем пробелы и спецсимволы)
                 const normalizedName = (sub.name || '').toLowerCase()
                   .replace(/\s+/g, '')
                   .replace(/[^a-zа-яё0-9]/gi, '');
                 
-                // Проверяем совпадение с нормализованными значениями
+                // Генерируем slug из названия подкатегории (как это делается в generateSubcategoryId)
+                const nameAsSlug = (sub.name || '')
+                  .toLowerCase()
+                  .replace(/\s+/g, '-')
+                  .replace(/[^a-zа-яё0-9-]/gi, '')
+                  .replace(/-+/g, '-')
+                  .trim();
+                const normalizedNameAsSlug = nameAsSlug.replace(/-/g, '');
+                
+                // Проверяем различные варианты совпадения
                 return normalizedSlug === normalizedPart || 
                        normalizedName === normalizedPart ||
+                       normalizedNameAsSlug === normalizedPart ||
                        normalizedSlug.includes(normalizedPart) ||
-                       normalizedPart.includes(normalizedSlug);
+                       normalizedPart.includes(normalizedSlug) ||
+                       normalizedName.includes(normalizedPart) ||
+                       normalizedPart.includes(normalizedName);
               });
             }
             
