@@ -23,7 +23,6 @@ function CatalogPageContent() {
   const [appliedManufacturers, setAppliedManufacturers] = useState<string[]>([]);
   const [appliedCharacteristics, setAppliedCharacteristics] = useState<{ [key: string]: string[] }>({});
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
   const [categorySearch, setCategorySearch] = useState('');
   const [manufacturerSearch, setManufacturerSearch] = useState('');
   const [showAllManufacturers, setShowAllManufacturers] = useState(false);
@@ -416,11 +415,6 @@ function CatalogPageContent() {
     }
   };
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    // Прокрутка наверх при смене страницы
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
 
   // Загрузка следующей страницы при курсорной пагинации
   const handleLoadMore = () => {
