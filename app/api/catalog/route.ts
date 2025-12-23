@@ -149,18 +149,17 @@ export async function GET(request: NextRequest) {
       ${joinClause}
       ${whereClause}
       ORDER BY p.id
-      LIMIT ? OFFSET ?
+      LIMIT ${limit} OFFSET ${offset}
     `;
-
-    const finalParams = [...queryParams, limit, offset];
     
     console.log('[API Catalog] SQL запрос товаров:', productsQuery.replace(/\s+/g, ' ').trim());
-    console.log('[API Catalog] Параметры:', finalParams);
+    console.log('[API Catalog] Параметры для WHERE:', queryParams);
+    console.log('[API Catalog] LIMIT:', limit, 'OFFSET:', offset);
 
     // Выполняем запросы параллельно для максимальной производительности
     const [countResult, productsResult] = await Promise.all([
       query(countQuery, queryParams),
-      query(productsQuery, finalParams)
+      query(productsQuery, queryParams) // LIMIT и OFFSET уже встроены в SQL
     ]);
 
     const total = (countResult as any[])[0]?.total || 0;
