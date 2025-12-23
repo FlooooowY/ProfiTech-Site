@@ -92,7 +92,8 @@ export async function GET(request: NextRequest) {
         const subcategoryValues: string[] = [];
         
         for (const subDoc of subcategoryDocs) {
-          const subId = subDoc._id || subDoc.id; // ID подкатегории (например, "2-4")
+          // Приводим ID к строке для сравнения с константами
+          const subId = String(subDoc._id || subDoc.id); // ID подкатегории (например, "2-4")
           
           // Ищем подкатегорию в константах CATEGORIES для получения правильного slug
           let subcategorySlug: string | null = null;
@@ -123,7 +124,7 @@ export async function GET(request: NextRequest) {
             subcategoryValues.push(`${categorySlug}-${subcategorySlug}`);
           } else {
             // Если нет категории, пробуем найти её через subcategory
-            const subCategoryId = subDoc.categoryId;
+            const subCategoryId = String(subDoc.categoryId || '');
             if (subCategoryId) {
               const categoryFromConstants = CATEGORIES.find(cat => cat.id === subCategoryId);
               const catSlug = categoryFromConstants?.slug || null;
