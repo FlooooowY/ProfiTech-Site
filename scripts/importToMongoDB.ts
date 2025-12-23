@@ -52,7 +52,7 @@ async function importProducts() {
           const subcategoryName = product.subcategoryId
             .split('-')
             .slice(2) // Пропускаем первые две части (categoryId)
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
             .join(' ');
           
           subcategoryMap.set(product.subcategoryId, {
