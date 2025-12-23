@@ -172,12 +172,39 @@ export async function GET(request: NextRequest) {
         // Используем только slug формат из констант
         const allSubcategoryValues = [...new Set(subcategoryValues)];
         
-        // Применяем фильтр по подкатегориям
+        // Перед тем как применять фильтр, проверяем, есть ли в базе товары
+        // с такими subcategoryId для текущей категории.
+        let finalSubcategoryValues = allSubcategoryValues;
         if (allSubcategoryValues.length > 0 && categoryId) {
+          const existingSubIds = await productsCollection.distinct(
+            'subcategoryId',
+            { categoryId },
+            { maxTimeMS: 5000 }
+          );
+          const existingSet = new Set(existingSubIds as string[]);
+          const intersection = allSubcategoryValues.filter(v => existingSet.has(v));
+
+          if (intersection.length === 0) {
+            // В базе нет товаров с выбранными подкатегориями — НЕ применяем фильтр,
+            // чтобы пользователь видел товары категории, а не пустой список.
+            console.log(
+              '[API Catalog] No products for selected subcategories, skipping subcategory filter. allSubcategoryValues=',
+              allSubcategoryValues,
+              'existingSubIds=',
+              existingSubIds
+            );
+            finalSubcategoryValues = [];
+          } else {
+            finalSubcategoryValues = intersection;
+          }
+        }
+
+        // Применяем фильтр по подкатегориям (только если есть реальные товары)
+        if (finalSubcategoryValues.length > 0 && categoryId) {
           const totalSubs = await subcategoriesCollection.countDocuments({ categoryId }, { maxTimeMS: 5000 });
           
           // Если выбраны не все подкатегории, применяем фильтр
-          if (allSubcategoryValues.length !== totalSubs && allSubcategoryValues.length > 0) {
+          if (finalSubcategoryValues.length !== totalSubs && finalSubcategoryValues.length > 0) {
             // Создаем список всех возможных slug подкатегорий для regex поиска
             const subcategorySlugs: string[] = [];
             
@@ -193,7 +220,7 @@ export async function GET(request: NextRequest) {
             
             // Используем $or для поиска: точное совпадение ИЛИ regex (заканчивается на нужный slug)
             const orConditions: any[] = [
-              { subcategoryId: { $in: allSubcategoryValues } }
+              { subcategoryId: { $in: finalSubcategoryValues } }
             ];
             
             // Для категории 2 (кофеварки) добавляем поддержку разных форматов
@@ -205,7 +232,7 @@ export async function GET(request: NextRequest) {
                 const subFromConstants = categoryFromConstants?.subcategories?.find(sub => sub.id === subId);
                 
                 if (subFromConstants) {
-                  // Добавляем поиск по латинскому формату (уже есть в allSubcategoryValues)
+                  // Добавляем поиск по латинскому формату (уже есть в finalSubcategoryValues)
                   // Но также добавляем regex для гибкого поиска
                   orConditions.push({
                     subcategoryId: { $regex: `^kofevarki-i-kofemashiny-.*${subFromConstants.slug}`, $options: 'i' }
@@ -247,12 +274,10 @@ export async function GET(request: NextRequest) {
             console.log('[API Catalog] Applied subcategory filter with', orConditions.length, 'conditions');
           }
           // Если все подкатегории выбраны, не добавляем фильтр (работаем как с категорией)
-        } else if (allSubcategoryValues.length > 0) {
+        } else if (finalSubcategoryValues.length > 0) {
           // Если нет categoryId, но есть подкатегории, применяем простой фильтр
-          filter.subcategoryId = { $in: allSubcategoryValues };
+          filter.subcategoryId = { $in: finalSubcategoryValues };
         }
-        
-        const finalSubcategoryValues = allSubcategoryValues;
         
         console.log('[API Catalog] Subcategory IDs:', subcategories);
         console.log('[API Catalog] Category slug:', categorySlug);
