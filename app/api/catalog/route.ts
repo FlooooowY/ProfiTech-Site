@@ -158,6 +158,29 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('[API Catalog] Filter:', JSON.stringify(filter, null, 2));
+    
+    // Проверяем, есть ли товары с такими параметрами (для отладки)
+    if (categoryId) {
+      const testCount = await productsCollection.countDocuments({ categoryId }, { maxTimeMS: 5000 });
+      console.log('[API Catalog] Products with categoryId:', categoryId, '=', testCount);
+      
+      if (subcategoriesParam) {
+        const subcategories = subcategoriesParam.split(',').filter(Boolean);
+        if (subcategories.length > 0) {
+          // Проверяем реальные subcategoryId в базе
+          const sampleProduct = await productsCollection.findOne({ categoryId }, { maxTimeMS: 5000 });
+          console.log('[API Catalog] Sample product subcategoryId:', sampleProduct?.subcategoryId);
+          console.log('[API Catalog] Looking for subcategoryId:', subcategories[0]);
+          
+          // Проверяем, есть ли товары с таким subcategoryId
+          const subCount = await productsCollection.countDocuments({ 
+            categoryId, 
+            subcategoryId: subcategories[0] 
+          }, { maxTimeMS: 5000 });
+          console.log('[API Catalog] Products with subcategoryId:', subcategories[0], '=', subCount);
+        }
+      }
+    }
 
     // COUNT запрос только для первых 10 страниц (оптимизация)
     const shouldCount = page <= 10;
