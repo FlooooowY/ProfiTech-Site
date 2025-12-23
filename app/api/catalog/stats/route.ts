@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
       if (subcategories.length > 0) {
         // Проверяем, выбраны ли все подкатегории категории
         if (categoryId) {
-          const totalSubs = await subcategoriesCollection.countDocuments({ categoryId });
+          const totalSubs = await subcategoriesCollection.countDocuments({ categoryId }, { maxTimeMS: 5000 });
           
           // Если выбраны не все подкатегории, фильтруем по выбранным
           if (subcategories.length !== totalSubs) {
@@ -116,7 +116,10 @@ export async function GET(request: NextRequest) {
       { $limit: 10000 }
     ];
 
-    const characteristicsResult = await productsCollection.aggregate(characteristicsPipeline).toArray();
+    const characteristicsResult = await productsCollection
+      .aggregate(characteristicsPipeline)
+      .maxTimeMS(15000) // Таймаут 15 секунд для агрегации
+      .toArray();
     
     // Формируем объект характеристик
     const characteristics: { [key: string]: string[] } = {};

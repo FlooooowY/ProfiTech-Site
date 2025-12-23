@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
         // Проверяем, выбраны ли все подкатегории категории
         if (categoryId) {
           const subcategoriesCollection = await getCollection('subcategories');
-          const totalSubs = await subcategoriesCollection.countDocuments({ categoryId });
+          const totalSubs = await subcategoriesCollection.countDocuments({ categoryId }, { maxTimeMS: 5000 });
           
           if (subcategories.length !== totalSubs) {
             // Не все подкатегории выбраны - фильтруем по выбранным
@@ -109,25 +109,33 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Полнотекстовый поиск
+    // Полнотекстовый поиск (используем $regex вместо $text для совместимости)
     if (searchQuery && searchQuery.length >= 2) {
       const searchWords = searchQuery.split(/\s+/).filter(w => w.length > 0);
       if (searchWords.length > 0) {
-        // Используем текстовый поиск MongoDB
-        filter.$text = { $search: searchWords.join(' ') };
+        // Используем $or с $regex для поиска по нескольким полям
+        filter.$or = searchWords.map(word => [
+          { name: { $regex: word, $options: 'i' } },
+          { description: { $regex: word, $options: 'i' } },
+          { manufacturer: { $regex: word, $options: 'i' } }
+        ]).flat();
       }
     }
 
     // COUNT запрос только для первых 10 страниц (оптимизация)
     const shouldCount = page <= 10;
-    const total = shouldCount ? await productsCollection.countDocuments(filter) : 0;
+    const total = shouldCount 
+      ? await productsCollection.countDocuments(filter, { maxTimeMS: 10000 })
+      : 0;
 
     // Запрос товаров с пагинацией
+    // Используем maxTimeMS для предотвращения зависаний
     const products = await productsCollection
       .find(filter)
       .sort({ createdAt: 1, _id: 1 }) // Сортировка для стабильной пагинации
       .skip(skip)
       .limit(limit)
+      .maxTimeMS(10000) // Таймаут 10 секунд
       .toArray();
 
     // Если товаров нет, возвращаем пустой результат

@@ -86,7 +86,7 @@ export async function createIndexes() {
       { key: { categoryId: 1, subcategoryId: 1 } },
       { key: { categoryId: 1, manufacturer: 1 } },
       { key: { subcategoryId: 1, manufacturer: 1 } },
-      { key: { name: 'text', description: 'text', manufacturer: 'text' } }, // Текстовый индекс для поиска
+      // Убрали текстовый индекс - используем $regex для поиска
       { key: { createdAt: 1, _id: 1 } }, // Для сортировки и пагинации
     ]);
     console.log('[MongoDB] Indexes created for products');
