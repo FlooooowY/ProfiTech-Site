@@ -103,6 +103,9 @@ export async function GET(request: NextRequest) {
       ORDER BY p.manufacturer
       LIMIT 1000
     `;
+    
+    console.log('[API Catalog Stats] SQL запрос производителей:', manufacturersQuery);
+    console.log('[API Catalog Stats] Параметры:', queryParams);
 
     // Получаем характеристики (UNION логика - все характеристики из выбранных подкатегорий)
     const characteristicsWhere = whereClause ? whereClause : '';

@@ -152,10 +152,15 @@ export async function GET(request: NextRequest) {
       LIMIT ? OFFSET ?
     `;
 
+    const finalParams = [...queryParams, limit, offset];
+    
+    console.log('[API Catalog] SQL запрос товаров:', productsQuery.replace(/\s+/g, ' ').trim());
+    console.log('[API Catalog] Параметры:', finalParams);
+
     // Выполняем запросы параллельно для максимальной производительности
     const [countResult, productsResult] = await Promise.all([
       query(countQuery, queryParams),
-      query(productsQuery, [...queryParams, limit, offset])
+      query(productsQuery, finalParams)
     ]);
 
     const total = (countResult as any[])[0]?.total || 0;
