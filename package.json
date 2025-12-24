@@ -28,6 +28,7 @@
     "ssl:configure-nginx": "bash scripts/configure-nginx-ssl.sh",
     "ssl:install": "bash scripts/install-ssl-certificate.sh",
     "site:diagnose-access": "bash scripts/diagnose-site-accessibility.sh",
+    "firewall:fix": "bash scripts/fix-firewall-ports.sh",
     "dns:check": "bash scripts/check-dns-records.sh",
     "dns:verify": "bash scripts/verify-dns-complete.sh"
   },
