@@ -4,6 +4,9 @@ import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AIAssistant from "@/components/AIAssistant";
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages } from 'next-intl/server';
+import { routing } from '@/i18n/routing';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,22 +24,28 @@ export const metadata: Metadata = {
   keywords: "профессиональное оборудование, кофемашины, холодильное оборудование, промышленная мебель",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Получаем сообщения для дефолтной локали
+  const messages = await getMessages();
+  const locale = routing.defaultLocale;
+
   return (
-    <html lang="ru" className="overflow-x-hidden w-full max-w-full">
+    <html lang={locale} className="overflow-x-hidden w-full max-w-full">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased overflow-x-hidden w-full max-w-full`}
       >
-        <Header />
-        <main className="pt-16 md:pt-20 min-h-screen w-full max-w-full overflow-x-hidden bg-white">
-          {children}
-        </main>
-        <Footer />
-        <AIAssistant />
+        <NextIntlClientProvider messages={messages} locale={locale}>
+          <Header />
+          <main className="pt-16 md:pt-20 min-h-screen w-full max-w-full overflow-x-hidden bg-white">
+            {children}
+          </main>
+          <Footer />
+          <AIAssistant />
+        </NextIntlClientProvider>
       </body>
     </html>
   );
