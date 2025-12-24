@@ -28,15 +28,24 @@ fi
 # Проверяем, есть ли блок для ACME challenge
 if ! grep -q "\.well-known/acme-challenge" "$NGINX_CONF"; then
     echo "⚠️  Блок для ACME challenge не найден в конфигурации"
-    echo "   Добавьте следующий блок ПЕРЕД location /:"
-    echo ""
-    echo "   location /.well-known/acme-challenge/ {"
-    echo "       root /var/www/html;"
-    echo "       try_files \$uri =404;"
-    echo "   }"
-    echo ""
-    echo "   Откройте файл: sudo nano $NGINX_CONF"
-    exit 1
+    echo "   Добавляю автоматически..."
+    
+    # Пытаемся добавить блок автоматически
+    if [ -f "./scripts/add-acme-to-nginx.sh" ]; then
+        chmod +x ./scripts/add-acme-to-nginx.sh
+        ./scripts/add-acme-to-nginx.sh
+    else
+        echo "   Скрипт add-acme-to-nginx.sh не найден"
+        echo "   Добавьте следующий блок ПЕРЕД location /:"
+        echo ""
+        echo "   location /.well-known/acme-challenge/ {"
+        echo "       root /var/www/html;"
+        echo "       try_files \$uri =404;"
+        echo "   }"
+        echo ""
+        echo "   Откройте файл: sudo nano $NGINX_CONF"
+        exit 1
+    fi
 else
     echo "✅ Блок для ACME challenge найден"
 fi
