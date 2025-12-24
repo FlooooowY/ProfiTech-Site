@@ -23,8 +23,9 @@ interface Product {
 }
 
 // Задержка между запросами (мс) для избежания лимитов API
-const DELAY_BETWEEN_REQUESTS = 1000; // 1 секунда
-const BATCH_SIZE = 10; // Обрабатываем по 10 товаров за раз
+const DELAY_BETWEEN_REQUESTS = 200; // 200мс - уменьшено для ускорения
+const BATCH_SIZE = 50; // Обрабатываем по 50 товаров за раз
+const PARALLEL_PRODUCTS = 5; // Обрабатываем 5 товаров параллельно в каждом батче
 
 // Статистика
 let stats = {
@@ -54,7 +55,7 @@ async function translateText(text: string, retries = 3): Promise<string> {
       if (sentence.trim().length > 0) {
         const translated = await translateText(sentence.trim(), retries);
         translatedSentences.push(translated);
-        await sleep(DELAY_BETWEEN_REQUESTS);
+        // Убрали задержку между предложениями для ускорения
       }
     }
     
@@ -69,8 +70,8 @@ async function translateText(text: string, retries = 3): Promise<string> {
       console.error(`  ⚠️ Ошибка перевода (попытка ${attempt}/${retries}):`, error.message);
       
       if (attempt < retries) {
-        // Увеличиваем задержку при повторных попытках
-        await sleep(DELAY_BETWEEN_REQUESTS * attempt);
+        // Увеличиваем задержку при повторных попытках (но меньше)
+        await sleep(DELAY_BETWEEN_REQUESTS * attempt * 0.5);
       } else {
         // Если все попытки неудачны, возвращаем оригинальный текст
         console.warn(`  ⚠️ Не удалось перевести, оставляем оригинал`);
@@ -106,53 +107,42 @@ async function translateProduct(product: Product): Promise<Partial<Product>> {
   try {
     // Переводим название
     if (product.name && !product.name_en) {
-      console.log(`  📝 Перевод названия: "${product.name.substring(0, 50)}..."`);
       updates.name_en = await translateText(product.name);
-      await sleep(DELAY_BETWEEN_REQUESTS);
     } else if (product.name_en) {
-      console.log(`  ⏭️ Название уже переведено`);
+      // Название уже переведено
     }
 
     // Переводим описание
     if (product.description && !product.description_en) {
       const cleanDescription = stripHtml(product.description);
       if (cleanDescription.length > 0) {
-        console.log(`  📝 Перевод описания (${cleanDescription.length} символов)...`);
         const translatedDescription = await translateText(cleanDescription);
-        // Сохраняем переведенное описание (можно улучшить для сохранения HTML)
         updates.description_en = translatedDescription;
-        await sleep(DELAY_BETWEEN_REQUESTS);
       }
-    } else if (product.description_en) {
-      console.log(`  ⏭️ Описание уже переведено`);
     }
 
-    // Переводим характеристики
+    // Переводим характеристики параллельно
     if (product.characteristics && product.characteristics.length > 0) {
-      const translatedCharacteristics = [];
-      
-      for (const char of product.characteristics) {
-        const translatedChar: any = { ...char };
-        
-        // Переводим название характеристики
-        if (char.name && !char.name_en) {
-          console.log(`  📝 Перевод характеристики "${char.name}"...`);
-          translatedChar.name_en = await translateText(char.name);
-          await sleep(DELAY_BETWEEN_REQUESTS);
-        } else if (char.name_en) {
-          translatedChar.name_en = char.name_en;
-        }
-        
-        // Переводим значение характеристики
-        if (char.value && !char.value_en) {
-          translatedChar.value_en = await translateText(char.value);
-          await sleep(DELAY_BETWEEN_REQUESTS);
-        } else if (char.value_en) {
-          translatedChar.value_en = char.value_en;
-        }
-        
-        translatedCharacteristics.push(translatedChar);
-      }
+      const translatedCharacteristics = await Promise.all(
+        product.characteristics.map(async (char) => {
+          const translatedChar: any = { ...char };
+          
+          // Переводим название и значение характеристики параллельно
+          const [nameEn, valueEn] = await Promise.all([
+            char.name && !char.name_en 
+              ? translateText(char.name).then(text => ({ name_en: text }))
+              : Promise.resolve({ name_en: char.name_en || char.name }),
+            char.value && !char.value_en 
+              ? translateText(char.value).then(text => ({ value_en: text }))
+              : Promise.resolve({ value_en: char.value_en || char.value }),
+          ]);
+          
+          translatedChar.name_en = nameEn.name_en;
+          translatedChar.value_en = valueEn.value_en;
+          
+          return translatedChar;
+        })
+      );
       
       updates.characteristics = translatedCharacteristics;
     }
@@ -196,7 +186,8 @@ async function translateProducts() {
       })
       .toArray();
 
-    console.log(`📝 Товаров для перевода: ${productsToTranslate.length}\n`);
+    console.log(`📝 Товаров для перевода: ${productsToTranslate.length}`);
+    console.log(`⚡ Режим: ${PARALLEL_PRODUCTS} товаров параллельно, батчи по ${BATCH_SIZE} товаров\n`);
 
     if (productsToTranslate.length === 0) {
       console.log('✅ Все товары уже переведены!');
@@ -211,43 +202,55 @@ async function translateProducts() {
 
       console.log(`\n📦 Батч ${batchNumber}/${totalBatches} (товары ${i + 1}-${Math.min(i + BATCH_SIZE, productsToTranslate.length)})`);
 
-      for (const product of batch) {
-        try {
-          console.log(`\n🔄 Товар ${stats.translated + stats.skipped + 1}/${productsToTranslate.length}: ${product.name.substring(0, 60)}...`);
-          
-          const updates = await translateProduct(product);
-          
-          if (Object.keys(updates).length > 0) {
-            // Обновляем товар в базе данных
-            await productsCollection.updateOne(
-              { _id: product._id },
-              { $set: updates }
-            );
+      // Обрабатываем товары параллельно (по PARALLEL_PRODUCTS за раз)
+      for (let j = 0; j < batch.length; j += PARALLEL_PRODUCTS) {
+        const parallelBatch = batch.slice(j, j + PARALLEL_PRODUCTS);
+        
+        // Обрабатываем несколько товаров параллельно
+        const results = await Promise.allSettled(
+          parallelBatch.map(async (product) => {
+            const updates = await translateProduct(product);
             
-            stats.updated++;
-            console.log(`  ✅ Товар обновлен`);
-          } else {
-            stats.skipped++;
-            console.log(`  ⏭️ Нет данных для перевода`);
-          }
-          
+            if (Object.keys(updates).length > 0) {
+              // Обновляем товар в базе данных
+              await productsCollection.updateOne(
+                { _id: product._id },
+                { $set: updates }
+              );
+              
+              stats.updated++;
+              return { success: true, productId: product.id };
+            } else {
+              stats.skipped++;
+              return { success: false, skipped: true, productId: product.id };
+            }
+          })
+        );
+        
+        // Обрабатываем результаты
+        for (const result of results) {
           stats.translated++;
-        } catch (error) {
-          stats.errors++;
-          console.error(`  ❌ Ошибка при обработке товара:`, error);
-          // Продолжаем со следующим товаром
+          if (result.status === 'fulfilled') {
+            if (result.value.success) {
+              console.log(`  ✅ Товар ${result.value.productId} обновлен`);
+            } else {
+              console.log(`  ⏭️ Товар ${result.value.productId} пропущен`);
+            }
+          } else {
+            stats.errors++;
+            console.error(`  ❌ Ошибка при обработке товара:`, result.reason);
+          }
         }
         
-        // Задержка между товарами
-        if (i + batch.length < productsToTranslate.length) {
+        // Небольшая задержка между группами параллельных товаров
+        if (j + PARALLEL_PRODUCTS < batch.length) {
           await sleep(DELAY_BETWEEN_REQUESTS);
         }
       }
 
-      // Большая задержка между батчами
+      // Минимальная задержка между батчами
       if (i + BATCH_SIZE < productsToTranslate.length) {
-        console.log(`\n⏳ Пауза между батчами...`);
-        await sleep(DELAY_BETWEEN_REQUESTS * 2);
+        await sleep(DELAY_BETWEEN_REQUESTS);
       }
     }
 
