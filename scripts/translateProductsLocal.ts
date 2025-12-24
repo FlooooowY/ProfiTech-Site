@@ -30,9 +30,13 @@ interface Product {
 
 // Конфигурация
 const LIBRETRANSLATE_URL = process.env.LIBRETRANSLATE_URL || 'http://localhost:5000';
+const FALLBACK_URL = 'https://libretranslate.com'; // Публичный API как запасной вариант
 const BATCH_SIZE = 1000; // Обрабатываем по 1000 товаров за раз
 const PARALLEL_REQUESTS = 50; // 50 параллельных запросов к API
 const DELAY_BETWEEN_BATCHES = 100; // 100мс между батчами
+
+// Текущий URL для использования (может переключиться на fallback)
+let currentTranslateUrl = LIBRETRANSLATE_URL;
 
 // Кэш для одинаковых текстов (чтобы не переводить повторно)
 const translationCache = new Map<string, string>();
@@ -48,9 +52,83 @@ let stats = {
 };
 
 /**
+ * Проверяет доступность LibreTranslate API
+ */
+async function checkLibreTranslateAvailability(): Promise<boolean> {
+  // Сначала пробуем локальный сервер
+  try {
+    console.log(`🔍 Проверка доступности LibreTranslate на ${LIBRETRANSLATE_URL}...`);
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 секунд таймаут
+    
+    const response = await fetch(`${LIBRETRANSLATE_URL}/languages`, {
+      method: 'GET',
+      signal: controller.signal,
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (response.ok) {
+      console.log('✅ LibreTranslate доступен и готов к работе\n');
+      currentTranslateUrl = LIBRETRANSLATE_URL;
+      return true;
+    } else {
+      console.error(`❌ LibreTranslate вернул ошибку: HTTP ${response.status}`);
+    }
+  } catch (error: any) {
+    if (error.name === 'AbortError') {
+      console.error('❌ Таймаут при подключении к локальному LibreTranslate (5 секунд)');
+    } else {
+      console.error(`❌ Ошибка подключения к локальному LibreTranslate: ${error.message}`);
+    }
+  }
+  
+  // Если локальный сервер недоступен, пробуем публичный API
+  if (LIBRETRANSLATE_URL === 'http://localhost:5000' || LIBRETRANSLATE_URL.includes('localhost')) {
+    console.log(`\n🔄 Пробуем использовать публичный API: ${FALLBACK_URL}...`);
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 секунд для публичного API
+      
+      const response = await fetch(`${FALLBACK_URL}/languages`, {
+        method: 'GET',
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (response.ok) {
+        console.log('✅ Публичный LibreTranslate API доступен (будет использован как запасной вариант)\n');
+        console.log('⚠️  Внимание: Публичный API имеет лимиты, скорость будет ниже\n');
+        currentTranslateUrl = FALLBACK_URL;
+        return true;
+      }
+    } catch (error: any) {
+      console.error(`❌ Публичный API также недоступен: ${error.message}`);
+    }
+  }
+  
+  // Оба варианта недоступны
+  console.error('\n💡 Решение проблемы:');
+  console.error('   1. Убедитесь, что LibreTranslate запущен:');
+  console.error('      docker ps | grep libretranslate');
+  console.error('   2. Если не запущен, запустите:');
+  console.error('      docker start libretranslate');
+  console.error('      или');
+  console.error('      docker run -d -p 5000:5000 --name libretranslate libretranslate/libretranslate');
+  console.error('   3. Или используйте автоматический запуск:');
+  console.error('      npm run services:start');
+  console.error('   4. Проверьте доступность API:');
+  console.error(`      curl ${LIBRETRANSLATE_URL}/languages`);
+  console.error('');
+  return false;
+}
+
+/**
  * Переводит текст через LibreTranslate API
  */
-async function translateText(text: string): Promise<string> {
+async function translateText(text: string, retries: number = 3): Promise<string> {
   if (!text || text.trim().length === 0) {
     return text;
   }
@@ -62,36 +140,59 @@ async function translateText(text: string): Promise<string> {
     return translationCache.get(cacheKey)!;
   }
 
-  try {
-    const response = await fetch(`${LIBRETRANSLATE_URL}/translate`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        q: text,
-        source: 'ru',
-        target: 'en',
-        format: 'text',
-      }),
-    });
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 секунд таймаут
+      
+      const response = await fetch(`${currentTranslateUrl}/translate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          q: text,
+          source: 'ru',
+          target: 'en',
+          format: 'text',
+        }),
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const translated = data.translatedText || text;
+
+      // Сохраняем в кэш
+      translationCache.set(cacheKey, translated);
+
+      return translated;
+    } catch (error: any) {
+      if (attempt === retries) {
+        // Последняя попытка - логируем ошибку
+        if (error.name === 'AbortError') {
+          console.error(`  ⚠️ Таймаут при переводе текста (попытка ${attempt}/${retries})`);
+        } else if (error.message?.includes('fetch failed') || error.message?.includes('ECONNREFUSED')) {
+          console.error(`  ⚠️ Не удалось подключиться к LibreTranslate (попытка ${attempt}/${retries})`);
+          console.error(`     Убедитесь, что сервер запущен: docker ps | grep libretranslate`);
+        } else {
+          console.error(`  ⚠️ Ошибка перевода (попытка ${attempt}/${retries}): ${error.message}`);
+        }
+        // Возвращаем оригинал при ошибке
+        return text;
+      } else {
+        // Повторная попытка после задержки
+        await sleep(1000 * attempt);
+      }
     }
-
-    const data = await response.json();
-    const translated = data.translatedText || text;
-
-    // Сохраняем в кэш
-    translationCache.set(cacheKey, translated);
-
-    return translated;
-  } catch (error: any) {
-    console.error(`  ⚠️ Ошибка перевода: ${error.message}`);
-    // Возвращаем оригинал при ошибке
-    return text;
   }
+  
+  return text;
 }
 
 /**
@@ -207,6 +308,16 @@ async function translateProducts() {
   try {
     console.log('🌐 Начинаем быстрый перевод товаров через LibreTranslate...\n');
     console.log(`📡 URL сервера перевода: ${LIBRETRANSLATE_URL}\n`);
+
+    // Проверяем доступность LibreTranslate перед началом работы
+    const isAvailable = await checkLibreTranslateAvailability();
+    if (!isAvailable) {
+      console.error('\n❌ LibreTranslate недоступен. Прерываем выполнение.');
+      console.error('💡 Запустите сервисы: npm run services:start');
+      process.exit(1);
+    }
+    
+    console.log(`📡 Используется сервер перевода: ${currentTranslateUrl}\n`);
 
     const productsCollection = await getCollection<Product>('products');
     
