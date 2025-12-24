@@ -26,6 +26,7 @@
     "ssl:get-webroot": "bash scripts/get-ssl-webroot.sh",
     "ssl:alternative": "bash scripts/get-ssl-alternative.sh",
     "ssl:configure-nginx": "bash scripts/configure-nginx-ssl.sh",
+    "ssl:install": "bash scripts/install-ssl-certificate.sh",
     "dns:check": "bash scripts/check-dns-records.sh",
     "dns:verify": "bash scripts/verify-dns-complete.sh"
   },
