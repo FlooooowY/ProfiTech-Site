@@ -61,7 +61,17 @@ export default function AIAssistant() {
       const data = await response.json();
       
       if (data.success) {
-        addMessage({ role: 'assistant', content: data.message });
+        let assistantMessage = data.message;
+        
+        // Если есть ссылка на каталог, делаем её кликабельной
+        if (data.suggestedLink) {
+          assistantMessage = assistantMessage.replace(
+            new RegExp(`(${data.suggestedLink})`, 'g'),
+            `[${data.suggestedLink}](${data.suggestedLink})`
+          );
+        }
+        
+        addMessage({ role: 'assistant', content: assistantMessage });
       } else {
         addMessage({ 
           role: 'assistant', 
