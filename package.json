@@ -19,7 +19,8 @@
     "services:check": "bash scripts/check-services.sh",
     "services:start": "bash scripts/start-services.sh",
     "site:check": "bash scripts/check-site.sh",
-    "site:diagnose": "bash scripts/diagnose-connection.sh"
+    "site:diagnose": "bash scripts/diagnose-connection.sh",
+    "domain:check": "bash scripts/check-domain.sh"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.12",
