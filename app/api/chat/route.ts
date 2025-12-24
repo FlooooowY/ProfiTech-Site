@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getCollection } from '@/lib/db';
+import { Product } from '@/types';
 
 // Интеграция с OpenRouter API для использования модели MiMo-V2-Flash от Xiaomi
 // Для работы нужно добавить OPENROUTER_API_KEY в .env.local
@@ -24,28 +26,74 @@ export async function POST(request: NextRequest) {
     const messageLower = message.toLowerCase();
     let suggestedCategory = null;
     let suggestedCategoryId = null;
+    let suggestedSubcategoryId = null;
     let suggestedLink = null;
+    let exampleProducts: string[] = [];
 
-    // Маппинг ключевых слов на категории
+    // Маппинг ключевых слов на категории и поиск примеров товаров
     if (messageLower.includes('пекарн') || messageLower.includes('хлебопекарн') || messageLower.includes('хлеб')) {
       suggestedCategory = 'Хлебопекарное оборудование';
       suggestedCategoryId = '1';
+      suggestedSubcategoryId = '1-4';
       suggestedLink = '/catalog?categoryId=1&subcategories=1-4';
+      
+      // Ищем примеры товаров
+      try {
+        const productsCollection = await getCollection<Product>('products');
+        const products = await productsCollection
+          .find({ 
+            categoryId: '1',
+            subcategoryId: { $regex: /hlebopekarnoe|хлебопекарн/i }
+          })
+          .limit(5)
+          .toArray();
+        exampleProducts = products.map(p => p.name).filter(Boolean);
+      } catch (e) {
+        console.error('Error fetching products:', e);
+      }
     } else if (messageLower.includes('кондитер') || messageLower.includes('торт')) {
       suggestedCategory = 'Кондитерское оборудование';
       suggestedCategoryId = '1';
+      suggestedSubcategoryId = '1-5';
       suggestedLink = '/catalog?categoryId=1&subcategories=1-5';
+      
+      try {
+        const productsCollection = await getCollection<Product>('products');
+        const products = await productsCollection
+          .find({ 
+            categoryId: '1',
+            subcategoryId: { $regex: /konditerskoe|кондитерск/i }
+          })
+          .limit(5)
+          .toArray();
+        exampleProducts = products.map(p => p.name).filter(Boolean);
+      } catch (e) {
+        console.error('Error fetching products:', e);
+      }
     } else if (messageLower.includes('кофе') || messageLower.includes('кофемашин') || messageLower.includes('кофеварк')) {
       suggestedCategory = 'Кофеварки и кофемашины';
       suggestedCategoryId = '2';
       suggestedLink = '/catalog?categoryId=2';
+      
+      try {
+        const productsCollection = await getCollection<Product>('products');
+        const products = await productsCollection
+          .find({ categoryId: '2' })
+          .limit(5)
+          .toArray();
+        exampleProducts = products.map(p => p.name).filter(Boolean);
+      } catch (e) {
+        console.error('Error fetching products:', e);
+      }
     } else if (messageLower.includes('холодильн') || messageLower.includes('морозилк')) {
       suggestedCategory = 'Холодильное оборудование';
       suggestedCategoryId = '1';
+      suggestedSubcategoryId = '1-2';
       suggestedLink = '/catalog?categoryId=1&subcategories=1-2';
     } else if (messageLower.includes('бар') || messageLower.includes('коктейл')) {
       suggestedCategory = 'Оборудование для баров';
       suggestedCategoryId = '1';
+      suggestedSubcategoryId = '1-6';
       suggestedLink = '/catalog?categoryId=1&subcategories=1-6';
     } else if (messageLower.includes('мебель')) {
       suggestedCategory = 'Промышленная мебель';
@@ -58,65 +106,47 @@ export async function POST(request: NextRequest) {
     }
 
     // Формируем системный промпт с контекстом
-    let systemPrompt = `Ты - AI помощник интернет-магазина ProfiTech, специализирующегося на профессиональном оборудовании.
+    let systemPrompt = `Ты - дружелюбный и знающий консультант интернет-магазина ProfiTech, который помогает клиентам выбрать профессиональное оборудование.
 
 Категории товаров:
 1. Профоборудование:
-   - Тепловое оборудование (печи, плиты, грили)
-   - Холодильное оборудование (холодильники, морозильники, витрины)
-   - Электромеханическое оборудование
-   - Хлебопекарное оборудование (печи для хлеба, тестомесы, расстоечные шкафы)
-   - Кондитерское оборудование (кондитерские печи, миксеры, тестомесы)
-   - Оборудование для баров (льдогенераторы, блендеры, шейкеры)
-   - Мясоперерабатывающее оборудование
-   - Оборудование фаст-фуд
-   - Нейтральное оборудование
-   - Фасовочно-упаковочное оборудование
-   - Прачечное оборудование
-   - Весовое оборудование
-   - Посудомоечное оборудование
-   - Линии раздачи
-   - Оборудование для кейтеринга
+   - Хлебопекарное: печи для хлеба (ротационные, конвекционные, каменные), тестомесы, расстоечные шкафы, формы для выпечки
+   - Кондитерское: кондитерские печи, миксеры, тестомесы, оборудование для работы с шоколадом
+   - Холодильное: холодильники, морозильники, витрины, шоковые морозильники
+   - Тепловое: печи, плиты, грили, фритюрницы
+   - Для баров: льдогенераторы, блендеры, шейкеры, барные холодильники
+   - И другие типы оборудования
 
-2. Кофеварки и кофемашины:
-   - Чайники для кофе
-   - Кофемашины (автоматические, профессиональные эспрессо-машины)
-   - Кофе-принтеры
-   - Кофеварки
-   - Сиропные станции
-   - Кофемолки
-   - Холодильники для молока
-   - Вспениватели и дозаторы молока
-   - Подогреватели чашек для кофе
-   - Средства для очистки кофемашин
-   - Кофе
-   - Джезвы
-   - Аксессуары
-
-3. Промышленная мебель (мебель для кухни, зала, бара, офиса)
-4. Климатическая техника (вентиляционное оборудование, кондиционеры, обогреватели)
-5. Телекоммуникационное оборудование (телефония, видеонаблюдение)
+2. Кофеварки и кофемашины: автоматические кофемашины, эспрессо-машины, кофемолки, аксессуары
+3. Промышленная мебель: для кухни, зала, бара, офиса
+4. Климатическая техника: вентиляция, кондиционеры, обогреватели
+5. Телекоммуникационное оборудование
 6. Точки продаж (POS-системы)
 7. Бытовая техника
 
 Твоя задача:
-- Помогать клиентам с выбором оборудования
-- Отвечать на вопросы о характеристиках товаров
-- Рекомендовать конкретные категории и подкатегории товаров
-- Быть вежливым, профессиональным и дружелюбным
-- Отвечать конкретно и по делу, не используй общие фразы
-- Если клиент спрашивает про конкретный тип оборудования, сразу предлагай соответствующую категорию
+- Отвечай естественно и дружелюбно, как живой консультант
+- Будь конкретным: сразу называй конкретные типы оборудования
+- Если клиент спрашивает про пекарню - расскажи про печи, тестомесы, расстоечные шкафы
+- Предлагай перейти в каталог для просмотра товаров
+- НЕ используй общие фразы типа "расскажите подробнее" или "что именно вас интересует"
+- НЕ повторяй один и тот же ответ на разные вопросы
 
 Важно:
-- Цены не указываются на сайте, их нужно уточнять у менеджеров через WhatsApp
-- Всегда предлагай перейти в каталог для просмотра товаров
-- Если клиент спрашивает про пекарню - предлагай хлебопекарное оборудование
-- Если клиент спрашивает про кондитерскую - предлагай кондитерское оборудование
-- Будь конкретным в рекомендациях, не используй общие фразы типа "расскажите подробнее"`;
+- Цены уточняются у менеджеров через WhatsApp
+- Всегда давай ссылку на каталог в конце ответа`;
 
-    // Добавляем контекст о запросе пользователя
+    // Добавляем контекст о запросе и примерах товаров
     if (suggestedCategory) {
-      systemPrompt += `\n\nКонтекст текущего запроса: Пользователь интересуется "${suggestedCategory}". Предложи ему перейти в каталог по ссылке: ${suggestedLink}`;
+      systemPrompt += `\n\nВАЖНО: Пользователь спрашивает про "${suggestedCategory}".`;
+      
+      if (exampleProducts.length > 0) {
+        systemPrompt += `\n\nВ нашем каталоге есть такие товары:\n${exampleProducts.slice(0, 3).map(p => `- ${p}`).join('\n')}`;
+        systemPrompt += `\n\nУпомяни эти примеры в ответе, чтобы показать, что у нас действительно есть товары.`;
+      }
+      
+      systemPrompt += `\n\nОбязательно предложи перейти в каталог: ${suggestedLink}`;
+      systemPrompt += `\n\nОтвечай конкретно и по делу. НЕ используй общие фразы.`;
     }
 
     // Формируем массив сообщений для контекста
@@ -191,7 +221,26 @@ function getFallbackResponse(message: string) {
   } else if (messageLower.includes('бар')) {
     response = 'Для оснащения бара у нас есть специализированный раздел "Оборудование для баров" в категории профоборудования. Там вы найдете льдогенераторы, блендеры, барные холодильники и многое другое. Также рекомендую посмотреть кофейное оборудование. Какие конкретно позиции вас интересуют?';
   } else if (messageLower.includes('пекарн') || messageLower.includes('хлебопекарн') || messageLower.includes('хлеб')) {
-    response = 'Отлично! Для пекарни у нас есть специальный раздел "Хлебопекарное оборудование" в категории "Профоборудование". Там вы найдете:\n\n• Печи для хлеба (ротационные, конвекционные, каменные)\n• Тестомесы и миксеры\n• Расстоечные шкафы\n• Формы для выпечки\n• И другое оборудование для пекарни\n\nПерейдите в каталог, чтобы посмотреть все товары: /catalog?categoryId=1&subcategories=1-4';
+    // Пытаемся найти примеры товаров
+    let productExamples = '';
+    try {
+      const productsCollection = await getCollection<Product>('products');
+      const products = await productsCollection
+        .find({ 
+          categoryId: '1',
+          subcategoryId: { $regex: /hlebopekarnoe|хлебопекарн/i }
+        })
+        .limit(3)
+        .toArray();
+      
+      if (products.length > 0) {
+        productExamples = '\n\nНапример, у нас есть:\n' + products.map(p => `• ${p.name}`).join('\n');
+      }
+    } catch (e) {
+      // Игнорируем ошибки при поиске товаров
+    }
+    
+    response = `Для пекарни у нас большой выбор хлебопекарного оборудования!${productExamples}\n\nВ каталоге вы найдете:\n• Печи для хлеба (ротационные, конвекционные, каменные)\n• Тестомесы и миксеры для теста\n• Расстоечные шкафы\n• Формы для выпечки\n• Делители и округлители теста\n\nПосмотрите все товары в каталоге: /catalog?categoryId=1&subcategories=1-4`;
   } else if (messageLower.includes('кондитер') || messageLower.includes('торт')) {
     response = 'Для кондитерской у нас есть раздел "Кондитерское оборудование" в категории "Профоборудование". Там вы найдете:\n\n• Кондитерские печи\n• Миксеры и тестомесы\n• Оборудование для работы с шоколадом\n• Формы для выпечки\n• И другое кондитерское оборудование\n\nПерейдите в каталог: /catalog?categoryId=1&subcategories=1-5';
   } else if (messageLower.includes('цен') || messageLower.includes('стоимост') || messageLower.includes('прайс')) {
