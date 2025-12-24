@@ -9,6 +9,8 @@ import { useCartStore } from '@/store/cartStore';
 import { useCatalogStore } from '@/store/catalogStore';
 import { useFavoritesStore } from '@/store/favoritesStore';
 import { COMPANY_INFO } from '@/constants/categories';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { useTranslations } from '@/lib/i18n';
 
 export default function Header() {
   const router = useRouter();
@@ -18,6 +20,7 @@ export default function Header() {
   const getTotalItems = useCartStore((state) => state.getTotalItems);
   const setSearchQueryStore = useCatalogStore((state) => state.setSearchQuery);
   const favorites = useFavoritesStore((state) => state.favorites);
+  const t = useTranslations();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -88,25 +91,25 @@ export default function Header() {
               href="/"
               className="text-gray-900 hover:text-[#FF6B35] transition-colors font-medium px-4"
             >
-              Главная
+              {t('common.home')}
             </Link>
             <Link
               href="/catalog"
               className="text-gray-900 hover:text-[#FF6B35] transition-colors font-medium px-4"
             >
-              Каталог
+              {t('common.catalog')}
             </Link>
             <Link
               href="/about"
               className="text-gray-900 hover:text-[#FF6B35] transition-colors font-medium px-4"
             >
-              О нас
+              {t('common.about')}
             </Link>
             <Link
               href="/contacts"
               className="text-gray-900 hover:text-[#FF6B35] transition-colors font-medium px-4"
             >
-              Контакты
+              {t('common.contacts')}
             </Link>
           </nav>
 
@@ -115,7 +118,7 @@ export default function Header() {
             <div className="flex items-center bg-white border-2 border-gray-200 rounded-full px-3 md:px-4 xl:px-5 py-2 md:py-2.5 w-48 md:w-56 lg:w-64 xl:w-80 max-w-full shadow-md hover:shadow-lg hover:border-[#FF6B35] transition-all focus-within:border-[#FF6B35]">
               <input
                 type="text"
-                placeholder="Поиск товаров..."
+                placeholder={t('common.search') + '..."'}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="bg-transparent flex-1 outline-none text-sm font-medium placeholder:text-gray-400"
@@ -125,7 +128,9 @@ export default function Header() {
           </div>
 
           {/* Right Actions */}
-          <div className="flex items-center" style={{ gap: '24px', marginRight: '16px' }}>
+          <div className="flex items-center" style={{ gap: '12px', marginRight: '16px' }}>
+            <LanguageSwitcher />
+            
             <a
               href={`https://wa.me/${COMPANY_INFO.defaultWhatsApp.replace(/\D/g, '')}`}
               target="_blank"
@@ -134,13 +139,13 @@ export default function Header() {
               style={{ padding: '12px 24px' }}
             >
               <Phone className="w-4 h-4" />
-              <span className="text-sm font-medium">Связаться</span>
+              <span className="text-sm font-medium">{t('home.writeWhatsApp')}</span>
             </a>
 
             <Link
               href="/favorites"
               className="relative p-3 hover:bg-gray-100 rounded-full transition-colors"
-              title="Избранное"
+              title={t('common.favorites')}
             >
               <Heart className="w-6 h-6 text-gray-900" />
               {favorites.length > 0 && (
@@ -187,7 +192,7 @@ export default function Header() {
         <div className="md:hidden pb-4 flex items-center bg-white border-2 border-gray-200 rounded-full px-5 py-3 shadow-md focus-within:border-[#FF6B35]">
           <input
             type="text"
-            placeholder="Поиск товаров..."
+            placeholder={t('common.search') + '..."'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="bg-transparent flex-1 outline-none text-base font-medium placeholder:text-gray-400"
@@ -211,28 +216,28 @@ export default function Header() {
                 onClick={() => setIsMenuOpen(false)}
                 className="text-gray-900 hover:text-[#FF6B35] transition-colors font-medium py-2"
               >
-                Главная
+                {t('common.home')}
               </Link>
               <Link
                 href="/catalog"
                 onClick={() => setIsMenuOpen(false)}
                 className="text-gray-900 hover:text-[#FF6B35] transition-colors font-medium py-2"
               >
-                Каталог
+                {t('common.catalog')}
               </Link>
               <Link
                 href="/about"
                 onClick={() => setIsMenuOpen(false)}
                 className="text-gray-900 hover:text-[#FF6B35] transition-colors font-medium py-2"
               >
-                О нас
+                {t('common.about')}
               </Link>
               <Link
                 href="/contacts"
                 onClick={() => setIsMenuOpen(false)}
                 className="text-gray-900 hover:text-[#FF6B35] transition-colors font-medium py-2"
               >
-                Контакты
+                {t('common.contacts')}
               </Link>
               <Link
                 href="/favorites"
@@ -240,8 +245,11 @@ export default function Header() {
                 className="text-gray-900 hover:text-[#FF6B35] transition-colors font-medium py-2 flex items-center space-x-2"
               >
                 <Heart className="w-5 h-5" />
-                <span>Избранное {favorites.length > 0 && `(${favorites.length})`}</span>
+                <span>{t('common.favorites')} {favorites.length > 0 && `(${favorites.length})`}</span>
               </Link>
+              <div className="flex items-center justify-between">
+                <LanguageSwitcher />
+              </div>
               <a
                 href={`https://wa.me/${COMPANY_INFO.defaultWhatsApp.replace(/\D/g, '')}`}
                 target="_blank"
@@ -250,7 +258,7 @@ export default function Header() {
                 style={{ padding: '16px 32px' }}
               >
                 <Phone className="w-4 h-4" />
-                <span className="text-sm font-medium">Связаться</span>
+                <span className="text-sm font-medium">{t('home.writeWhatsApp')}</span>
               </a>
             </nav>
           </motion.div>

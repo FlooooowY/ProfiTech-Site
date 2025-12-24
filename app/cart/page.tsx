@@ -53,11 +53,11 @@ export default function CartPage() {
             <div className="relative w-full h-full bg-gradient-to-br from-[#FF6B35] to-[#F7931E] rounded-full flex items-center justify-center shadow-2xl">
               <ShoppingCart className="w-20 h-20 text-white" />
             </div>
-            <motion.div
+          <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
               className="absolute -top-2 -right-2"
-            >
+          >
               <Sparkles className="w-8 h-8 text-[#FF6B35]" />
             </motion.div>
           </motion.div>
@@ -82,13 +82,13 @@ export default function CartPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
           >
-            <Link
-              href="/catalog"
+          <Link
+            href="/catalog"
               className="inline-flex items-center space-x-3 px-10 py-5 bg-gradient-to-r from-[#FF6B35] via-[#FF7A45] to-[#F7931E] text-white font-bold rounded-2xl hover:shadow-2xl transform hover:scale-105 transition-all text-lg"
-            >
-              <span>Перейти в каталог</span>
+          >
+            <span>Перейти в каталог</span>
               <ArrowRight className="w-6 h-6" />
-            </Link>
+          </Link>
           </motion.div>
         </motion.div>
       </div>
@@ -112,9 +112,9 @@ export default function CartPage() {
               <div>
                 <h1 className="text-4xl md:text-5xl font-bold mb-2 text-gray-900">
                   Список запросов
-                </h1>
+          </h1>
                 <div className="flex items-center space-x-3">
-                  <p className="text-gray-600 text-lg">
+          <p className="text-gray-600 text-lg">
                     Товаров в списке:
                   </p>
                   <span className="px-4 py-1.5 bg-gradient-to-r from-[#FF6B35]/10 to-[#F7931E]/10 text-[#FF6B35] rounded-full font-bold text-lg border-2 border-[#FF6B35]/20">
@@ -134,7 +134,7 @@ export default function CartPage() {
                 <span>Очистить список</span>
               </motion.button>
             )}
-          </div>
+        </div>
         </motion.div>
 
         <div className="grid lg:grid-cols-3 gap-8">
@@ -152,80 +152,80 @@ export default function CartPage() {
                   className="group bg-white rounded-2xl shadow-lg border-2 border-gray-200 overflow-hidden hover:shadow-2xl hover:border-[#FF6B35]/30 transition-all duration-300"
                 >
                   <div className="p-6 flex flex-col sm:flex-row gap-6">
-                    {/* Product Image */}
+                  {/* Product Image */}
                     <Link
                       href={`/catalog/${encodeURIComponent(item.product.id)}`}
                       className="relative w-full sm:w-48 h-48 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl overflow-hidden flex-shrink-0 group/image"
                     >
-                      {item.product.images && item.product.images[0] ? (
+                    {item.product.images && item.product.images[0] ? (
                         <>
                           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover/image:opacity-100 transition-opacity z-10"></div>
-                          <img
-                            src={item.product.images[0]}
-                            alt={item.product.name}
+                      <img
+                        src={item.product.images[0]}
+                        alt={item.product.name}
                             className="w-full h-full object-cover group-hover/image:scale-110 transition-transform duration-500"
-                          />
+                      />
                         </>
-                      ) : (
+                    ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <Package className="w-20 h-20 text-gray-300" />
-                        </div>
-                      )}
+                      </div>
+                    )}
                       <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-lg">
                         <span className="text-sm font-bold text-[#FF6B35]">×{item.quantity}</span>
-                      </div>
+                  </div>
                     </Link>
 
-                    {/* Product Info */}
+                  {/* Product Info */}
                     <div className="flex-1 min-w-0 flex flex-col">
                       <Link href={`/catalog/${encodeURIComponent(item.product.id)}`}>
                         <h3 className="text-2xl font-bold mb-3 text-gray-900 hover:text-[#FF6B35] transition-colors line-clamp-2 group-hover:underline">
-                          {item.product.name}
-                        </h3>
+                      {item.product.name}
+                    </h3>
                       </Link>
                       <p className="text-gray-600 text-sm mb-4 line-clamp-3 leading-relaxed flex-grow">
-                        {stripHtml(item.product.description)}
-                      </p>
+                      {stripHtml(item.product.description)}
+                    </p>
                       <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-[#FF6B35]/10 to-[#F7931E]/10 text-[#FF6B35] rounded-xl text-sm font-bold border-2 border-[#FF6B35]/20 w-fit">
                         <Package className="w-4 h-4 mr-2" />
-                        {item.product.manufacturer}
-                      </div>
+                      {item.product.manufacturer}
                     </div>
+                  </div>
 
                     {/* Quantity Controls & Remove */}
                     <div className="flex sm:flex-col items-center justify-between sm:justify-start gap-4">
-                      {/* Quantity Controls */}
+                  {/* Quantity Controls */}
                       <div className="flex items-center space-x-3 bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-3 border-2 border-gray-200">
                         <motion.button
                           onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
                           whileHover={{ scale: 1.15, backgroundColor: '#FF6B35' }}
                           whileTap={{ scale: 0.9 }}
                           className="w-11 h-11 bg-white hover:bg-[#FF6B35] hover:text-white text-gray-700 rounded-xl flex items-center justify-center transition-all shadow-md hover:shadow-lg"
-                        >
+                      >
                           <Minus className="w-5 h-5" />
                         </motion.button>
                         <span className="w-16 text-center font-bold text-xl text-gray-900 bg-white px-3 py-2 rounded-lg shadow-sm">
-                          {item.quantity}
-                        </span>
+                        {item.quantity}
+                      </span>
                         <motion.button
                           onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
                           whileHover={{ scale: 1.15, backgroundColor: '#FF6B35' }}
                           whileTap={{ scale: 0.9 }}
                           className="w-11 h-11 bg-white hover:bg-[#FF6B35] hover:text-white text-gray-700 rounded-xl flex items-center justify-center transition-all shadow-md hover:shadow-lg"
-                        >
+                      >
                           <Plus className="w-5 h-5" />
                         </motion.button>
-                      </div>
+                    </div>
 
                       {/* Remove Button */}
                       <motion.button
-                        onClick={() => removeItem(item.product.id)}
+                      onClick={() => removeItem(item.product.id)}
                         whileHover={{ scale: 1.15, rotate: 15, backgroundColor: '#ef4444' }}
                         whileTap={{ scale: 0.9 }}
                         className="w-12 h-12 bg-red-50 hover:bg-red-500 hover:text-white text-red-600 rounded-xl flex items-center justify-center transition-all shadow-md hover:shadow-lg border-2 border-red-200 hover:border-red-500"
-                        title="Удалить из списка"
-                      >
-                        <Trash2 className="w-5 h-5" />
+                      title="Удалить из списка"
+                    >
+                      <Trash2 className="w-5 h-5" />
                       </motion.button>
                     </div>
                   </div>
@@ -250,7 +250,7 @@ export default function CartPage() {
                   </div>
                   <h2 className="text-2xl font-bold text-white">Итого</h2>
                 </div>
-              </div>
+          </div>
 
               <div className="px-12 py-4">
                 <div className="space-y-8" style={{ marginBottom: '24px' }}>
@@ -267,12 +267,12 @@ export default function CartPage() {
                     <div className="flex items-center space-x-2">
                       <ShoppingCart className="w-5 h-5 text-[#FF6B35]" />
                       <span className="text-gray-700 font-semibold">Общее количество:</span>
-                    </div>
-                    <span className="font-bold text-2xl text-[#FF6B35] bg-white px-4 py-1.5 rounded-lg shadow-sm">
-                      {getTotalItems()} шт.
-                    </span>
-                  </div>
                 </div>
+                    <span className="font-bold text-2xl text-[#FF6B35] bg-white px-4 py-1.5 rounded-lg shadow-sm">
+                    {getTotalItems()} шт.
+                  </span>
+                </div>
+              </div>
 
                 {/* Info Box */}
                 <div className="bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-50 rounded-2xl p-7 border-2 border-blue-200 shadow-sm" style={{ marginBottom: '24px' }}>
@@ -284,14 +284,14 @@ export default function CartPage() {
                       <p className="text-sm text-gray-700 leading-relaxed">
                         <strong className="text-gray-900 block mb-1">Уточнение цены:</strong>
                         После отправки запроса наш менеджер свяжется с вами для уточнения цены и деталей заказа.
-                      </p>
+                </p>
                     </div>
                   </div>
-                </div>
+              </div>
 
                 {/* Checkout Button */}
                 <motion.button
-                  onClick={handleCheckout}
+                onClick={handleCheckout}
                   whileHover={{ scale: 1.02, y: -3 }}
                   whileTap={{ scale: 0.98 }}
                   className="w-full py-6 bg-gradient-to-r from-[#FF6B35] via-[#FF7A45] to-[#F7931E] text-white font-bold rounded-2xl hover:shadow-2xl transition-all flex items-center justify-center space-x-3 text-lg mb-8 relative overflow-hidden group"
@@ -303,20 +303,20 @@ export default function CartPage() {
                 </motion.button>
 
                 <p className="text-xs text-gray-500 text-center mb-12">
-                  Нажимая кнопку, вы будете перенаправлены в WhatsApp
-                </p>
+                Нажимая кнопку, вы будете перенаправлены в WhatsApp
+              </p>
 
                 {/* Continue Shopping */}
                 <div className="pt-16 border-t-2 border-gray-200">
-                  <Link
-                    href="/catalog"
+                <Link
+                  href="/catalog"
                     className="flex items-center justify-center space-x-2 text-[#FF6B35] hover:text-[#F7931E] font-bold transition-colors group py-3 px-4 rounded-xl hover:bg-gradient-to-r hover:from-[#FF6B35]/10 hover:to-[#F7931E]/10"
-                  >
+                >
                     <ArrowRight className="w-5 h-5 rotate-180 group-hover:-translate-x-2 transition-transform" />
                     <span>Продолжить покупки</span>
-                  </Link>
-                </div>
+                </Link>
               </div>
+            </div>
             </motion.div>
           </div>
         </div>

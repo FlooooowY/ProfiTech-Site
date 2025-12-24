@@ -1,0 +1,67 @@
+{
+  "common": {
+    "home": "Home",
+    "catalog": "Catalog",
+    "about": "About",
+    "contacts": "Contacts",
+    "cart": "Cart",
+    "favorites": "Favorites",
+    "search": "Search",
+    "language": "Language",
+    "loading": "Loading...",
+    "error": "Error",
+    "close": "Close"
+  },
+  "home": {
+    "title": "ProfiTech - Professional Equipment for Business",
+    "subtitle": "From idea to implementation. Wide selection of professional equipment: coffee machines, refrigeration equipment, furniture and more.",
+    "whyChoose": "Why choose",
+    "whyChooseSubtitle": "We offer comprehensive solutions for your business",
+    "wideRange": "Wide range",
+    "wideRangeDesc": "Over 10,000 professional equipment items",
+    "quality": "Quality guarantee",
+    "qualityDesc": "We work only with verified manufacturers",
+    "fastDelivery": "Fast delivery",
+    "fastDeliveryDesc": "Fast delivery throughout Russia",
+    "support": "24/7 Support",
+    "supportDesc": "Always available to answer your questions",
+    "ourCategories": "Our",
+    "categories": "categories",
+    "categoriesSubtitle": "Find exactly what you need for your business",
+    "subcategories": "subcategories",
+    "viewCatalog": "View full catalog",
+    "readyToStart": "Ready to start?",
+    "readyToStartDesc": "Contact us now and get a personalized commercial offer",
+    "goToCatalog": "Go to catalog",
+    "writeWhatsApp": "Write to WhatsApp"
+  },
+  "catalog": {
+    "title": "Product Catalog",
+    "filters": "Filters",
+    "manufacturers": "Manufacturers",
+    "characteristics": "Characteristics",
+    "price": "Price",
+    "sortBy": "Sort by",
+    "noProducts": "No products found",
+    "productsFound": "Products found",
+    "addToCart": "Add to cart",
+    "addToFavorites": "Add to favorites",
+    "removeFromFavorites": "Remove from favorites"
+  },
+  "cart": {
+    "title": "Cart",
+    "empty": "Cart is empty",
+    "total": "Total",
+    "order": "Place order",
+    "continueShopping": "Continue shopping"
+  },
+  "contacts": {
+    "title": "Contacts",
+    "getInTouch": "Get in touch",
+    "address": "Address",
+    "phone": "Phone",
+    "email": "Email",
+    "workingHours": "Working hours"
+  }
+}
+

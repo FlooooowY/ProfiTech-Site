@@ -6,6 +6,7 @@ import { ArrowRight, Package, Zap, HeadphonesIcon, Shield } from 'lucide-react';
 import Carousel from '@/components/Carousel';
 import { CATEGORIES } from '@/constants/categories';
 import { CarouselImage } from '@/types';
+import { useTranslations } from '@/lib/i18n';
 
 // Изображения для карусели
 const carouselImages: CarouselImage[] = [
@@ -35,30 +36,33 @@ const carouselImages: CarouselImage[] = [
   },
 ];
 
-const features = [
-  {
-    icon: Package,
-    title: 'Широкий ассортимент',
-    description: 'Более 10,000 позиций профессионального оборудования',
-  },
-  {
-    icon: Shield,
-    title: 'Гарантия качества',
-    description: 'Работаем только с проверенными производителями',
-  },
-  {
-    icon: Zap,
-    title: 'Быстрая доставка',
-    description: 'Оперативная доставка по всей России',
-  },
-  {
-    icon: HeadphonesIcon,
-    title: 'Поддержка 24/7',
-    description: 'Всегда на связи для решения ваших вопросов',
-  },
-];
 
 export default function HomePage() {
+  const t = useTranslations();
+  
+  const features = [
+    {
+      icon: Package,
+      title: t('home.wideRange'),
+      description: t('home.wideRangeDesc'),
+    },
+    {
+      icon: Shield,
+      title: t('home.quality'),
+      description: t('home.qualityDesc'),
+    },
+    {
+      icon: Zap,
+      title: t('home.fastDelivery'),
+      description: t('home.fastDeliveryDesc'),
+    },
+    {
+      icon: HeadphonesIcon,
+      title: t('home.support'),
+      description: t('home.supportDesc'),
+    },
+  ];
+
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-white">
       {/* Hero Section with Carousel */}
@@ -77,10 +81,10 @@ export default function HomePage() {
             style={{ marginBottom: '80px' }}
           >
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold" style={{ color: '#000000', marginBottom: '32px' }}>
-              <span style={{ color: '#000000' }}>Почему выбирают</span> <span className="gradient-text">ProfiTech</span>
+              <span style={{ color: '#000000' }}>{t('home.whyChoose')}</span> <span className="gradient-text">ProfiTech</span>
             </h2>
             <p className="text-gray-600 text-lg md:text-xl max-w-3xl mx-auto font-semibold">
-              Мы предлагаем комплексные решения для вашего бизнеса
+              {t('home.whyChooseSubtitle')}
             </p>
           </motion.div>
 
@@ -119,10 +123,10 @@ export default function HomePage() {
             style={{ marginBottom: '60px' }}
           >
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold" style={{ marginBottom: '16px' }}>
-              <span style={{ color: '#FF6B35' }}>Наши</span> <span className="gradient-text">категории</span>
+              <span style={{ color: '#FF6B35' }}>{t('home.ourCategories')}</span> <span className="gradient-text">{t('home.categories')}</span>
             </h2>
             <p className="text-gray-600 text-lg md:text-xl max-w-3xl mx-auto font-semibold">
-              Найдите именно то, что нужно для вашего бизнеса
+              {t('home.categoriesSubtitle')}
             </p>
           </motion.div>
 
@@ -149,7 +153,7 @@ export default function HomePage() {
                         {category.name}
                       </h3>
                       <p className="text-sm text-gray-600 font-semibold">
-                        {category.subcategories?.length} подкатегорий
+                        {category.subcategories?.length} {t('home.subcategories')}
                       </p>
                     </div>
                     <ArrowRight className="w-7 h-7 text-gray-900 group-hover:text-[#FF6B35] group-hover:translate-x-2 transition-all duration-300 flex-shrink-0" />
@@ -188,7 +192,7 @@ export default function HomePage() {
               className="inline-flex items-center space-x-2 text-[#FF6B35] font-semibold rounded-full hover:shadow-lg transform hover:scale-105 transition-all"
               style={{ padding: '16px 32px' }}
             >
-              <span>Смотреть весь каталог</span>
+              <span>{t('home.viewCatalog')}</span>
               <ArrowRight className="w-5 h-5" />
             </Link>
           </motion.div>
@@ -205,11 +209,10 @@ export default function HomePage() {
             viewport={{ once: true }}
           >
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white" style={{ marginBottom: '40px', color: '#ffffff' }}>
-              Готовы начать?
+              {t('home.readyToStart')}
             </h2>
             <p className="text-xl md:text-2xl max-w-3xl mx-auto opacity-95 leading-relaxed" style={{ marginBottom: '48px' }}>
-              Свяжитесь с нами прямо сейчас и получите индивидуальное
-              коммерческое предложение
+              {t('home.readyToStartDesc')}
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <Link
@@ -217,7 +220,7 @@ export default function HomePage() {
                 className="bg-white text-[#FF6B35] font-bold text-lg rounded-full hover:shadow-2xl transform hover:scale-105 transition-all"
                 style={{ padding: '20px 40px' }}
               >
-                Перейти в каталог
+                {t('home.goToCatalog')}
               </Link>
               <a
                 href="https://wa.me/79000000000"
@@ -226,7 +229,7 @@ export default function HomePage() {
                 className="bg-white/20 backdrop-blur-sm border-2 border-white text-white font-bold text-lg rounded-full hover:bg-white/30 transition-all"
                 style={{ padding: '20px 40px' }}
               >
-                Написать в WhatsApp
+                {t('home.writeWhatsApp')}
               </a>
             </div>
           </motion.div>
