@@ -13,10 +13,12 @@
     "db:import-products": "tsx scripts/importToMongoDB.ts",
     "db:fix-subcategories": "tsx scripts/fixSubcategoryIds.ts",
     "db:check-subcategories": "tsx scripts/checkSubcategories.ts",
-    "db:check": "node scripts/checkMongoDB.js"
+    "db:check": "node scripts/checkMongoDB.js",
+    "db:translate-products": "tsx scripts/translateProducts.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.12",
+    "@vitalets/google-translate-api": "^9.2.1",
     "csv-parse": "^6.1.0",
     "framer-motion": "^12.23.26",
     "lucide-react": "^0.562.0",
