@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     if (!apiKey) {
       console.warn('OPENROUTER_API_KEY не установлен, используется fallback логика');
       // Fallback на простую логику, если API ключ не установлен
-      return getFallbackResponse(message);
+      return await getFallbackResponse(message, conversationHistory);
     }
 
     // Определяем категорию из запроса для поиска товаров
@@ -178,7 +178,7 @@ export async function POST(request: NextRequest) {
       console.error('OpenRouter API Error:', response.status, errorData);
       
       // Fallback на простую логику при ошибке API
-      return getFallbackResponse(message);
+      return await getFallbackResponse(message, conversationHistory);
     }
 
     const data = await response.json();
@@ -198,28 +198,90 @@ export async function POST(request: NextRequest) {
       });
     } else {
       console.error('Unexpected response format:', data);
-      return getFallbackResponse(message);
+      return await getFallbackResponse(message, conversationHistory);
     }
 
   } catch (error) {
     console.error('AI Chat Error:', error);
     // Fallback на простую логику при любой ошибке
-    const { message } = await request.json();
-    return getFallbackResponse(message);
+    try {
+      const body = await request.json();
+      return await getFallbackResponse(body.message || '', body.messages || []);
+    } catch (e) {
+      return await getFallbackResponse('', []);
+    }
   }
 }
 
 // Fallback функция с простой логикой (используется если API недоступен)
-function getFallbackResponse(message: string) {
+async function getFallbackResponse(message: string, conversationHistory: any[] = []) {
   const messageLower = message.toLowerCase();
   let response = '';
   
-  if (messageLower.includes('кофе') || messageLower.includes('кофемашин')) {
+  // Пытаемся найти товары по запросу
+  let foundProducts: Product[] = [];
+  try {
+    const productsCollection = await getCollection<Product>('products');
+    
+    // Извлекаем ключевые слова из запроса
+    const keywords = messageLower.split(/\s+/).filter(w => w.length > 2);
+    
+    // Ищем товары по названию и характеристикам
+    const searchQuery: any = {
+      $or: [
+        { name: { $regex: new RegExp(keywords.join('|'), 'i') } },
+        { description: { $regex: new RegExp(keywords.join('|'), 'i') } }
+      ]
+    };
+    
+    // Если упоминается объем (например, "25 литров")
+    const volumeMatch = messageLower.match(/(\d+)\s*(литр|л|liters?|l)/i);
+    if (volumeMatch) {
+      const volume = volumeMatch[1];
+      searchQuery.$or.push({
+        'characteristics.value': { $regex: new RegExp(volume, 'i') }
+      });
+    }
+    
+    // Если упоминается категория, добавляем фильтр
+    if (messageLower.includes('бар') || messageLower.includes('барн')) {
+      searchQuery.$or.push({ subcategoryId: { $regex: /bar|бар/i } });
+    }
+    if (messageLower.includes('холодильн')) {
+      searchQuery.$or.push({ subcategoryId: { $regex: /holodil|холодильн/i } });
+    }
+    
+    foundProducts = await productsCollection
+      .find(searchQuery)
+      .limit(5)
+      .toArray();
+  } catch (e) {
+    console.error('Error searching products:', e);
+  }
+  
+  // Формируем ответ на основе найденных товаров
+  if (foundProducts.length > 0) {
+    const productList = foundProducts.slice(0, 3).map(p => `• ${p.name}`).join('\n');
+    response = `Отлично! Я нашел для вас подходящие товары:\n\n${productList}`;
+    
+    if (foundProducts.length > 3) {
+      response += `\n\nИ еще ${foundProducts.length - 3} товар(ов) в каталоге.`;
+    }
+    
+    // Определяем категорию для ссылки
+    if (messageLower.includes('бар') || messageLower.includes('барн')) {
+      response += `\n\nПосмотрите все товары для баров: /catalog?categoryId=1&subcategories=1-6`;
+    } else if (messageLower.includes('холодильн')) {
+      response += `\n\nПосмотрите все холодильное оборудование: /catalog?categoryId=1&subcategories=1-2`;
+    } else {
+      response += `\n\nПосмотрите все товары в каталоге: /catalog`;
+    }
+  } else if (messageLower.includes('кофе') || messageLower.includes('кофемашин')) {
     response = 'Отличный выбор! У нас широкий ассортимент кофейного оборудования. Рекомендую обратить внимание на раздел "Кофеварки и кофемашины". Там вы найдете профессиональные кофемашины, кофемолки и все необходимые аксессуары. Что именно вас интересует: автоматические кофемашины, профессиональные эспрессо-машины или может быть кофемолки?';
   } else if (messageLower.includes('холодильн')) {
-    response = 'Для холодильного оборудования у нас есть специальный раздел в категории "Профоборудование". Мы предлагаем промышленные холодильники различных объемов и конфигураций. Расскажите подробнее о ваших потребностях: какой объем нужен, для каких целей используете?';
-  } else if (messageLower.includes('бар')) {
-    response = 'Для оснащения бара у нас есть специализированный раздел "Оборудование для баров" в категории профоборудования. Там вы найдете льдогенераторы, блендеры, барные холодильники и многое другое. Также рекомендую посмотреть кофейное оборудование. Какие конкретно позиции вас интересуют?';
+    response = 'Для холодильного оборудования у нас есть специальный раздел в категории "Профоборудование". Мы предлагаем промышленные холодильники различных объемов и конфигураций. Посмотрите все варианты в каталоге: /catalog?categoryId=1&subcategories=1-2';
+  } else if (messageLower.includes('бар') || messageLower.includes('барн')) {
+    response = 'Для оснащения бара у нас есть специализированный раздел "Оборудование для баров" в категории профоборудования. Там вы найдете льдогенераторы, блендеры, барные холодильники и многое другое. Посмотрите все товары: /catalog?categoryId=1&subcategories=1-6';
   } else if (messageLower.includes('пекарн') || messageLower.includes('хлебопекарн') || messageLower.includes('хлеб')) {
     // Пытаемся найти примеры товаров
     let productExamples = '';
