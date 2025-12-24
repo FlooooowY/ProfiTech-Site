@@ -19,7 +19,9 @@ export interface Subcategory {
 export interface Product {
   id: string;
   name: string;
+  name_en?: string; // Английское название
   description: string;
+  description_en?: string; // Английское описание
   categoryId: string;
   subcategoryId?: string;
   manufacturer: string;
@@ -31,7 +33,9 @@ export interface Product {
 
 export interface ProductCharacteristic {
   name: string;
+  name_en?: string; // Английское название характеристики
   value: string;
+  value_en?: string; // Английское значение характеристики
 }
 
 // Типы для корзины

@@ -8,12 +8,15 @@ import { useCatalogStore } from '@/store/catalogStore';
 import { useCartStore } from '@/store/cartStore';
 import { Product, ProductCharacteristic } from '@/types';
 import { COMPANY_INFO } from '@/constants/categories';
+import { useTranslations } from '@/lib/i18n';
+import { getProductName, getProductDescription, getTranslatedCharacteristic } from '@/lib/productTranslations';
 
 export default function ProductPage() {
   const params = useParams();
   const router = useRouter();
   const { products } = useCatalogStore();
   const { addItem } = useCartStore();
+  const t = useTranslations();
   const [product, setProduct] = useState<Product | null>(null);
   const [selectedImage, setSelectedImage] = useState(0);
 
@@ -56,13 +59,14 @@ export default function ProductPage() {
       return { mainCharacteristics: [], dimensions: [] };
     }
 
-    const dimensionNames = ['ширина', 'глубина', 'высота', 'вес', 'габариты', 'размеры'];
+    const dimensionNames = ['ширина', 'глубина', 'высота', 'вес', 'габариты', 'размеры', 'width', 'depth', 'height', 'weight', 'dimensions', 'sizes'];
     const main: ProductCharacteristic[] = [];
     const dims: ProductCharacteristic[] = [];
 
     product.characteristics.forEach(char => {
       const nameLower = char.name.toLowerCase();
-      if (dimensionNames.some(dim => nameLower.includes(dim))) {
+      const nameEnLower = char.name_en?.toLowerCase() || '';
+      if (dimensionNames.some(dim => nameLower.includes(dim) || nameEnLower.includes(dim))) {
         dims.push(char);
       } else {
         main.push(char);
@@ -79,7 +83,8 @@ export default function ProductPage() {
   };
 
   const handleWhatsApp = () => {
-    const message = `Здравствуйте! Интересует товар:\n${product?.name}\n${window.location.href}\n\nПожалуйста, сообщите цену и наличие.`;
+    const productName = product ? getProductName(product) : '';
+    const message = `${t('product.whatsappGreeting')}\n${t('product.interestedIn')}:\n${productName}\n${window.location.href}\n\n${t('product.pleaseContact')}`;
     const whatsappUrl = `https://wa.me/${COMPANY_INFO.defaultWhatsApp.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
@@ -88,12 +93,12 @@ export default function ProductPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4 text-gray-900">Товар не найден</h2>
+          <h2 className="text-2xl font-bold mb-4 text-gray-900">{t('product.notFound')}</h2>
           <button
             onClick={() => router.push('/catalog')}
             className="px-6 py-3 bg-gradient-to-r from-[#FF6B35] to-[#F7931E] text-white rounded-lg font-semibold hover:from-[#FF7A45] hover:to-[#FF8A55] transition-colors"
           >
-            Вернуться в каталог
+            {t('product.backToCatalog')}
           </button>
         </div>
       </div>
@@ -110,7 +115,7 @@ export default function ProductPage() {
           whileHover={{ x: -5 }}
         >
           <ArrowLeft className="w-5 h-5 group-hover:scale-110 transition-transform" />
-          <span className="font-medium">Назад к каталогу</span>
+          <span className="font-medium">{t('product.backToCatalog')}</span>
         </motion.button>
 
         <div className="grid lg:grid-cols-2 gap-12 mb-12">
@@ -126,7 +131,7 @@ export default function ProductPage() {
                 {product.images && product.images[selectedImage] ? (
                   <img
                     src={product.images[selectedImage]}
-                    alt={product.name}
+                    alt={getProductName(product)}
                     className="max-w-full max-h-full w-auto h-auto object-contain pointer-events-none"
                     style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                   />
@@ -167,7 +172,7 @@ export default function ProductPage() {
                   >
                     <img
                       src={image}
-                      alt={`${product.name} - ${index + 1}`}
+                      alt={`${getProductName(product)} - ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
                   </motion.button>
@@ -194,7 +199,7 @@ export default function ProductPage() {
               transition={{ delay: 0.1 }}
               className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight"
             >
-              {product.name}
+              {getProductName(product)}
             </motion.h1>
 
             {/* Description - 2-3 paragraphs */}
@@ -207,7 +212,7 @@ export default function ProductPage() {
               {product.description ? (
                 <div
                   className="[&_p]:mb-4 [&_p]:text-base [&_p]:leading-relaxed [&_p]:text-gray-700"
-                  dangerouslySetInnerHTML={{ __html: product.description }}
+                  dangerouslySetInnerHTML={{ __html: getProductDescription(product) }}
                 />
               ) : (
                 <>
@@ -241,7 +246,7 @@ export default function ProductPage() {
                 whileTap={{ scale: 0.98 }}
               >
                 <ShoppingCart className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                <span>Добавить в корзину запросов</span>
+                <span>{t('product.addToRequest')}</span>
               </motion.button>
 
               <motion.button
@@ -251,7 +256,7 @@ export default function ProductPage() {
                 whileTap={{ scale: 0.98 }}
               >
                 <MessageCircle className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                <span>Уточнить детали в WhatsApp</span>
+                <span>{t('product.contactWhatsApp')}</span>
               </motion.button>
             </motion.div>
           </div>
@@ -265,46 +270,52 @@ export default function ProductPage() {
             transition={{ delay: 0.4 }}
             className="bg-white rounded-lg shadow-md border border-gray-200 p-6 md:p-8 mb-8"
           >
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Основные характеристики</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('product.mainCharacteristics')}</h2>
             
             {/* Desktop Table */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
                 <tbody className="divide-y divide-gray-200">
-                  {mainCharacteristics.map((char, index) => (
-                    <motion.tr
-                      key={index}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.5 + index * 0.05 }}
-                      className="hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="py-4 px-4 font-semibold text-gray-700 w-1/2">
-                        {char.name}
-                      </td>
-                      <td className="py-4 px-4 text-gray-900 font-medium">
-                        {char.value}
-                      </td>
-                    </motion.tr>
-                  ))}
+                  {mainCharacteristics.map((char, index) => {
+                    const translatedChar = getTranslatedCharacteristic(char);
+                    return (
+                      <motion.tr
+                        key={index}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.5 + index * 0.05 }}
+                        className="hover:bg-gray-50 transition-colors"
+                      >
+                        <td className="py-4 px-4 font-semibold text-gray-700 w-1/2">
+                          {translatedChar.name}
+                        </td>
+                        <td className="py-4 px-4 text-gray-900 font-medium">
+                          {translatedChar.value}
+                        </td>
+                      </motion.tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
 
             {/* Mobile Cards */}
             <div className="md:hidden space-y-3">
-              {mainCharacteristics.map((char, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 + index * 0.05 }}
-                  className="bg-gray-50 rounded-lg p-4 border border-gray-200"
-                >
-                  <div className="font-semibold text-gray-700 mb-2">{char.name}</div>
-                  <div className="text-gray-900 font-medium">{char.value}</div>
-                </motion.div>
-              ))}
+              {mainCharacteristics.map((char, index) => {
+                const translatedChar = getTranslatedCharacteristic(char);
+                return (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 + index * 0.05 }}
+                    className="bg-gray-50 rounded-lg p-4 border border-gray-200"
+                  >
+                    <div className="font-semibold text-gray-700 mb-2">{translatedChar.name}</div>
+                    <div className="text-gray-900 font-medium">{translatedChar.value}</div>
+                  </motion.div>
+                );
+              })}
             </div>
           </motion.section>
         )}
@@ -317,46 +328,52 @@ export default function ProductPage() {
             transition={{ delay: 0.6 }}
             className="bg-white rounded-lg shadow-md border border-gray-200 p-6 md:p-8 mb-8"
           >
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Габариты</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('product.dimensions')}</h2>
             
             {/* Desktop Table */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
                 <tbody className="divide-y divide-gray-200">
-                  {dimensions.map((char, index) => (
-                    <motion.tr
-                      key={index}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.7 + index * 0.05 }}
-                      className="hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="py-4 px-4 font-semibold text-gray-700 w-1/2">
-                        {char.name}
-                      </td>
-                      <td className="py-4 px-4 text-gray-900 font-medium">
-                        {char.value}
-                      </td>
-                    </motion.tr>
-                  ))}
+                  {dimensions.map((char, index) => {
+                    const translatedChar = getTranslatedCharacteristic(char);
+                    return (
+                      <motion.tr
+                        key={index}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.7 + index * 0.05 }}
+                        className="hover:bg-gray-50 transition-colors"
+                      >
+                        <td className="py-4 px-4 font-semibold text-gray-700 w-1/2">
+                          {translatedChar.name}
+                        </td>
+                        <td className="py-4 px-4 text-gray-900 font-medium">
+                          {translatedChar.value}
+                        </td>
+                      </motion.tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
 
             {/* Mobile Cards */}
             <div className="md:hidden space-y-3">
-              {dimensions.map((char, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.7 + index * 0.05 }}
-                  className="bg-gray-50 rounded-lg p-4 border border-gray-200"
-                >
-                  <div className="font-semibold text-gray-700 mb-2">{char.name}</div>
-                  <div className="text-gray-900 font-medium">{char.value}</div>
-                </motion.div>
-              ))}
+              {dimensions.map((char, index) => {
+                const translatedChar = getTranslatedCharacteristic(char);
+                return (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.7 + index * 0.05 }}
+                    className="bg-gray-50 rounded-lg p-4 border border-gray-200"
+                  >
+                    <div className="font-semibold text-gray-700 mb-2">{translatedChar.name}</div>
+                    <div className="text-gray-900 font-medium">{translatedChar.value}</div>
+                  </motion.div>
+                );
+              })}
             </div>
           </motion.section>
         )}
@@ -372,7 +389,7 @@ export default function ProductPage() {
             <AlertTriangle className="w-6 h-6 text-amber-600 mr-3 flex-shrink-0 mt-0.5" />
             <div>
               <p className="text-sm text-amber-800 leading-relaxed">
-                <strong>Внимание!</strong> Характеристики носят справочный характер. Перед запросом уточняйте комплектацию и актуальные параметры. Информация не является публичной офертой.
+                <strong>{t('product.warning')}</strong> {t('product.warningDescription')}
               </p>
             </div>
           </div>
@@ -392,7 +409,7 @@ export default function ProductPage() {
             whileTap={{ scale: 0.95 }}
           >
             <ShoppingCart className="w-5 h-5" />
-            <span>В корзину</span>
+            <span>{t('product.addToCart')}</span>
           </motion.button>
 
           <motion.button

@@ -9,6 +9,7 @@ import { useCartStore } from '@/store/cartStore';
 import { useFavoritesStore } from '@/store/favoritesStore';
 import { getShortDescription } from '@/utils/textHelpers';
 import { useTranslations } from '@/lib/i18n';
+import { getProductName, getProductDescription, getTranslatedCharacteristic } from '@/lib/productTranslations';
 
 interface ProductCardProps {
   product: Product;
@@ -171,23 +172,26 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
       <div className="px-6 pt-7 pb-7 bg-white rounded-b-3xl">
         {/* Product Name */}
         <h3 className="font-bold text-xl mb-5 line-clamp-2 text-gray-900 group-hover:text-[#FF6B35] transition-colors duration-300 leading-tight min-h-[3.5rem]">
-          {product.name}
+          {getProductName(product)}
         </h3>
         
         {/* Description */}
         <p className="text-sm text-gray-500 line-clamp-2 mb-6 leading-relaxed">
-          {getShortDescription(product.description, 90)}
+          {getShortDescription(getProductDescription(product), 90)}
         </p>
 
         {/* Key Characteristics - Compact Design */}
         {product.characteristics && product.characteristics.length > 0 && (
           <div className="mb-5 grid grid-cols-2 gap-3">
-            {product.characteristics.slice(0, 2).map((char, index) => (
-              <div key={index} className="bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-xl p-3 border border-gray-200/50">
-                <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">{char.name}</div>
-                <div className="text-sm font-bold text-gray-900">{char.value}</div>
-              </div>
-            ))}
+            {product.characteristics.slice(0, 2).map((char, index) => {
+              const translatedChar = getTranslatedCharacteristic(char);
+              return (
+                <div key={index} className="bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-xl p-3 border border-gray-200/50">
+                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">{translatedChar.name}</div>
+                  <div className="text-sm font-bold text-gray-900">{translatedChar.value}</div>
+                </div>
+              );
+            })}
           </div>
         )}
 

@@ -11,11 +11,14 @@ import { useCatalogStore } from '@/store/catalogStore';
 import { useCartStore } from '@/store/cartStore';
 import { CATEGORIES } from '@/constants/categories';
 import { Product } from '@/types';
+import { useTranslations } from '@/lib/i18n';
+import { getProductName, getProductDescription, getTranslatedCharacteristic } from '@/lib/productTranslations';
 
 const PRODUCTS_PER_PAGE = 24;
 
 function CatalogPageContent() {
   const searchParams = useSearchParams();
+  const t = useTranslations();
   const [showFilters, setShowFilters] = useState(false);
   // Примененные фильтры (используются для загрузки товаров)
   const [appliedCategory, setAppliedCategory] = useState<string>('');
@@ -1114,7 +1117,7 @@ function CatalogPageContent() {
             {/* Header */}
             <div className="sticky top-0 bg-gradient-to-r from-white to-gray-50 border-b border-gray-200/50 p-6 flex items-center justify-between z-10 backdrop-blur-sm">
               <div className="flex-1">
-                <h2 className="text-3xl font-bold text-gray-900 mb-2 line-clamp-2">{quickViewProduct.name}</h2>
+                <h2 className="text-3xl font-bold text-gray-900 mb-2 line-clamp-2">{getProductName(quickViewProduct)}</h2>
                 {quickViewProduct.manufacturer && quickViewProduct.manufacturer !== 'Не указан' && (
                   <span className="inline-block px-4 py-1.5 bg-gradient-to-r from-[#FF6B35]/10 to-[#F7931E]/10 text-[#FF6B35] rounded-full text-sm font-bold border border-[#FF6B35]/20">
                     {quickViewProduct.manufacturer}
@@ -1145,7 +1148,7 @@ function CatalogPageContent() {
                       {quickViewProduct.images && quickViewProduct.images[0] ? (
                         <img
                           src={quickViewProduct.images[0]}
-                          alt={quickViewProduct.name}
+                          alt={getProductName(quickViewProduct)}
                           className="w-full h-full object-contain"
                         />
                       ) : (
@@ -1168,7 +1171,7 @@ function CatalogPageContent() {
                           >
                             <img
                               src={image}
-                              alt={`${quickViewProduct.name} - ${index + 1}`}
+                              alt={`${getProductName(quickViewProduct)} - ${index + 1}`}
                               className="w-full h-full object-cover"
                             />
                           </motion.button>
@@ -1189,11 +1192,11 @@ function CatalogPageContent() {
                       <div className="flex items-center gap-3 mb-2">
                         <span className="text-2xl">💬</span>
                         <p className="text-lg font-bold text-[#FF6B35]">
-                          Цена по запросу
+                          {t('product.priceOnRequest')}
                         </p>
                       </div>
                       <p className="text-sm text-gray-600 ml-11">
-                        Свяжитесь с нами для уточнения актуальной цены и наличия
+                        {t('product.contactForPriceDetails')}
                       </p>
                     </motion.div>
 
@@ -1204,9 +1207,9 @@ function CatalogPageContent() {
                       transition={{ delay: 0.4 }}
                       className="bg-white rounded-2xl p-6 border border-gray-200/50 shadow-sm"
                     >
-                      <h3 className="text-xl font-bold text-gray-900 mb-4">Описание</h3>
+                      <h3 className="text-xl font-bold text-gray-900 mb-4">{t('product.description')}</h3>
                       <div 
-                        dangerouslySetInnerHTML={{ __html: quickViewProduct.description }}
+                        dangerouslySetInnerHTML={{ __html: getProductDescription(quickViewProduct) }}
                         className="prose prose-base max-w-none text-gray-700 leading-relaxed [&_p]:mb-3 [&_ul]:list-disc [&_ul]:ml-6 [&_ul]:mb-3 [&_li]:mb-2 [&_b]:font-bold [&_strong]:font-bold [&_a]:text-[#FF6B35] [&_a]:no-underline [&_a]:hover:underline"
                       />
                     </motion.div>
@@ -1219,23 +1222,26 @@ function CatalogPageContent() {
                         transition={{ delay: 0.5 }}
                         className="bg-white rounded-2xl p-6 border border-gray-200/50 shadow-sm"
                       >
-                        <h3 className="text-xl font-bold text-gray-900 mb-4">Характеристики</h3>
+                        <h3 className="text-xl font-bold text-gray-900 mb-4">{t('product.characteristics')}</h3>
                         <div className="space-y-3">
-                          {quickViewProduct.characteristics.slice(0, 6).map((char, index) => (
-                            <div 
-                              key={index} 
-                              className={`flex justify-between items-center py-3 px-4 rounded-xl ${
-                                index % 2 === 0 
-                                  ? 'bg-gradient-to-r from-gray-50 to-gray-100/50 border border-gray-200/50' 
-                                  : 'bg-white border border-gray-200/50'
-                              }`}
-                            >
-                              <span className="text-gray-700 font-semibold">{char.name}</span>
-                              <span className="text-gray-900 font-bold text-right ml-4">
-                                {char.value}
-                              </span>
-                            </div>
-                          ))}
+                          {quickViewProduct.characteristics.slice(0, 6).map((char, index) => {
+                            const translatedChar = getTranslatedCharacteristic(char);
+                            return (
+                              <div 
+                                key={index} 
+                                className={`flex justify-between items-center py-3 px-4 rounded-xl ${
+                                  index % 2 === 0 
+                                    ? 'bg-gradient-to-r from-gray-50 to-gray-100/50 border border-gray-200/50' 
+                                    : 'bg-white border border-gray-200/50'
+                                }`}
+                              >
+                                <span className="text-gray-700 font-semibold">{translatedChar.name}</span>
+                                <span className="text-gray-900 font-bold text-right ml-4">
+                                  {translatedChar.value}
+                                </span>
+                              </div>
+                            );
+                          })}
                         </div>
                       </motion.div>
                     )}
@@ -1259,7 +1265,7 @@ function CatalogPageContent() {
                         whileTap={{ scale: 0.98 }}
                       >
                         <ShoppingCart className="w-6 h-6" />
-                        <span>Добавить в запрос</span>
+                        <span>{t('product.addToRequest')}</span>
                       </motion.button>
                       
                       <Link
@@ -1267,7 +1273,7 @@ function CatalogPageContent() {
                         onClick={() => setQuickViewProduct(null)}
                         className="block w-full py-4 bg-white border-2 border-[#FF6B35] text-[#FF6B35] font-bold text-base rounded-2xl shadow-md hover:shadow-lg transition-all text-center hover:bg-[#FF6B35] hover:text-white"
                       >
-                        Подробнее о товаре
+                        {t('product.moreDetails')}
                       </Link>
                     </motion.div>
                   </div>

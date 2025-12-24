@@ -116,7 +116,22 @@
     "quickView": "Быстрый просмотр",
     "addToFavorites": "Добавить в избранное",
     "removeFromFavorites": "Удалить из избранного",
-    "addToCart": "Добавить в корзину"
+    "addToCart": "Добавить в корзину",
+    "notFound": "Товар не найден",
+    "backToCatalog": "Вернуться в каталог",
+    "mainCharacteristics": "Основные характеристики",
+    "dimensions": "Габариты",
+    "description": "Описание",
+    "characteristics": "Характеристики",
+    "priceOnRequest": "Цена по запросу",
+    "contactForPriceDetails": "Свяжитесь с нами для уточнения актуальной цены и наличия",
+    "moreDetails": "Подробнее о товаре",
+    "warning": "Внимание!",
+    "warningDescription": "Характеристики носят справочный характер. Перед запросом уточняйте комплектацию и актуальные параметры. Информация не является публичной офертой.",
+    "whatsappGreeting": "Здравствуйте!",
+    "interestedIn": "Интересует товар",
+    "pleaseContact": "Пожалуйста, сообщите цену и наличие.",
+    "contactWhatsApp": "Уточнить детали в WhatsApp"
   },
   "footer": {
     "navigation": "Навигация",

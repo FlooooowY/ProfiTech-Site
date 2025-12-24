@@ -116,7 +116,22 @@
     "quickView": "Quick view",
     "addToFavorites": "Add to favorites",
     "removeFromFavorites": "Remove from favorites",
-    "addToCart": "Add to cart"
+    "addToCart": "Add to cart",
+    "notFound": "Product not found",
+    "backToCatalog": "Back to catalog",
+    "mainCharacteristics": "Main characteristics",
+    "dimensions": "Dimensions",
+    "description": "Description",
+    "characteristics": "Characteristics",
+    "priceOnRequest": "Price on request",
+    "contactForPriceDetails": "Contact us to clarify the current price and availability",
+    "moreDetails": "More details about the product",
+    "warning": "Warning!",
+    "warningDescription": "Characteristics are for reference only. Before requesting, please clarify the configuration and current parameters. Information is not a public offer.",
+    "whatsappGreeting": "Hello!",
+    "interestedIn": "Interested in product",
+    "pleaseContact": "Please let me know the price and availability.",
+    "contactWhatsApp": "Contact via WhatsApp"
   },
   "footer": {
     "navigation": "Navigation",
