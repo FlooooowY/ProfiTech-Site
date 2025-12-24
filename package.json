@@ -24,6 +24,8 @@
     "domain:setup": "bash scripts/setup-nginx-domain.sh",
     "ssl:fix-acme": "bash scripts/fix-acme-404.sh",
     "ssl:get-webroot": "bash scripts/get-ssl-webroot.sh",
+    "ssl:alternative": "bash scripts/get-ssl-alternative.sh",
+    "ssl:configure-nginx": "bash scripts/configure-nginx-ssl.sh",
     "dns:check": "bash scripts/check-dns-records.sh",
     "dns:verify": "bash scripts/verify-dns-complete.sh"
   },
