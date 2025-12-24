@@ -140,7 +140,17 @@ A     www   ваш-ip-адрес-сервера
 3. Порт 80 открыт в файрволе: `sudo ufw allow 80/tcp`
 4. Блок `.well-known/acme-challenge/` добавлен в конфигурацию Nginx (см. выше)
 
-После того как домен будет работать, настройте SSL:
+**Быстрая настройка через скрипт:**
+
+```bash
+cd ~/ProfiTech-Site
+git pull
+chmod +x scripts/fix-nginx-complete.sh
+./scripts/fix-nginx-complete.sh
+sudo certbot --nginx -d profitech.store -d www.profitech.store
+```
+
+**Ручная настройка SSL:**
 
 ```bash
 # Установите Certbot
@@ -154,7 +164,24 @@ sudo certbot --nginx -d profitech.store -d www.profitech.store
 sudo certbot renew --dry-run
 ```
 
-После этого обновите конфигурацию Nginx, раскомментировав строку редиректа на HTTPS.
+**Если возникли проблемы с лимитом запросов Let's Encrypt:**
+
+Подождите 1 час после последней неудачной попытки или используйте webroot метод:
+
+```bash
+sudo certbot certonly --webroot \
+    -w /var/www/html \
+    -d profitech.store \
+    -d www.profitech.store \
+    --email admin@profitech.store \
+    --agree-tos \
+    --non-interactive
+
+# После получения сертификата настройте Nginx
+sudo certbot --nginx -d profitech.store -d www.profitech.store
+```
+
+После получения сертификата Certbot автоматически настроит редирект на HTTPS.
 
 ### 8. Проверка
 
