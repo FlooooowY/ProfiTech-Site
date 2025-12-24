@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { Link, usePathname } from 'next/navigation';
+import { useLocale } from 'next-intl';
 import { Globe } from 'lucide-react';
 
 const languages = [
@@ -10,47 +11,29 @@ const languages = [
 ];
 
 export default function LanguageSwitcher() {
-  const router = useRouter();
   const pathname = usePathname();
-  const [currentLang, setCurrentLang] = useState<'ru' | 'en'>('ru');
+  const locale = useLocale() as 'ru' | 'en';
   const [isOpen, setIsOpen] = useState(false);
 
-  useEffect(() => {
-    // Определяем текущий язык из localStorage
-    const savedLang = (localStorage.getItem('language') as 'ru' | 'en') || 'ru';
-    setCurrentLang(savedLang);
-  }, []);
-
-  const switchLanguage = (langCode: 'ru' | 'en') => {
-    setCurrentLang(langCode);
-    localStorage.setItem('language', langCode);
-    setIsOpen(false);
-    
-    // Обновляем URL для SEO (добавляем /en для английского, убираем для русского)
-    const currentPath = pathname;
-    let newPath = currentPath;
-    
-    if (langCode === 'en') {
-      // Если переключаемся на английский, добавляем /en
-      if (!currentPath.startsWith('/en')) {
-        newPath = `/en${currentPath === '/' ? '' : currentPath}`;
-      }
-    } else {
-      // Если переключаемся на русский, убираем /en
-      if (currentPath.startsWith('/en')) {
-        newPath = currentPath.replace('/en', '') || '/';
-      }
+  // Функция для получения пути с нужной локалью
+  const getLocalizedPath = (targetLocale: 'ru' | 'en') => {
+    // Убираем текущий префикс локали если есть
+    let path = pathname;
+    if (path.startsWith('/ru')) {
+      path = path.replace('/ru', '') || '/';
+    } else if (path.startsWith('/en')) {
+      path = path.replace('/en', '') || '/';
     }
     
-    // Обновляем страницу для применения языка
-    if (newPath !== currentPath) {
-      router.push(newPath);
+    // Добавляем префикс для английского, для русского оставляем без префикса
+    if (targetLocale === 'en') {
+      return `/en${path === '/' ? '' : path}`;
     } else {
-      window.location.reload();
+      return path;
     }
   };
 
-  const currentLanguage = languages.find(lang => lang.code === currentLang) || languages[0];
+  const currentLanguage = languages.find(lang => lang.code === locale) || languages[0];
 
   return (
     <div className="relative">
@@ -76,21 +59,27 @@ export default function LanguageSwitcher() {
             onClick={() => setIsOpen(false)}
           />
           <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-20 overflow-hidden">
-            {languages.map((lang) => (
-              <button
-                key={lang.code}
-                onClick={() => switchLanguage(lang.code as 'ru' | 'en')}
-                className={`w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors ${
-                  currentLang === lang.code ? 'bg-gray-50' : ''
-                }`}
-              >
-                <span className="text-xl">{lang.flag}</span>
-                <span className="flex-1 font-medium text-gray-900">{lang.name}</span>
-                {currentLang === lang.code && (
-                  <span className="text-[#FF6B35] font-bold">✓</span>
-                )}
-              </button>
-            ))}
+            {languages.map((lang) => {
+              const isActive = locale === lang.code;
+              const localizedPath = getLocalizedPath(lang.code as 'ru' | 'en');
+              
+              return (
+                <Link
+                  key={lang.code}
+                  href={localizedPath}
+                  onClick={() => setIsOpen(false)}
+                  className={`w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors ${
+                    isActive ? 'bg-gray-50' : ''
+                  }`}
+                >
+                  <span className="text-xl">{lang.flag}</span>
+                  <span className="flex-1 font-medium text-gray-900">{lang.name}</span>
+                  {isActive && (
+                    <span className="text-[#FF6B35] font-bold">✓</span>
+                  )}
+                </Link>
+              );
+            })}
           </div>
         </>
       )}

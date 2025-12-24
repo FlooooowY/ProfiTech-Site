@@ -143,9 +143,12 @@
   },
   "categories": {
     "profoborudovanie": "Professional Equipment",
-    "kofevarki-i-kofemashini": "Coffee Machines",
-    "mebel": "Furniture",
-    "ventilyatsionnoe-oborudovanie": "Ventilation Equipment"
+    "kofevarki-i-kofemashiny": "Coffee Machines",
+    "promyshlennaya-mebel": "Industrial Furniture",
+    "klimaticheskaya-tehnika": "Climate Control Equipment",
+    "telekommunikacionnoe-oborudovanie": "Telecommunication Equipment",
+    "tochki-prodazh": "Points of Sale",
+    "bitovaya-tehnika": "Household Appliances"
   }
 }
 

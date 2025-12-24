@@ -143,9 +143,12 @@
   },
   "categories": {
     "profoborudovanie": "Профоборудование",
-    "kofevarki-i-kofemashini": "Кофеварки и кофемашины",
-    "mebel": "Мебель",
-    "ventilyatsionnoe-oborudovanie": "Вентиляционное оборудование"
+    "kofevarki-i-kofemashiny": "Кофеварки и кофемашины",
+    "promyshlennaya-mebel": "Промышленная мебель",
+    "klimaticheskaya-tehnika": "Климатическая техника",
+    "telekommunikacionnoe-oborudovanie": "Телекоммуникационное оборудование",
+    "tochki-prodazh": "Точки продаж",
+    "bitovaya-tehnika": "Бытовая техника"
   }
 }
 
