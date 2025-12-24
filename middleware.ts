@@ -12,16 +12,9 @@ export default function middleware(request: NextRequest) {
     return NextResponse.next();
   }
   
-  // Если путь уже начинается с /ru или /en, используем стандартный middleware
-  if (pathname.startsWith('/ru') || pathname.startsWith('/en')) {
-    return intlMiddleware(request);
-  }
-  
-  // Для дефолтной локали (ru) не переписываем URL, просто устанавливаем локаль
-  const response = NextResponse.next();
-  response.cookies.set('NEXT_LOCALE', routing.defaultLocale);
-  response.headers.set('x-next-intl-locale', routing.defaultLocale);
-  return response;
+  // Всегда используем стандартный middleware next-intl для правильной обработки локалей
+  // Он сам обработает localePrefix: 'as-needed'
+  return intlMiddleware(request);
 }
 
 export const config = {

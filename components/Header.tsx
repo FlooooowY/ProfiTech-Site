@@ -73,15 +73,15 @@ export default function Header() {
       <div className="container mx-auto px-2 sm:px-4 max-w-full overflow-x-hidden">
         <div className="flex items-center justify-between h-16 md:h-20 gap-1 sm:gap-2 md:gap-4 flex-wrap">
           {/* Logo */}
-          <Link href="/" className="flex items-center group" style={{ gap: '20px' }}>
-            <div className="w-12 h-12 bg-gradient-to-br from-[#FF6B35] to-[#F7931E] rounded-xl flex items-center justify-center transform group-hover:scale-110 transition-transform">
+          <Link href="/" className="flex items-center group" style={{ gap: '12px' }}>
+            <div className="w-12 h-12 bg-gradient-to-br from-[#FF6B35] to-[#F7931E] rounded-xl flex items-center justify-center transform group-hover:scale-110 transition-transform flex-shrink-0">
               <span className="text-white font-bold text-xl">PT</span>
             </div>
-            <div className="hidden md:block">
-              <h1 className="text-2xl font-bold gradient-text">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-lg sm:text-xl md:text-2xl font-bold gradient-text truncate">
                 {COMPANY_INFO.name}
               </h1>
-              <p className="text-xs text-gray-800">{COMPANY_INFO.slogan}</p>
+              <p className="text-xs sm:text-sm text-gray-800 truncate hidden sm:block">{COMPANY_INFO.slogan}</p>
             </div>
           </Link>
 

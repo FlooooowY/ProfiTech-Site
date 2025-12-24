@@ -52,7 +52,10 @@
     "productsFound": "Products found",
     "addToCart": "Add to cart",
     "addToFavorites": "Add to favorites",
-    "removeFromFavorites": "Remove from favorites"
+    "removeFromFavorites": "Remove from favorites",
+    "resetFilters": "Reset filters",
+    "noCharacteristics": "No characteristics available",
+    "otherCharacteristics": "Other characteristics"
   },
   "cart": {
     "title": "Request List",

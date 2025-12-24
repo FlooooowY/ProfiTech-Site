@@ -580,11 +580,12 @@ function CatalogPageContent() {
                   transition={{ type: 'tween', duration: 0.3 }}
                   onClick={(e) => e.stopPropagation()}
                   className="absolute left-0 top-0 bottom-0 w-80 bg-white shadow-2xl overflow-y-auto z-50"
+                  style={{ paddingTop: '80px' }}
                 >
-                <div className="p-4 space-y-4">
+                <div className="p-4 space-y-4" style={{ paddingTop: '20px' }}>
                   {/* Заголовок с кнопкой закрытия */}
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-2xl font-bold text-gray-900">Фильтры</h2>
+                  <div className="flex items-center justify-between mb-4 sticky top-0 bg-white z-10 pb-2 border-b">
+                    <h2 className="text-2xl font-bold text-gray-900">{t('catalog.filters')}</h2>
                     <button
                       onClick={() => setShowFilters(false)}
                       className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -733,13 +734,145 @@ function CatalogPageContent() {
                       )}
                     </div>
 
+                    {/* Основные характеристики */}
+                    <div className="space-y-4">
+                      <h3 className="font-bold text-base text-gray-900">{t('catalog.characteristics')}</h3>
+                      {isLoadingStats ? (
+                        <div className="space-y-3 py-4">
+                          {[1, 2, 3].map((i) => (
+                            <div key={i} className="space-y-2">
+                              <div className="h-6 bg-gray-200 rounded animate-pulse" />
+                              <div className="space-y-1.5">
+                                {[1, 2, 3].map((j) => (
+                                  <div key={j} className="h-5 bg-gray-100 rounded animate-pulse" />
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : Object.keys(mainCharacteristics.main).length > 0 ? (
+                        <div>
+                          {Object.entries(mainCharacteristics.main).map(([charName, values]) => (
+                            <div key={charName} className="space-y-2">
+                              <button
+                                onClick={() => setExpandedCharacteristics(prev => ({ ...prev, [charName]: prev[charName] === undefined ? false : !prev[charName] }))}
+                                className="w-full font-bold text-base text-gray-900 flex items-center justify-between hover:text-[#FF6B35] transition-colors"
+                              >
+                                <span>{charName}</span>
+                                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${(expandedCharacteristics[charName] === undefined || expandedCharacteristics[charName] !== false) ? 'rotate-180' : ''}`} />
+                              </button>
+                              {(expandedCharacteristics[charName] === undefined || expandedCharacteristics[charName] !== false) && (
+                                <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
+                                  {values.slice(0, 10).map((value) => {
+                                    const isSelected = pendingFilters.characteristics[charName]?.includes(value) || false;
+                                    return (
+                                      <label
+                                        key={value}
+                                        className="flex items-center space-x-3 cursor-pointer py-1.5 hover:bg-gray-50 rounded transition-colors"
+                                      >
+                                        <input
+                                          type="checkbox"
+                                          checked={isSelected}
+                                          onChange={() => {
+                                            setPendingFilters(prev => {
+                                              const current = prev.characteristics[charName] || [];
+                                              const updated = isSelected
+                                                ? current.filter(v => v !== value)
+                                                : [...current, value];
+                                              
+                                              const newChars = { ...prev.characteristics };
+                                              if (updated.length === 0) {
+                                                delete newChars[charName];
+                                              } else {
+                                                newChars[charName] = updated;
+                                              }
+                                              
+                                              return { ...prev, characteristics: newChars };
+                                            });
+                                          }}
+                                          className="w-5 h-5 rounded accent-[#FF6B35] focus:ring-2 focus:ring-[#FF6B35]"
+                                        />
+                                        <span className="text-sm text-gray-700">{value}</span>
+                                      </label>
+                                    );
+                                  })}
+                                  {values.length > 10 && (
+                                    <p className="text-xs text-gray-500 mt-1">+{values.length - 10} еще...</p>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-500 py-4 text-center">{t('catalog.noCharacteristics') || 'Нет доступных характеристик'}</p>
+                      )}
+                    </div>
+
+                    {/* Остальные характеристики (свернутые) */}
+                    {Object.keys(mainCharacteristics.other).length > 0 && (
+                      <div className="space-y-2">
+                        <button
+                          onClick={() => setExpandedCharacteristics(prev => ({ ...prev, other: !prev.other }))}
+                          className="w-full flex items-center justify-between text-gray-700 hover:text-[#FF6B35] transition-colors"
+                        >
+                          <span className="font-bold text-base">{t('catalog.otherCharacteristics') || 'Другие характеристики'}</span>
+                          <ChevronDown className={`w-4 h-4 transition-transform ${expandedCharacteristics.other ? 'rotate-180' : ''}`} />
+                        </button>
+                        {expandedCharacteristics.other && (
+                          <div className="space-y-3 max-h-64 overflow-y-auto custom-scrollbar">
+                            {Object.entries(mainCharacteristics.other).map(([charName, values]) => (
+                              <div key={charName} className="space-y-2">
+                                <h4 className="font-semibold text-sm text-gray-700">{charName}</h4>
+                                <div className="space-y-1.5">
+                                  {values.slice(0, 5).map((value) => {
+                                    const isSelected = pendingFilters.characteristics[charName]?.includes(value) || false;
+                                    return (
+                                      <label
+                                        key={value}
+                                        className="flex items-center space-x-2 cursor-pointer py-1 hover:bg-gray-50 rounded"
+                                      >
+                                        <input
+                                          type="checkbox"
+                                          checked={isSelected}
+                                          onChange={() => {
+                                            setPendingFilters(prev => {
+                                              const current = prev.characteristics[charName] || [];
+                                              const updated = isSelected
+                                                ? current.filter(v => v !== value)
+                                                : [...current, value];
+                                              
+                                              const newChars = { ...prev.characteristics };
+                                              if (updated.length === 0) {
+                                                delete newChars[charName];
+                                              } else {
+                                                newChars[charName] = updated;
+                                              }
+                                              
+                                              return { ...prev, characteristics: newChars };
+                                            });
+                                          }}
+                                          className="w-4 h-4 rounded accent-[#FF6B35]"
+                                        />
+                                        <span className="text-xs text-gray-600">{value}</span>
+                                      </label>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {/* Кнопка сброса */}
                     <div className="sticky bottom-0 bg-white pt-4 pb-2 space-y-2 border-t border-gray-200">
                       <button
                         onClick={handleResetFilters}
                         className="w-full py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-all"
                       >
-                        Сбросить фильтры
+                        {t('catalog.resetFilters') || 'Сбросить фильтры'}
                       </button>
                     </div>
                   </div>

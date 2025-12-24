@@ -52,7 +52,10 @@
     "productsFound": "Найдено товаров",
     "addToCart": "В корзину",
     "addToFavorites": "В избранное",
-    "removeFromFavorites": "Удалить из избранного"
+    "removeFromFavorites": "Удалить из избранного",
+    "resetFilters": "Сбросить фильтры",
+    "noCharacteristics": "Нет доступных характеристик",
+    "otherCharacteristics": "Другие характеристики"
   },
   "cart": {
     "title": "Список запросов",

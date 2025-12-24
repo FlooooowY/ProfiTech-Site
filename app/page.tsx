@@ -147,19 +147,19 @@ export default function HomePage() {
                   className="card block group hover:shadow-2xl transition-all duration-300 h-full"
                   style={{ padding: '32px' }}
                 >
-                  <div className="flex items-start mb-6" style={{ gap: '32px' }}>
-                    <div className="w-20 h-20 bg-gradient-to-br from-[#FF6B35] to-[#F7931E] rounded-3xl flex items-center justify-center text-4xl group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg flex-shrink-0">
+                  <div className="flex items-start mb-6 gap-3 sm:gap-4">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-[#FF6B35] to-[#F7931E] rounded-3xl flex items-center justify-center text-3xl sm:text-4xl group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg flex-shrink-0">
                       {category.icon}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-2xl font-bold text-gray-950 group-hover:text-[#FF6B35] transition-colors mb-2">
+                    <div className="flex-1 min-w-0 pr-2 sm:pr-4">
+                      <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-950 group-hover:text-[#FF6B35] transition-colors mb-1 sm:mb-2 line-clamp-2 break-words">
                         {t(`categories.${category.slug}`) || category.name}
                       </h3>
-                      <p className="text-sm text-gray-600 font-semibold">
+                      <p className="text-xs sm:text-sm text-gray-600 font-semibold">
                         {category.subcategories?.length} {t('home.subcategories')}
                       </p>
                     </div>
-                    <ArrowRight className="w-7 h-7 text-gray-900 group-hover:text-[#FF6B35] group-hover:translate-x-2 transition-all duration-300 flex-shrink-0" />
+                    <ArrowRight className="w-5 h-5 sm:w-7 sm:h-7 text-gray-900 group-hover:text-[#FF6B35] group-hover:translate-x-2 transition-all duration-300 flex-shrink-0 mt-1" />
                   </div>
                   <p className="text-gray-600 mb-6 leading-relaxed font-semibold">
                     {category.description}
