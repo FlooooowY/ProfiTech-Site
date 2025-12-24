@@ -18,7 +18,8 @@
     "db:translate-products-fast": "tsx scripts/translateProductsLocal.ts",
     "services:check": "bash scripts/check-services.sh",
     "services:start": "bash scripts/start-services.sh",
-    "site:check": "bash scripts/check-site.sh"
+    "site:check": "bash scripts/check-site.sh",
+    "site:diagnose": "bash scripts/diagnose-connection.sh"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.12",
