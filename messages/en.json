@@ -67,7 +67,45 @@
     "address": "Address",
     "phone": "Phone",
     "email": "Email",
-    "workingHours": "Working hours"
+    "workingHours": "Working hours",
+    "contactUs": "Contact us",
+    "alwaysHappy": "We are always happy to answer your questions",
+    "ourContacts": "Our",
+    "contactsTitle": "contacts",
+    "chooseContact": "Choose a convenient way to contact us",
+    "sendMessage": "Send",
+    "message": "message",
+    "fillForm": "Fill out the form and we will contact you soon",
+    "yourName": "Your name",
+    "messagePlaceholder": "Tell us how we can help you...",
+    "sendMessageBtn": "Send message",
+    "whatsappRedirect": "After sending, you will be redirected to WhatsApp",
+    "fast": "Fast",
+    "reliable": "Reliable",
+    "professional": "Professional"
+  },
+  "product": {
+    "inStock": "In stock",
+    "checkPrice": "Check price",
+    "addToRequest": "Add to request",
+    "quickView": "Quick view",
+    "addToFavorites": "Add to favorites",
+    "removeFromFavorites": "Remove from favorites",
+    "addToCart": "Add to cart"
+  },
+  "footer": {
+    "navigation": "Navigation",
+    "contacts": "Contacts",
+    "socialMedia": "We are on social media",
+    "subscribe": "Subscribe to news",
+    "rightsReserved": "All rights reserved",
+    "aboutCompany": "Professional equipment for business. We help bring your ideas to life."
+  },
+  "categories": {
+    "profoborudovanie": "Professional Equipment",
+    "kofevarki-i-kofemashini": "Coffee Machines",
+    "mebel": "Furniture",
+    "ventilyatsionnoe-oborudovanie": "Ventilation Equipment"
   }
 }
 

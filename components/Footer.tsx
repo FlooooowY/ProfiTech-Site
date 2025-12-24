@@ -3,9 +3,11 @@
 import Link from 'next/link';
 import { Mail, Phone, MapPin, Facebook, Instagram, Send } from 'lucide-react';
 import { COMPANY_INFO } from '@/constants/categories';
+import { useTranslations } from '@/lib/i18n';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const t = useTranslations();
 
   return (
     <footer className="bg-gradient-to-br from-gray-900 to-gray-800 text-white" style={{ paddingTop: '80px', paddingBottom: '40px', marginTop: '0', paddingLeft: '32px', paddingRight: '32px' }}>
@@ -18,21 +20,20 @@ export default function Footer() {
             </h3>
             <p className="text-gray-400 mb-4">{COMPANY_INFO.slogan}</p>
             <p className="text-sm text-gray-500">
-              Профессиональное оборудование для бизнеса. Мы помогаем воплотить
-              ваши идеи в реальность.
+              {t('footer.aboutCompany')}
             </p>
           </div>
 
           {/* Навигация */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Навигация</h4>
+            <h4 className="text-lg font-semibold mb-4">{t('footer.navigation')}</h4>
             <ul className="space-y-2">
               <li>
                 <Link
                   href="/"
                   className="text-gray-400 hover:text-[#FF6B35] transition-colors"
                 >
-                  Главная
+                  {t('common.home')}
                 </Link>
               </li>
               <li>
@@ -40,7 +41,7 @@ export default function Footer() {
                   href="/catalog"
                   className="text-gray-400 hover:text-[#FF6B35] transition-colors"
                 >
-                  Каталог
+                  {t('common.catalog')}
                 </Link>
               </li>
               <li>
@@ -48,7 +49,7 @@ export default function Footer() {
                   href="/about"
                   className="text-gray-400 hover:text-[#FF6B35] transition-colors"
                 >
-                  О нас
+                  {t('common.about')}
                 </Link>
               </li>
               <li>
@@ -56,7 +57,7 @@ export default function Footer() {
                   href="/contacts"
                   className="text-gray-400 hover:text-[#FF6B35] transition-colors"
                 >
-                  Контакты
+                  {t('common.contacts')}
                 </Link>
               </li>
               <li>
@@ -64,7 +65,7 @@ export default function Footer() {
                   href="/cart"
                   className="text-gray-400 hover:text-[#FF6B35] transition-colors"
                 >
-                  Корзина
+                  {t('common.cart')}
                 </Link>
               </li>
             </ul>
@@ -72,7 +73,7 @@ export default function Footer() {
 
           {/* Контакты */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Контакты</h4>
+            <h4 className="text-lg font-semibold mb-4">{t('footer.contacts')}</h4>
             <ul className="space-y-3">
               <li className="flex items-start space-x-3">
                 <Phone className="w-5 h-5 text-[#FF6B35] mt-1 flex-shrink-0" />
@@ -107,7 +108,7 @@ export default function Footer() {
 
           {/* Социальные сети */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Мы в соцсетях</h4>
+            <h4 className="text-lg font-semibold mb-4">{t('footer.socialMedia')}</h4>
             <div className="flex space-x-4">
               <a
                 href="#"
@@ -142,7 +143,7 @@ export default function Footer() {
             </div>
             <div className="mt-6">
               <p className="text-sm text-gray-400 mb-2">
-                Подпишитесь на новости
+                {t('footer.subscribe')}
               </p>
               <form className="flex">
                 <input
@@ -164,7 +165,7 @@ export default function Footer() {
         {/* Copyright */}
         <div className="border-t border-gray-700 pt-8 mt-8 text-center">
           <p className="text-gray-400 text-sm">
-            © {currentYear} {COMPANY_INFO.name}. Все права защищены.
+            © {currentYear} {COMPANY_INFO.name}. {t('footer.rightsReserved')}.
           </p>
         </div>
       </div>

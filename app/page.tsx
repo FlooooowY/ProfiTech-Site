@@ -153,7 +153,7 @@ export default function HomePage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="text-2xl font-bold text-gray-950 group-hover:text-[#FF6B35] transition-colors mb-2">
-                        {category.name}
+                        {t(`categories.${category.slug}`) || category.name}
                       </h3>
                       <p className="text-sm text-gray-600 font-semibold">
                         {category.subcategories?.length} {t('home.subcategories')}

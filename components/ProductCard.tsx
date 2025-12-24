@@ -8,6 +8,7 @@ import { Product } from '@/types';
 import { useCartStore } from '@/store/cartStore';
 import { useFavoritesStore } from '@/store/favoritesStore';
 import { getShortDescription } from '@/utils/textHelpers';
+import { useTranslations } from '@/lib/i18n';
 
 interface ProductCardProps {
   product: Product;
@@ -18,6 +19,7 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
   const [isHovered, setIsHovered] = useState(false);
   const { addItem, updateQuantity, items } = useCartStore();
   const { isFavorite, toggleFavorite } = useFavoritesStore();
+  const t = useTranslations();
   
   // Получаем количество товара в корзине
   const cartQuantity = useMemo(() => {
@@ -119,7 +121,7 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
             whileHover={{ scale: 1.15, rotate: 10 }}
             whileTap={{ scale: 0.9 }}
             onClick={handleToggleFavorite}
-            title={isProductFavorite ? 'Удалить из избранного' : 'Добавить в избранное'}
+            title={isProductFavorite ? t('product.removeFromFavorites') : t('product.addToFavorites')}
           >
             <Heart
               className={`w-5 h-5 transition-all duration-300 ${
@@ -133,7 +135,7 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
         <div className="absolute bottom-3 left-3 z-20">
           <div className="px-3 py-1.5 bg-green-500/95 backdrop-blur-md rounded-full flex items-center gap-1.5 shadow-lg">
             <CheckCircle2 className="w-3.5 h-3.5 text-white" />
-            <span className="text-xs font-bold text-white">В наличии</span>
+            <span className="text-xs font-bold text-white">{t('product.inStock')}</span>
           </div>
         </div>
 
@@ -149,7 +151,7 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
             whileHover={{ scale: 1.15, rotate: 5 }}
             whileTap={{ scale: 0.9 }}
             onClick={handleAddToCart}
-            title="Добавить в корзину"
+            title={t('product.addToCart')}
           >
             <ShoppingCart className="w-6 h-6 group-hover/btn:scale-110 transition-transform" />
           </motion.button>
@@ -158,7 +160,7 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
             whileHover={{ scale: 1.15, rotate: -5 }}
             whileTap={{ scale: 0.9 }}
             onClick={handleQuickView}
-            title="Быстрый просмотр"
+            title={t('product.quickView')}
           >
             <Eye className="w-6 h-6 group-hover/btn:scale-110 transition-transform" />
           </motion.button>
@@ -194,7 +196,7 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
           <div className="flex items-center justify-center gap-2">
             <span className="text-lg">💬</span>
             <p className="text-xs font-bold text-[#FF6B35] uppercase tracking-wider">
-              Уточнить цену
+              {t('product.checkPrice')}
             </p>
           </div>
         </div>
@@ -209,7 +211,7 @@ export default function ProductCard({ product, onQuickView }: ProductCardProps) 
           >
             <span className="relative z-10 flex items-center justify-center space-x-3">
               <ShoppingCart className="w-6 h-6" />
-              <span>Добавить в запрос</span>
+              <span>{t('product.addToRequest')}</span>
             </span>
             <div className="absolute inset-0 bg-gradient-to-r from-[#F7931E] via-[#FF7A45] to-[#FF6B35] opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300" />
             <div className="absolute inset-0 bg-white/10 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300" />

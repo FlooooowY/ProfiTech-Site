@@ -67,7 +67,45 @@
     "address": "Адрес",
     "phone": "Телефон",
     "email": "Email",
-    "workingHours": "Режим работы"
+    "workingHours": "Режим работы",
+    "contactUs": "Свяжитесь с нами",
+    "alwaysHappy": "Мы всегда рады ответить на ваши вопросы",
+    "ourContacts": "Наши",
+    "contactsTitle": "контакты",
+    "chooseContact": "Выберите удобный способ связи с нами",
+    "sendMessage": "Отправить",
+    "message": "сообщение",
+    "fillForm": "Заполните форму, и мы свяжемся с вами в ближайшее время",
+    "yourName": "Ваше имя",
+    "messagePlaceholder": "Расскажите, чем мы можем вам помочь...",
+    "sendMessageBtn": "Отправить сообщение",
+    "whatsappRedirect": "После отправки вы будете перенаправлены в WhatsApp",
+    "fast": "Быстро",
+    "reliable": "Надежно",
+    "professional": "Профессионально"
+  },
+  "product": {
+    "inStock": "В наличии",
+    "checkPrice": "Уточнить цену",
+    "addToRequest": "Добавить в запрос",
+    "quickView": "Быстрый просмотр",
+    "addToFavorites": "Добавить в избранное",
+    "removeFromFavorites": "Удалить из избранного",
+    "addToCart": "Добавить в корзину"
+  },
+  "footer": {
+    "navigation": "Навигация",
+    "contacts": "Контакты",
+    "socialMedia": "Мы в соцсетях",
+    "subscribe": "Подпишитесь на новости",
+    "rightsReserved": "Все права защищены",
+    "aboutCompany": "Профессиональное оборудование для бизнеса. Мы помогаем воплотить ваши идеи в реальность."
+  },
+  "categories": {
+    "profoborudovanie": "Профоборудование",
+    "kofevarki-i-kofemashini": "Кофеварки и кофемашины",
+    "mebel": "Мебель",
+    "ventilyatsionnoe-oborudovanie": "Вентиляционное оборудование"
   }
 }
 

@@ -4,8 +4,10 @@ import { motion } from 'framer-motion';
 import { Mail, Phone, MapPin, Clock, Send, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { COMPANY_INFO } from '@/constants/categories';
+import { useTranslations } from '@/lib/i18n';
 
 export default function ContactsPage() {
+  const t = useTranslations();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -167,7 +169,7 @@ export default function ContactsPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 drop-shadow-2xl"
           >
-            Свяжитесь с <span className="text-white">нами</span>
+            {t('contacts.contactUs')} <span className="text-white">{t('contacts.contactsTitle')}</span>
           </motion.h1>
           
           <motion.p
@@ -176,7 +178,7 @@ export default function ContactsPage() {
             transition={{ delay: 0.2 }}
             className="text-xl md:text-2xl lg:text-3xl max-w-3xl mx-auto font-semibold drop-shadow-lg mb-8"
           >
-            Мы всегда рады ответить на ваши вопросы
+            {t('contacts.alwaysHappy')}
           </motion.p>
           
           <motion.div
@@ -185,7 +187,7 @@ export default function ContactsPage() {
             transition={{ delay: 0.4 }}
             className="flex flex-wrap justify-center gap-4 mt-8"
           >
-            {['Быстро', 'Надежно', 'Профессионально'].map((tag, i) => (
+            {[t('contacts.fast'), t('contacts.reliable'), t('contacts.professional')].map((tag, i) => (
               <span
                 key={i}
                 className="px-6 py-2 bg-white/20 backdrop-blur-sm rounded-full border-2 border-white/30 text-white font-semibold text-sm md:text-base"
@@ -208,10 +210,10 @@ export default function ContactsPage() {
             style={{ marginBottom: '60px' }}
           >
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold" style={{ color: '#000000', marginBottom: '16px' }}>
-              Наши <span className="gradient-text">контакты</span>
+              {t('contacts.ourContacts')} <span className="gradient-text">{t('contacts.contactsTitle')}</span>
             </h2>
             <p className="text-gray-600 text-lg md:text-xl max-w-3xl mx-auto font-semibold">
-              Выберите удобный способ связи с нами
+              {t('contacts.chooseContact')}
             </p>
           </motion.div>
 
@@ -251,10 +253,10 @@ export default function ContactsPage() {
             style={{ marginBottom: '60px' }}
           >
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold" style={{ color: '#000000', marginBottom: '16px' }}>
-              Отправить <span className="gradient-text">сообщение</span>
+              {t('contacts.sendMessage')} <span className="gradient-text">{t('contacts.message')}</span>
             </h2>
             <p className="text-gray-600 text-lg md:text-xl max-w-3xl mx-auto font-semibold">
-              Заполните форму, и мы свяжемся с вами в ближайшее время
+              {t('contacts.fillForm')}
             </p>
           </motion.div>
 
@@ -274,7 +276,7 @@ export default function ContactsPage() {
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-semibold mb-2" style={{ color: '#000000' }}>
-                        Ваше имя *
+                        {t('contacts.yourName')} *
                       </label>
                       <input
                         type="text"
@@ -331,19 +333,19 @@ export default function ContactsPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold mb-2" style={{ color: '#000000' }}>
-                      Сообщение *
-                    </label>
-                    <textarea
-                      required
-                      value={formData.message}
-                      onChange={(e) =>
-                        setFormData({ ...formData, message: e.target.value })
-                      }
-                      rows={6}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-[#FF6B35] transition-all"
-                      placeholder="Расскажите, чем мы можем вам помочь..."
-                    />
+                      <label className="block text-sm font-semibold mb-2" style={{ color: '#000000' }}>
+                        {t('contacts.message')} *
+                      </label>
+                      <textarea
+                        required
+                        value={formData.message}
+                        onChange={(e) =>
+                          setFormData({ ...formData, message: e.target.value })
+                        }
+                        rows={6}
+                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-[#FF6B35] transition-all"
+                        placeholder={t('contacts.messagePlaceholder')}
+                      />
                   </div>
 
                   <button
@@ -351,12 +353,12 @@ export default function ContactsPage() {
                     className="w-full py-4 bg-gradient-to-r from-[#FF6B35] to-[#F7931E] text-white font-semibold rounded-lg hover:shadow-lg transform hover:scale-105 transition-all flex items-center justify-center space-x-2"
                     style={{ padding: '16px 32px' }}
                   >
-                    <span>Отправить сообщение</span>
+                    <span>{t('contacts.sendMessageBtn')}</span>
                     <Send className="w-5 h-5" />
                   </button>
 
                   <p className="text-sm text-gray-600 text-center font-medium">
-                    * После отправки вы будете перенаправлены в WhatsApp
+                    * {t('contacts.whatsappRedirect')}
                   </p>
                 </form>
               </div>
@@ -365,26 +367,6 @@ export default function ContactsPage() {
         </div>
       </section>
 
-      {/* Map Section */}
-      <section className="bg-gradient-to-br from-gray-50 via-white to-gray-50" style={{ paddingTop: '5rem', paddingBottom: '5rem', paddingLeft: '32px', paddingRight: '32px' }}>
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="aspect-video bg-gray-200 rounded-2xl overflow-hidden shadow-xl"
-          >
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-              <div className="text-center">
-                <MapPin className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600 font-semibold text-lg">
-                  Здесь будет интерактивная карта с местоположением офиса
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
     </div>
   );
 }
