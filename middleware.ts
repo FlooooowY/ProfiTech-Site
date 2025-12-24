@@ -2,8 +2,6 @@ import createMiddleware from 'next-intl/middleware';
 import { routing } from './i18n/routing';
 import { NextRequest, NextResponse } from 'next/server';
 
-const intlMiddleware = createMiddleware(routing);
-
 export default function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   
@@ -12,9 +10,17 @@ export default function middleware(request: NextRequest) {
     return NextResponse.next();
   }
   
-  // Всегда используем стандартный middleware next-intl для правильной обработки локалей
-  // Он сам обработает localePrefix: 'as-needed'
-  return intlMiddleware(request);
+  // Если путь начинается с /en, используем стандартный middleware
+  if (pathname.startsWith('/en')) {
+    return createMiddleware(routing)(request);
+  }
+  
+  // Для дефолтной локали (ru) не переписываем URL
+  // Просто устанавливаем локаль через заголовок и cookie
+  const response = NextResponse.next();
+  response.headers.set('x-next-intl-locale', routing.defaultLocale);
+  response.cookies.set('NEXT_LOCALE', routing.defaultLocale);
+  return response;
 }
 
 export const config = {
