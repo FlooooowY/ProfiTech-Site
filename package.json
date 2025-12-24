@@ -14,11 +14,14 @@
     "db:fix-subcategories": "tsx scripts/fixSubcategoryIds.ts",
     "db:check-subcategories": "tsx scripts/checkSubcategories.ts",
     "db:check": "node scripts/checkMongoDB.js",
-    "db:translate-products": "tsx scripts/translateProducts.ts"
+    "db:translate-products": "tsx scripts/translateProducts.ts",
+    "db:translate-products-fast": "tsx scripts/translateProductsLocal.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.12",
     "@vitalets/google-translate-api": "^9.2.1",
+    "google-translate-api-x": "^10.7.1",
+    "translate-google": "^1.5.1",
     "csv-parse": "^6.1.0",
     "framer-motion": "^12.23.26",
     "lucide-react": "^0.562.0",
