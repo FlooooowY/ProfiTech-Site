@@ -5,8 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import AIAssistant from "@/components/AIAssistant";
 import { NextIntlClientProvider } from 'next-intl';
-import { getMessages } from 'next-intl/server';
-import { routing } from '@/i18n/routing';
+import { getLocale, getMessages } from 'next-intl/server';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,9 +28,9 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Получаем сообщения для дефолтной локали
+  // Получаем текущую локаль и сообщения
+  const locale = await getLocale();
   const messages = await getMessages();
-  const locale = routing.defaultLocale;
 
   return (
     <html lang={locale} className="overflow-x-hidden w-full max-w-full">
