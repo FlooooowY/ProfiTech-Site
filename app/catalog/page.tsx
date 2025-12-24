@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Filter, X, ChevronDown, Loader2, ChevronLeft, ChevronRight, Search, ChevronRight as ChevronRightIcon, ShoppingCart } from 'lucide-react';
 import ProductCard from '@/components/ProductCard';
 import FilterSidebar from '@/components/FilterSidebar';
@@ -566,6 +566,186 @@ function CatalogPageContent() {
         </button>
 
         <div className="relative">
+          {/* Mobile Filters Panel */}
+          <AnimatePresence>
+            {showFilters && (
+              <div className="lg:hidden fixed inset-0 bg-black/50 z-40" onClick={() => setShowFilters(false)}>
+                <motion.div
+                  initial={{ x: '-100%' }}
+                  animate={{ x: 0 }}
+                  exit={{ x: '-100%' }}
+                  transition={{ type: 'tween', duration: 0.3 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute left-0 top-0 bottom-0 w-80 bg-white shadow-2xl overflow-y-auto z-50"
+                >
+                <div className="p-4 space-y-4">
+                  {/* Заголовок с кнопкой закрытия */}
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-2xl font-bold text-gray-900">Фильтры</h2>
+                    <button
+                      onClick={() => setShowFilters(false)}
+                      className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                    >
+                      <X className="w-6 h-6 text-gray-600" />
+                    </button>
+                  </div>
+                  
+                  {/* Вставляем содержимое фильтров */}
+                  <div className="space-y-4">
+                    {/* Category Filter */}
+                    <div className="space-y-3">
+                      <h3 className="font-bold text-base text-gray-900">Категории</h3>
+                      
+                      {/* Поиск по категориям */}
+                      <div className="relative">
+                        <input
+                          type="text"
+                          placeholder="Поиск категорий..."
+                          value={categorySearch}
+                          onChange={(e) => setCategorySearch(e.target.value)}
+                          className="w-full pl-4 pr-12 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-[#FF6B35] focus:bg-white transition-all"
+                        />
+                        <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none z-10" />
+                      </div>
+
+                      <div className="space-y-1 max-h-64 overflow-y-auto custom-scrollbar">
+                        {filteredCategories.map((category) => (
+                          <div key={category.id}>
+                            <div className="flex items-center">
+                              <ChevronRightIcon className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  const newCategory = pendingFilters.category === category.id ? '' : category.id;
+                                  setPendingFilters(prev => ({
+                                    ...prev,
+                                    category: newCategory,
+                                    subcategories: newCategory === '' ? [] : prev.subcategories.filter(sub => {
+                                      const cat = CATEGORIES.find(c => c.id === newCategory);
+                                      return cat?.subcategories?.some(s => s.id === sub) || false;
+                                    })
+                                  }));
+                                }}
+                                className={`flex-1 text-left py-2 px-2 rounded transition-colors text-sm ${
+                                  pendingFilters.category === category.id
+                                    ? 'text-[#FF6B35] font-semibold'
+                                    : 'text-gray-700 hover:text-[#FF6B35]'
+                                }`}
+                              >
+                                {category.name}
+                              </button>
+                            </div>
+                            {/* Подкатегории */}
+                            {pendingFilters.category === category.id && category.subcategories && category.subcategories.length > 0 && (
+                              <div className="ml-6 mt-1 space-y-1">
+                                {category.subcategories.map((sub) => (
+                                  <label
+                                    key={sub.id}
+                                    className="flex items-center space-x-2 cursor-pointer py-1 hover:bg-gray-50 rounded"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={pendingFilters.subcategories?.includes(sub.id) || false}
+                                      onChange={() => {
+                                        setPendingFilters(prev => {
+                                          const current = prev.subcategories || [];
+                                          const updated = current.includes(sub.id)
+                                            ? current.filter(id => id !== sub.id)
+                                            : [...current, sub.id];
+                                          return {
+                                            ...prev,
+                                            subcategories: updated
+                                          };
+                                        });
+                                      }}
+                                      className="w-4 h-4 rounded accent-[#FF6B35]"
+                                    />
+                                    <span className="text-xs text-gray-600">{sub.name}</span>
+                                  </label>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Manufacturer Filter */}
+                    <div className="space-y-3">
+                      <h3 className="font-bold text-base text-gray-900">Производитель</h3>
+                      
+                      {/* Поиск по производителям */}
+                      <div className="relative">
+                        <input
+                          type="text"
+                          placeholder="Поиск производителей..."
+                          value={manufacturerSearch}
+                          onChange={(e) => setManufacturerSearch(e.target.value)}
+                          className="w-full pl-4 pr-12 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-[#FF6B35] focus:bg-white transition-all"
+                        />
+                        <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none z-10" />
+                      </div>
+
+                      {isLoadingStats ? (
+                        <div className="space-y-2 py-4">
+                          {[1, 2, 3, 4, 5].map((i) => (
+                            <div key={i} className="h-8 bg-gray-200 rounded animate-pulse" />
+                          ))}
+                        </div>
+                      ) : sortedManufacturers.length > 0 ? (
+                        <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
+                          {filteredManufacturers.map((manufacturer) => (
+                            <label
+                              key={manufacturer}
+                              className="flex items-center space-x-3 cursor-pointer py-2 hover:bg-gray-50 rounded transition-colors"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={pendingFilters.manufacturers.includes(manufacturer)}
+                                onChange={() => {
+                                  setPendingFilters(prev => ({
+                                    ...prev,
+                                    manufacturers: prev.manufacturers.includes(manufacturer)
+                                      ? prev.manufacturers.filter(m => m !== manufacturer)
+                                      : [...prev.manufacturers, manufacturer]
+                                  }));
+                                }}
+                                className="w-5 h-5 rounded accent-[#FF6B35] focus:ring-2 focus:ring-[#FF6B35]"
+                              />
+                              <span className="text-sm text-gray-700">{manufacturer}</span>
+                            </label>
+                          ))}
+                          {sortedManufacturers.length > 10 && !showAllManufacturers && (
+                            <button
+                              onClick={() => setShowAllManufacturers(true)}
+                              className="text-sm text-[#FF6B35] hover:underline flex items-center gap-1 w-full py-2"
+                            >
+                              Показать всё
+                              <ChevronDown className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-500 py-4 text-center">Нет доступных производителей</p>
+                      )}
+                    </div>
+
+                    {/* Кнопка сброса */}
+                    <div className="sticky bottom-0 bg-white pt-4 pb-2 space-y-2 border-t border-gray-200">
+                      <button
+                        onClick={handleResetFilters}
+                        className="w-full py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-all"
+                      >
+                        Сбросить фильтры
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>
+
           {/* Filters Sidebar - Fixed слева, прилипает к подвалу */}
           <FilterSidebar headerHeight={96}>
             <div className="p-4 space-y-4">

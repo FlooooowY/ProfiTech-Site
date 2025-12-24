@@ -7,38 +7,41 @@ import Carousel from '@/components/Carousel';
 import { CATEGORIES } from '@/constants/categories';
 import { CarouselImage } from '@/types';
 import { useTranslations } from '@/lib/i18n';
+import { COMPANY_INFO } from '@/constants/categories';
 
-// Изображения для карусели
-const carouselImages: CarouselImage[] = [
-  {
-    id: '1',
-    url: '/uploads/carousel/slide1.svg',
-    alt: 'Профессиональное оборудование',
-    title: 'Профессиональное оборудование',
-    description: 'Более 126,000 позиций профессионального оборудования для вашего бизнеса',
-    link: '/catalog',
-  },
-  {
-    id: '2',
-    url: '/uploads/carousel/slide1.svg',
-    alt: 'Кофейное оборудование',
-    title: 'Кофейное оборудование',
-    description: 'Кофемашины, кофемолки и аксессуары для идеального кофе',
-    link: '/catalog?category=kofevarki-i-kofemashini',
-  },
-  {
-    id: '3',
-    url: '/uploads/carousel/slide1.svg',
-    alt: 'Холодильное оборудование',
-    title: 'Холодильное оборудование',
-    description: 'Промышленные холодильники и морозильные камеры для ресторанов и магазинов',
-    link: '/catalog?category=profoborudovanie',
-  },
-];
+// Изображения для карусели будут созданы динамически с переводами
 
 
 export default function HomePage() {
   const t = useTranslations();
+  
+  // Изображения для карусели с переводами
+  const carouselImages: CarouselImage[] = [
+    {
+      id: '1',
+      url: '/uploads/carousel/slide1.svg',
+      alt: t('home.title'),
+      title: t('home.title'),
+      description: t('home.carousel1'),
+      link: '/catalog',
+    },
+    {
+      id: '2',
+      url: '/uploads/carousel/slide1.svg',
+      alt: t('home.carousel2Title'),
+      title: t('home.carousel2Title'),
+      description: t('home.carousel2Desc'),
+      link: '/catalog?category=kofevarki-i-kofemashini',
+    },
+    {
+      id: '3',
+      url: '/uploads/carousel/slide1.svg',
+      alt: t('home.carousel3Title'),
+      title: t('home.carousel3Title'),
+      description: t('home.carousel3Desc'),
+      link: '/catalog?category=profoborudovanie',
+    },
+  ];
   
   const features = [
     {
@@ -172,7 +175,7 @@ export default function HomePage() {
                     ))}
                     {category.subcategories && category.subcategories.length > 3 && (
                       <span className="px-4 py-2 bg-gradient-to-r from-[#FF6B35] to-[#F7931E] text-white rounded-full text-sm font-bold">
-                        +{category.subcategories.length - 3} ещё
+                        +{category.subcategories.length - 3} {t('home.more')}
                       </span>
                     )}
                   </div>
@@ -223,7 +226,7 @@ export default function HomePage() {
                 {t('home.goToCatalog')}
               </Link>
               <a
-                href="https://wa.me/79000000000"
+                href={`https://wa.me/${COMPANY_INFO.defaultWhatsApp.replace(/\D/g, '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-white/20 backdrop-blur-sm border-2 border-white text-white font-bold text-lg rounded-full hover:bg-white/30 transition-all"
