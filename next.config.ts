@@ -22,6 +22,16 @@ const nextConfig: NextConfig = {
       ...(config.resolve.modules || []),
     ];
     
+    // Исключаем скрипты из сборки (они не должны быть частью production bundle)
+    config.externals = config.externals || [];
+    if (Array.isArray(config.externals)) {
+      config.externals.push({
+        // Игнорируем импорты из scripts
+        'scripts/translateProducts': 'commonjs scripts/translateProducts',
+        'scripts/translateProductsLocal': 'commonjs scripts/translateProductsLocal',
+      });
+    }
+    
     return config;
   },
   turbopack: {

@@ -4,9 +4,29 @@
  */
 
 import { getCollection, closeConnection } from '../lib/db';
-import { translate as translateVitalets } from '@vitalets/google-translate-api';
-import { translate as translateX } from 'google-translate-api-x';
-import translateGoogle from 'translate-google';
+
+// Опциональные импорты библиотек перевода (могут отсутствовать при сборке Next.js)
+let translateVitalets: any;
+let translateX: any;
+let translateGoogle: any;
+
+try {
+  translateVitalets = require('@vitalets/google-translate-api').translate;
+} catch (e) {
+  // Игнорируем ошибку, если модуль не найден
+}
+
+try {
+  translateX = require('google-translate-api-x').translate;
+} catch (e) {
+  // Игнорируем ошибку, если модуль не найден
+}
+
+try {
+  translateGoogle = require('translate-google');
+} catch (e) {
+  // Игнорируем ошибку, если модуль не найден
+}
 
 interface Product {
   _id?: any;
@@ -48,30 +68,69 @@ let stats = {
 };
 
 /**
+ * Проверяет, доступна ли библиотека перевода
+ */
+function isTranslatorAvailable(type: TranslatorType): boolean {
+  switch (type) {
+    case 'vitalets':
+      return typeof translateVitalets === 'function';
+    case 'google-x':
+      return typeof translateX === 'function';
+    case 'translate-google':
+      return typeof translateGoogle === 'function';
+    default:
+      return false;
+  }
+}
+
+/**
  * Переключает на следующую доступную библиотеку перевода
  */
 function switchTranslator(): void {
   const translators: TranslatorType[] = ['vitalets', 'google-x', 'translate-google'];
   const currentIndex = translators.indexOf(currentTranslator);
-  const nextIndex = (currentIndex + 1) % translators.length;
-  currentTranslator = translators[nextIndex];
-  console.log(`  🔄 Переключение на библиотеку: ${currentTranslator}`);
+  
+  // Ищем следующую доступную библиотеку
+  for (let i = 1; i <= translators.length; i++) {
+    const nextIndex = (currentIndex + i) % translators.length;
+    const nextTranslator = translators[nextIndex];
+    if (isTranslatorAvailable(nextTranslator)) {
+      currentTranslator = nextTranslator;
+      console.log(`  🔄 Переключение на библиотеку: ${currentTranslator}`);
+      return;
+    }
+  }
+  
+  throw new Error('Нет доступных библиотек перевода');
 }
 
 /**
  * Переводит текст используя текущую библиотеку
  */
 async function translateWithCurrentLibrary(text: string): Promise<string> {
+  if (!isTranslatorAvailable(currentTranslator)) {
+    switchTranslator(); // Переключаемся на доступную библиотеку
+  }
+  
   switch (currentTranslator) {
     case 'vitalets':
+      if (!translateVitalets) {
+        throw new Error('Библиотека @vitalets/google-translate-api не установлена');
+      }
       const result1 = await translateVitalets(text, { to: 'en', from: 'ru' });
       return result1.text;
     
     case 'google-x':
+      if (!translateX) {
+        throw new Error('Библиотека google-translate-api-x не установлена');
+      }
       const result2 = await translateX(text, { to: 'en', from: 'ru' });
       return result2.text;
     
     case 'translate-google':
+      if (!translateGoogle) {
+        throw new Error('Библиотека translate-google не установлена');
+      }
       const result3 = await translateGoogle(text, { from: 'ru', to: 'en' });
       return Array.isArray(result3) ? result3.join(' ') : result3;
     
@@ -241,6 +300,26 @@ function sleep(ms: number): Promise<void> {
 async function translateProducts() {
   try {
     console.log('🌐 Начинаем перевод товаров...\n');
+    
+    // Проверяем доступность библиотек перевода
+    const availableTranslators: TranslatorType[] = [];
+    if (isTranslatorAvailable('vitalets')) availableTranslators.push('vitalets');
+    if (isTranslatorAvailable('google-x')) availableTranslators.push('google-x');
+    if (isTranslatorAvailable('translate-google')) availableTranslators.push('translate-google');
+    
+    if (availableTranslators.length === 0) {
+      console.error('❌ Ошибка: Нет доступных библиотек перевода!');
+      console.error('💡 Установите хотя бы одну из библиотек:');
+      console.error('   npm install @vitalets/google-translate-api');
+      console.error('   npm install google-translate-api-x');
+      console.error('   npm install translate-google');
+      process.exit(1);
+    }
+    
+    // Устанавливаем первую доступную библиотеку
+    currentTranslator = availableTranslators[0];
+    console.log(`✅ Доступные библиотеки перевода: ${availableTranslators.join(', ')}`);
+    console.log(`📡 Используется: ${currentTranslator}\n`);
 
     const productsCollection = await getCollection<Product>('products');
     
