@@ -641,11 +641,17 @@ function CatalogPageContent() {
                             </div>
                             {/* Подкатегории */}
                             {pendingFilters.category === category.id && category.subcategories && category.subcategories.length > 0 && (
-                              <div className="ml-6 mt-1 space-y-1">
+                              <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="ml-6 mt-1 space-y-1 overflow-hidden"
+                              >
                                 {category.subcategories.map((sub) => (
                                   <label
                                     key={sub.id}
-                                    className="flex items-center space-x-2 cursor-pointer py-1 hover:bg-gray-50 rounded"
+                                    className="flex items-center space-x-2 cursor-pointer py-1.5 hover:bg-gray-50 rounded transition-colors"
                                   >
                                     <input
                                       type="checkbox"
@@ -662,12 +668,12 @@ function CatalogPageContent() {
                                           };
                                         });
                                       }}
-                                      className="w-4 h-4 rounded accent-[#FF6B35]"
+                                      className="w-4 h-4 rounded accent-[#FF6B35] flex-shrink-0"
                                     />
-                                    <span className="text-xs text-gray-600">{sub.name}</span>
+                                    <span className="text-xs text-gray-600 flex-1">{sub.name}</span>
                                   </label>
                                 ))}
-                              </div>
+                              </motion.div>
                             )}
                           </div>
                         ))}
@@ -935,11 +941,17 @@ function CatalogPageContent() {
                       </div>
                       {/* Подкатегории */}
                       {pendingFilters.category === category.id && category.subcategories && category.subcategories.length > 0 && (
-                        <div className="ml-6 mt-1 space-y-1">
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="ml-6 mt-1 space-y-1 overflow-hidden"
+                        >
                           {category.subcategories.map((sub) => (
                             <label
                               key={sub.id}
-                              className="flex items-center space-x-2 cursor-pointer py-1 hover:bg-gray-50 rounded"
+                              className="flex items-center space-x-2 cursor-pointer py-1.5 hover:bg-gray-50 rounded transition-colors"
                             >
                               <input
                                 type="checkbox"
@@ -956,12 +968,12 @@ function CatalogPageContent() {
                                     };
                                   });
                                 }}
-                                className="w-4 h-4 rounded accent-[#FF6B35]"
+                                className="w-4 h-4 rounded accent-[#FF6B35] flex-shrink-0"
                               />
-                              <span className="text-xs text-gray-600">{sub.name}</span>
+                              <span className="text-xs text-gray-600 flex-1">{sub.name}</span>
                             </label>
                           ))}
-                        </div>
+                        </motion.div>
                       )}
                     </div>
                   ))}
