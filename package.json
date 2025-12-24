@@ -24,7 +24,8 @@
     "ssl:configure-nginx": "bash scripts/configure-nginx-ssl.sh",
     "ssl:install": "bash scripts/install-ssl-certificate.sh",
     "firewall:fix": "bash scripts/fix-firewall-ports.sh",
-    "db:fix-connection": "bash scripts/fix-mongodb-connection.sh"
+    "db:fix-connection": "bash scripts/fix-mongodb-connection.sh",
+    "hosts:fix": "bash scripts/fix-etc-hosts.sh"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.12",
