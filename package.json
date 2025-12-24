@@ -15,7 +15,9 @@
     "db:check-subcategories": "tsx scripts/checkSubcategories.ts",
     "db:check": "node scripts/checkMongoDB.js",
     "db:translate-products": "tsx scripts/translateProducts.ts",
-    "db:translate-products-fast": "tsx scripts/translateProductsLocal.ts"
+    "db:translate-products-fast": "tsx scripts/translateProductsLocal.ts",
+    "services:check": "bash scripts/check-services.sh",
+    "services:start": "bash scripts/start-services.sh"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.12",

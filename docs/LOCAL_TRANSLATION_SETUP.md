@@ -2,16 +2,73 @@
 
 Для перевода 126k товаров за 10-15 минут используйте локальный сервер перевода LibreTranslate.
 
+## ⚠️ Требования
+
+Перед запуском перевода убедитесь, что:
+1. **MongoDB запущен** и доступен
+2. **LibreTranslate запущен** на `http://localhost:5000`
+
+### Быстрая проверка и запуск сервисов
+
+```bash
+# Проверка статуса всех сервисов
+chmod +x scripts/check-services.sh
+./scripts/check-services.sh
+
+# Автоматический запуск всех необходимых сервисов
+chmod +x scripts/start-services.sh
+./scripts/start-services.sh
+```
+
+Если скрипты показывают ошибки, следуйте инструкциям ниже.
+
+## Установка и запуск MongoDB
+
+Если MongoDB не установлен:
+
+```bash
+# Установка MongoDB
+sudo apt update
+sudo apt install -y mongodb
+
+# Запуск MongoDB
+sudo systemctl start mongod
+sudo systemctl enable mongod  # Автозапуск при перезагрузке
+
+# Проверка статуса
+sudo systemctl status mongod
+```
+
+Если MongoDB уже установлен, но не запущен:
+
+```bash
+sudo systemctl start mongod
+```
+
 ## Вариант 1: Docker (рекомендуется)
+
+### Установка Docker (если не установлен):
+
+```bash
+# Установка Docker
+chmod +x scripts/install-docker.sh
+./scripts/install-docker.sh
+
+# После установки перелогиньтесь или выполните:
+newgrp docker
+```
 
 ### Установка LibreTranslate через Docker:
 
 ```bash
-# Запустите LibreTranslate в Docker
-docker run -ti --rm -p 5000:5000 libretranslate/libretranslate
-
-# Или в фоновом режиме
+# Запустите LibreTranslate в Docker (фоновый режим)
 docker run -d -p 5000:5000 --name libretranslate libretranslate/libretranslate
+
+# Проверка статуса
+docker ps | grep libretranslate
+
+# Просмотр логов (если есть проблемы)
+docker logs libretranslate
 ```
 
 ### Использование:

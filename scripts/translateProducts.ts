@@ -4,7 +4,9 @@
  */
 
 import { getCollection, closeConnection } from '../lib/db';
-import { translate } from '@vitalets/google-translate-api';
+import { translate as translateVitalets } from '@vitalets/google-translate-api';
+import { translate as translateX } from 'google-translate-api-x';
+import translateGoogle from 'translate-google';
 
 interface Product {
   _id?: any;
@@ -23,9 +25,18 @@ interface Product {
 }
 
 // Задержка между запросами (мс) для избежания лимитов API
-const DELAY_BETWEEN_REQUESTS = 200; // 200мс - уменьшено для ускорения
-const BATCH_SIZE = 50; // Обрабатываем по 50 товаров за раз
-const PARALLEL_PRODUCTS = 5; // Обрабатываем 5 товаров параллельно в каждом батче
+const DELAY_BETWEEN_REQUESTS = 1000; // 1 секунда - увеличено для избежания лимитов
+const BATCH_SIZE = 20; // Обрабатываем по 20 товаров за раз
+const PARALLEL_PRODUCTS = 2; // Обрабатываем 2 товара параллельно (уменьшено для избежания лимитов)
+
+// Тип библиотеки для перевода
+type TranslatorType = 'vitalets' | 'google-x' | 'translate-google';
+let currentTranslator: TranslatorType = 'vitalets';
+let translatorFailures: Record<TranslatorType, number> = {
+  'vitalets': 0,
+  'google-x': 0,
+  'translate-google': 0,
+};
 
 // Статистика
 let stats = {
@@ -37,9 +48,42 @@ let stats = {
 };
 
 /**
- * Переводит текст с русского на английский
+ * Переключает на следующую доступную библиотеку перевода
  */
-async function translateText(text: string, retries = 3): Promise<string> {
+function switchTranslator(): void {
+  const translators: TranslatorType[] = ['vitalets', 'google-x', 'translate-google'];
+  const currentIndex = translators.indexOf(currentTranslator);
+  const nextIndex = (currentIndex + 1) % translators.length;
+  currentTranslator = translators[nextIndex];
+  console.log(`  🔄 Переключение на библиотеку: ${currentTranslator}`);
+}
+
+/**
+ * Переводит текст используя текущую библиотеку
+ */
+async function translateWithCurrentLibrary(text: string): Promise<string> {
+  switch (currentTranslator) {
+    case 'vitalets':
+      const result1 = await translateVitalets(text, { to: 'en', from: 'ru' });
+      return result1.text;
+    
+    case 'google-x':
+      const result2 = await translateX(text, { to: 'en', from: 'ru' });
+      return result2.text;
+    
+    case 'translate-google':
+      const result3 = await translateGoogle(text, { from: 'ru', to: 'en' });
+      return Array.isArray(result3) ? result3.join(' ') : result3;
+    
+    default:
+      throw new Error(`Неизвестная библиотека: ${currentTranslator}`);
+  }
+}
+
+/**
+ * Переводит текст с русского на английский с автоматической ротацией библиотек
+ */
+async function translateText(text: string, retries = 5): Promise<string> {
   if (!text || text.trim().length === 0) {
     return text;
   }
@@ -55,27 +99,57 @@ async function translateText(text: string, retries = 3): Promise<string> {
       if (sentence.trim().length > 0) {
         const translated = await translateText(sentence.trim(), retries);
         translatedSentences.push(translated);
-        // Убрали задержку между предложениями для ускорения
+        await sleep(DELAY_BETWEEN_REQUESTS); // Задержка между предложениями
       }
     }
     
     return translatedSentences.join(' ');
   }
 
+  // Пробуем перевести с текущей библиотекой, при ошибке переключаемся
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
-      const result = await translate(text, { to: 'en', from: 'ru' });
-      return result.text;
+      const translated = await translateWithCurrentLibrary(text);
+      // Сбрасываем счетчик ошибок при успехе
+      translatorFailures[currentTranslator] = 0;
+      return translated;
     } catch (error: any) {
-      console.error(`  ⚠️ Ошибка перевода (попытка ${attempt}/${retries}):`, error.message);
+      const errorMessage = error.message || String(error);
+      console.error(`  ⚠️ Ошибка перевода (${currentTranslator}, попытка ${attempt}/${retries}):`, errorMessage);
+      
+      // Увеличиваем счетчик ошибок для текущей библиотеки
+      translatorFailures[currentTranslator]++;
+      
+      // Если слишком много ошибок с этой библиотекой, переключаемся
+      if (translatorFailures[currentTranslator] >= 3) {
+        switchTranslator();
+        translatorFailures[currentTranslator] = 0; // Сбрасываем для новой библиотеки
+      }
       
       if (attempt < retries) {
-        // Увеличиваем задержку при повторных попытках (но меньше)
-        await sleep(DELAY_BETWEEN_REQUESTS * attempt * 0.5);
+        // Увеличиваем задержку при повторных попытках
+        const delay = DELAY_BETWEEN_REQUESTS * attempt * 2; // Увеличена задержка
+        console.log(`  ⏳ Ожидание ${delay}мс перед повторной попыткой...`);
+        await sleep(delay);
       } else {
-        // Если все попытки неудачны, возвращаем оригинальный текст
-        console.warn(`  ⚠️ Не удалось перевести, оставляем оригинал`);
-        return text;
+        // Если все попытки неудачны, пробуем другую библиотеку
+        if (attempt === retries) {
+          const oldTranslator = currentTranslator;
+          switchTranslator();
+          if (currentTranslator !== oldTranslator) {
+            console.log(`  🔄 Последняя попытка с другой библиотекой...`);
+            try {
+              const translated = await translateWithCurrentLibrary(text);
+              return translated;
+            } catch (finalError) {
+              console.warn(`  ⚠️ Не удалось перевести, оставляем оригинал`);
+              return text;
+            }
+          } else {
+            console.warn(`  ⚠️ Не удалось перевести, оставляем оригинал`);
+            return text;
+          }
+        }
       }
     }
   }
@@ -187,7 +261,8 @@ async function translateProducts() {
       .toArray();
 
     console.log(`📝 Товаров для перевода: ${productsToTranslate.length}`);
-    console.log(`⚡ Режим: ${PARALLEL_PRODUCTS} товаров параллельно, батчи по ${BATCH_SIZE} товаров\n`);
+    console.log(`⚡ Режим: ${PARALLEL_PRODUCTS} товаров параллельно, батчи по ${BATCH_SIZE} товаров`);
+    console.log(`🌐 Библиотека перевода: ${currentTranslator} (автоматическая ротация при ошибках)\n`);
 
     if (productsToTranslate.length === 0) {
       console.log('✅ Все товары уже переведены!');
