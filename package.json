@@ -23,7 +23,8 @@
     "ssl:get-webroot": "bash scripts/get-ssl-webroot.sh",
     "ssl:configure-nginx": "bash scripts/configure-nginx-ssl.sh",
     "ssl:install": "bash scripts/install-ssl-certificate.sh",
-    "firewall:fix": "bash scripts/fix-firewall-ports.sh"
+    "firewall:fix": "bash scripts/fix-firewall-ports.sh",
+    "db:fix-connection": "bash scripts/fix-mongodb-connection.sh"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.12",
