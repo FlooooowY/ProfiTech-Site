@@ -20,6 +20,12 @@ server {
     listen 80;
     server_name profitech.store www.profitech.store;  # Замените на ваш домен
     
+    # ВАЖНО: Блок для Let's Encrypt ACME challenge (должен быть ПЕРЕД location /)
+    location /.well-known/acme-challenge/ {
+        root /var/www/html;
+        try_files $uri =404;
+    }
+    
     # Редирект на HTTPS (после настройки SSL)
     # return 301 https://$server_name$request_uri;
     
@@ -59,7 +65,16 @@ server {
 }
 ```
 
-### 3. Проверьте существующие конфигурации
+### 3. Создайте директорию для ACME challenge (для SSL)
+
+```bash
+# Создайте директорию для Let's Encrypt
+sudo mkdir -p /var/www/html/.well-known/acme-challenge
+sudo chown -R www-data:www-data /var/www/html
+sudo chmod -R 755 /var/www/html
+```
+
+### 4. Проверьте существующие конфигурации
 
 ```bash
 # Проверьте, нет ли уже конфигурации с таким доменом
@@ -72,7 +87,7 @@ ls -la /etc/nginx/sites-enabled/
 sudo rm -f /etc/nginx/sites-enabled/default
 ```
 
-### 4. Активируйте конфигурацию
+### 5. Активируйте конфигурацию
 
 ```bash
 # Создайте символическую ссылку
@@ -96,19 +111,19 @@ sudo nano /etc/nginx/sites-enabled/default  # Или другой файл с к
 sudo nginx -t
 ```
 
-### 4. Перезапустите Nginx
+### 6. Перезапустите Nginx
 
 ```bash
 sudo systemctl restart nginx
 ```
 
-### 5. Проверьте статус
+### 7. Проверьте статус
 
 ```bash
 sudo systemctl status nginx
 ```
 
-### 6. Настройте DNS
+### 8. Настройте DNS
 
 Убедитесь, что в настройках DNS вашего домена указаны A-записи:
 
@@ -117,7 +132,13 @@ A     @     ваш-ip-адрес-сервера
 A     www   ваш-ip-адрес-сервера
 ```
 
-### 7. Настройте SSL (Let's Encrypt)
+### 9. Настройте SSL (Let's Encrypt)
+
+**ВАЖНО:** Перед получением SSL сертификата убедитесь, что:
+1. DNS записи настроены и обновились (проверьте: `nslookup profitech.store`)
+2. Домен доступен из интернета (проверьте: `curl -I http://profitech.store`)
+3. Порт 80 открыт в файрволе: `sudo ufw allow 80/tcp`
+4. Блок `.well-known/acme-challenge/` добавлен в конфигурацию Nginx (см. выше)
 
 После того как домен будет работать, настройте SSL:
 
