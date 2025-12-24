@@ -22,7 +22,8 @@
     "site:diagnose": "bash scripts/diagnose-connection.sh",
     "domain:check": "bash scripts/check-domain.sh",
     "domain:setup": "bash scripts/setup-nginx-domain.sh",
-    "ssl:fix-acme": "bash scripts/fix-acme-404.sh"
+    "ssl:fix-acme": "bash scripts/fix-acme-404.sh",
+    "ssl:get-webroot": "bash scripts/get-ssl-webroot.sh"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.12",
