@@ -59,16 +59,40 @@ server {
 }
 ```
 
-### 3. Активируйте конфигурацию
+### 3. Проверьте существующие конфигурации
+
+```bash
+# Проверьте, нет ли уже конфигурации с таким доменом
+sudo grep -r "profitech.store" /etc/nginx/
+
+# Проверьте все активные конфигурации
+ls -la /etc/nginx/sites-enabled/
+
+# Если есть дефолтная конфигурация, удалите её
+sudo rm -f /etc/nginx/sites-enabled/default
+```
+
+### 4. Активируйте конфигурацию
 
 ```bash
 # Создайте символическую ссылку
 sudo ln -s /etc/nginx/sites-available/profitech /etc/nginx/sites-enabled/
 
-# Удалите дефолтную конфигурацию (если есть)
-sudo rm /etc/nginx/sites-enabled/default
-
 # Проверьте конфигурацию
+sudo nginx -t
+```
+
+**Если видите предупреждение о конфликтующих именах серверов:**
+
+```bash
+# Найдите все файлы с таким server_name
+sudo grep -r "server_name.*profitech.store" /etc/nginx/
+
+# Удалите или закомментируйте дублирующие блоки server
+# Обычно это в /etc/nginx/sites-enabled/default или других файлах
+sudo nano /etc/nginx/sites-enabled/default  # Или другой файл с конфликтом
+
+# После исправления проверьте снова
 sudo nginx -t
 ```
 
