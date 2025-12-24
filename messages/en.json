@@ -55,11 +55,36 @@
     "removeFromFavorites": "Remove from favorites"
   },
   "cart": {
-    "title": "Cart",
-    "empty": "Cart is empty",
+    "title": "Request List",
+    "empty": "Request list is empty",
+    "emptyDescription": "Add products from the catalog to request price and availability",
     "total": "Total",
     "order": "Place order",
-    "continueShopping": "Continue shopping"
+    "continueShopping": "Continue shopping",
+    "itemsInList": "Items in list",
+    "clearList": "Clear list",
+    "removeFromList": "Remove from list",
+    "positionsInList": "Positions in list",
+    "totalQuantity": "Total quantity",
+    "pcs": "pcs",
+    "manufacturer": "Manufacturer",
+    "quantity": "Quantity",
+    "whatsappGreeting": "Hello! I'm interested in the following products:",
+    "totalPositions": "Total positions",
+    "contactForPrice": "Please contact me to clarify the price and details.",
+    "priceInquiry": "Price inquiry",
+    "priceInquiryDescription": "After sending the request, our manager will contact you to clarify the price and order details.",
+    "sendToWhatsApp": "Send request to WhatsApp",
+    "whatsappRedirect": "By clicking the button, you will be redirected to WhatsApp",
+    "goToCatalog": "Go to catalog"
+  },
+  "favorites": {
+    "empty": "Favorites is empty",
+    "emptyDescription": "You don't have any favorite products yet",
+    "emptyMessage": "Add products to favorites to quickly find them later. Just click the heart icon on the product card.",
+    "found": "Products found",
+    "clear": "Clear favorites",
+    "goToCatalog": "Go to catalog"
   },
   "contacts": {
     "title": "Contacts",

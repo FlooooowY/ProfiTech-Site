@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Upload, Database, CheckCircle, XCircle, Loader2, AlertCircle, RefreshCw, Package, FolderOpen, TrendingUp, FileText } from 'lucide-react';
+import { Upload, Database, CheckCircle, XCircle, Loader2, AlertCircle, RefreshCw, Package, FolderOpen, TrendingUp, FileText, LogOut } from 'lucide-react';
+import { isAuthenticated, logout } from '@/lib/adminAuth';
 
 interface ImportStats {
   totalFiles?: number;
@@ -20,15 +22,23 @@ interface CurrentStats {
 }
 
 export default function AdminPage() {
+  const router = useRouter();
   const [isImporting, setIsImporting] = useState(false);
   const [importStats, setImportStats] = useState<ImportStats | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [currentStats, setCurrentStats] = useState<CurrentStats | null>(null);
   const [isLoadingStats, setIsLoadingStats] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   useEffect(() => {
+    // Проверяем аутентификацию
+    if (!isAuthenticated()) {
+      router.push('/admin/login');
+      return;
+    }
+    setIsCheckingAuth(false);
     fetchCurrentStats();
-  }, []);
+  }, [router]);
 
   const fetchCurrentStats = async () => {
     setIsLoadingStats(true);
@@ -49,9 +59,18 @@ export default function AdminPage() {
     setImportStats(null);
 
     try {
+      const token = localStorage.getItem('adminToken');
       const response = await fetch('/api/import', {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
       });
+      
+      if (response.status === 401) {
+        logout();
+        return;
+      }
 
       const data = await response.json();
 
@@ -71,6 +90,14 @@ export default function AdminPage() {
     }
   };
 
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[#FF6B35]" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50" style={{ paddingTop: '7.5rem' }}>
       <div className="container mx-auto px-4 py-8" style={{ paddingLeft: '32px', paddingRight: '32px', maxWidth: '1400px' }}>
@@ -80,18 +107,29 @@ export default function AdminPage() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-12"
         >
-          <div className="flex items-center space-x-4 mb-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-[#FF6B35] to-[#F7931E] rounded-2xl flex items-center justify-center shadow-lg">
-              <Database className="w-8 h-8 text-white" />
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-[#FF6B35] to-[#F7931E] rounded-2xl flex items-center justify-center shadow-lg">
+                <Database className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-4xl md:text-5xl font-bold text-gray-900">
+                  Панель администратора
+                </h1>
+                <p className="text-gray-600 text-lg mt-2">
+                  Управление импортом каталога товаров
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-4xl md:text-5xl font-bold text-gray-900">
-                Панель администратора
-              </h1>
-              <p className="text-gray-600 text-lg mt-2">
-                Управление импортом каталога товаров
-              </p>
-            </div>
+            <motion.button
+              onClick={logout}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex items-center space-x-2 px-5 py-3 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-xl transition-all shadow-lg hover:shadow-xl"
+            >
+              <LogOut className="w-5 h-5" />
+              <span>Выйти</span>
+            </motion.button>
           </div>
         </motion.div>
 
