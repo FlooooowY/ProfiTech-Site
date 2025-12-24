@@ -29,17 +29,38 @@ sudo cp "$NGINX_CONF" "${NGINX_CONF}.backup.$(date +%Y%m%d_%H%M%S)"
 # Ищем место для вставки (перед первым location /)
 echo "📝 Добавление блока ACME challenge..."
 
-# Создаем временный файл с блоком
-ACME_BLOCK="    # ВAЖНО: Блок для Let's Encrypt ACME challenge (должен быть ПЕРЕД location /)
+# Используем Python для добавления блока (более надежно, чем sed с многострочными строками)
+sudo python3 << EOF
+import re
+
+conf_file = "$NGINX_CONF"
+acme_block = """    # ВАЖНО: Блок для Let's Encrypt ACME challenge (должен быть ПЕРЕД location /)
     location /.well-known/acme-challenge/ {
         root /var/www/html;
         try_files \$uri =404;
     }
-"
+"""
 
-# Используем sed для добавления блока перед первым location /
-# Ищем строку "location / {" и вставляем перед ней
-sudo sed -i "/^\s*location \/ {/i\\$ACME_BLOCK" "$NGINX_CONF"
+# Читаем файл
+with open(conf_file, 'r') as f:
+    content = f.read()
+
+# Ищем первое вхождение "location / {" и вставляем блок перед ним
+pattern = r'(\s+)(location\s+/\s+\{)'
+replacement = r'\1' + acme_block + r'\1\2'
+
+if re.search(pattern, content):
+    content = re.sub(pattern, replacement, content, count=1)
+    
+    # Записываем обратно
+    with open(conf_file, 'w') as f:
+        f.write(content)
+    print("✅ Блок добавлен успешно")
+else:
+    print("⚠️  Не найдено 'location / {' в конфигурации")
+    print("   Добавьте блок вручную перед первым location блоком")
+    exit(1)
+EOF
 
 echo "✅ Блок добавлен"
 
