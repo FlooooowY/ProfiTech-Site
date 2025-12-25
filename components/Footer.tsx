@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Mail, Phone, MapPin, Facebook, Instagram, Send } from 'lucide-react';
+import { Mail, Phone, MapPin, MessageCircle, Send } from 'lucide-react';
 import { COMPANY_INFO } from '@/constants/categories';
 import { useTranslations } from '@/lib/i18n';
 
@@ -111,30 +111,18 @@ export default function Footer() {
             <h4 className="text-lg font-semibold mb-4">{t('footer.socialMedia')}</h4>
             <div className="flex space-x-4">
               <a
-                href="#"
-                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-[#1877F2] transition-all hover:scale-110 group"
-                aria-label="Facebook"
-              >
-                <Facebook className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
-              </a>
-              <a
-                href="#"
-                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-gradient-to-br hover:from-[#E4405F] hover:to-[#FCAF45] transition-all hover:scale-110 group"
-                aria-label="Instagram"
-              >
-                <Instagram className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
-              </a>
-              <a
                 href={`https://wa.me/${COMPANY_INFO.defaultWhatsApp.replace(/\D/g, '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-[#25D366] transition-all hover:scale-110 group"
                 aria-label="WhatsApp"
               >
-                <Phone className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
+                <MessageCircle className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
               </a>
               <a
-                href="#"
+                href={`https://t.me/${COMPANY_INFO.telegram}`}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-[#0088CC] transition-all hover:scale-110 group"
                 aria-label="Telegram"
               >
