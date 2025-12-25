@@ -497,15 +497,19 @@ async function searchProductsByQuery(query: string): Promise<{
     
     // Если точных совпадений мало, добавляем товары с совпадением хотя бы одного слова в названии
     if (foundProducts.length < 5) {
+      const foundProductIds = new Set(foundProducts.map(p => p.id));
+      
       const additionalProducts = await productsCollection
         .find({ 
-          $or: [nameMatch, descriptionMatch],
-          _id: { $nin: foundProducts.map(p => p.id) }
+          $or: [nameMatch, descriptionMatch]
         })
-        .limit(10)
+        .limit(20)
         .toArray();
       
-      foundProducts = [...foundProducts, ...additionalProducts];
+      // Фильтруем дубликаты по ID
+      const uniqueAdditionalProducts = additionalProducts.filter(p => !foundProductIds.has(p.id));
+      
+      foundProducts = [...foundProducts, ...uniqueAdditionalProducts];
     }
     
     // Сортируем результаты: сначала товары с точным совпадением в названии
