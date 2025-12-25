@@ -596,8 +596,9 @@ export async function POST(request: NextRequest) {
   try {
     const { message, messages: conversationHistory = [] } = await request.json();
 
-    // Проверяем наличие API ключа
+    // Проверяем наличие и валидность API ключа
     const apiKey = process.env.OPENROUTER_API_KEY;
+    const hasValidApiKey = apiKey && apiKey.trim().length > 0;
     
     // Ищем товары по запросу клиента
     const searchResult = await searchProductsByQuery(message);
@@ -646,8 +647,8 @@ export async function POST(request: NextRequest) {
       });
     }
     
-    if (!apiKey) {
-      console.warn('OPENROUTER_API_KEY не установлен, используется fallback логика');
+    // Если API ключ отсутствует или невалидный, используем fallback
+    if (!hasValidApiKey) {
       // Fallback на простую логику, если API ключ не установлен
       return await getFallbackResponse(message, conversationHistory, foundProducts, suggestedLink);
     }
@@ -823,13 +824,35 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const errorData = await response.text();
-      console.error('OpenRouter API Error:', response.status, errorData);
+      const errorStatus = response.status;
       
-      // Fallback на простую логику при ошибке API
+      // Обрабатываем ошибки авторизации (401) - неверный ключ
+      if (errorStatus === 401) {
+        console.warn('OpenRouter API: Invalid API key (401). Using fallback logic.');
+        // Fallback на простую логику при ошибке авторизации
+        return await getFallbackResponse(message, conversationHistory, foundProducts, suggestedLink);
+      }
+      
+      // Обрабатываем другие ошибки API
+      console.error(`OpenRouter API Error (${errorStatus}):`, errorData);
+      
+      // Fallback на простую логику при любой ошибке API
       return await getFallbackResponse(message, conversationHistory, foundProducts, suggestedLink);
     }
 
     const data = await response.json();
+    
+    // Проверяем, есть ли ошибка в ответе
+    if (data.error) {
+      console.error('OpenRouter API Error in response:', data.error);
+      // Если ошибка авторизации, используем fallback
+      if (data.error.code === 401 || data.error.message?.includes('User not found')) {
+        console.warn('OpenRouter API: Invalid API key. Using fallback logic.');
+        return await getFallbackResponse(message, conversationHistory, foundProducts, suggestedLink);
+      }
+      // Для других ошибок тоже используем fallback
+      return await getFallbackResponse(message, conversationHistory, foundProducts, suggestedLink);
+    }
     
     if (data.choices && data.choices[0] && data.choices[0].message) {
       let aiResponse = data.choices[0].message.content;
