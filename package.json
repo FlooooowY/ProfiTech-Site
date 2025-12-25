@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "node scripts/start-production.js",
-    "start:direct": "next start",
+    "start": "next start",
+    "start:safe": "node scripts/start-production.js",
     "start:prod": "npm run build && next start",
     "lint": "eslint",
     "import": "tsx scripts/importCatalog.ts",
