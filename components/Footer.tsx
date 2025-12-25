@@ -120,7 +120,7 @@ export default function Footer() {
                 <MessageCircle className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
               </a>
               <a
-                href={`https://t.me/${COMPANY_INFO.telegram}`}
+                href={COMPANY_INFO.telegramChannel}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-[#0088CC] transition-all hover:scale-110 group"
