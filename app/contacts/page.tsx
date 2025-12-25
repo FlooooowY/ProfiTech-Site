@@ -27,14 +27,14 @@ export default function ContactsPage() {
     }
     
     if (digitsOnly.length < 10 || digitsOnly.length > 15) {
-      setPhoneError('Номер телефона должен содержать от 10 до 15 цифр');
+      setPhoneError(t('contacts.phoneErrorLength'));
       return false;
     }
     
     // Проверяем формат российского номера (начинается с 7 или 8, или без них)
     const russianPhonePattern = /^(\+?7|8)?9\d{9}$/;
     if (!russianPhonePattern.test(digitsOnly) && digitsOnly.length === 11) {
-      setPhoneError('Неверный формат номера телефона');
+      setPhoneError(t('contacts.phoneErrorFormat'));
       return false;
     }
     
@@ -61,7 +61,7 @@ export default function ContactsPage() {
     }
     
     // Формируем сообщение для WhatsApp
-    const message = `Новое обращение с сайта:\n\nИмя: ${formData.name}\nEmail: ${formData.email}\nТелефон: ${formData.phone || 'Не указан'}\n\nСообщение:\n${formData.message}`;
+    const message = `${t('contacts.newRequestFromSite')}\n\n${t('contacts.yourName')}: ${formData.name}\nEmail: ${formData.email}\n${t('contacts.phone')}: ${formData.phone || t('contacts.notSpecified')}\n\n${t('contacts.message')}:\n${formData.message}`;
     const encodedMessage = encodeURIComponent(message);
     const whatsappNumber = COMPANY_INFO.defaultWhatsApp.replace(/\D/g, '');
     const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;

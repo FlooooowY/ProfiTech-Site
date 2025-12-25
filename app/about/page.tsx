@@ -2,32 +2,31 @@
 
 import { motion } from 'framer-motion';
 import { Target, Users, Award, Zap, TrendingUp, Heart, Shield, Sparkles } from 'lucide-react';
+import { useTranslations } from '@/lib/i18n';
 
 export default function AboutPage() {
+  const t = useTranslations();
+  
   const values = [
     {
       icon: Target,
-      title: 'Наша миссия',
-      description:
-        'Предоставлять качественное профессиональное оборудование и помогать бизнесу достигать своих целей',
+      title: t('about.values.mission.title'),
+      description: t('about.values.mission.description'),
     },
     {
       icon: Users,
-      title: 'Команда экспертов',
-      description:
-        'Наши специалисты обладают глубокими знаниями и всегда готовы помочь с выбором',
+      title: t('about.values.team.title'),
+      description: t('about.values.team.description'),
     },
     {
       icon: Award,
-      title: 'Качество',
-      description:
-        'Работаем только с проверенными производителями и гарантируем качество продукции',
+      title: t('about.values.quality.title'),
+      description: t('about.values.quality.description'),
     },
     {
       icon: Zap,
-      title: 'Инновации',
-      description:
-        'Следим за новинками рынка и предлагаем самые современные решения',
+      title: t('about.values.innovation.title'),
+      description: t('about.values.innovation.description'),
     },
   ];
 
@@ -104,7 +103,7 @@ export default function AboutPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 drop-shadow-2xl"
           >
-            О компании <span className="text-white">ProfiTech</span>
+            {t('about.title')} <span className="text-white">ProfiTech</span>
           </motion.h1>
           
           <motion.p
@@ -113,7 +112,7 @@ export default function AboutPage() {
             transition={{ delay: 0.2 }}
             className="text-xl md:text-2xl lg:text-3xl max-w-3xl mx-auto font-semibold drop-shadow-lg mb-8"
           >
-            От идеи до воплощения - мы помогаем вашему бизнесу расти
+            {t('about.subtitle')}
           </motion.p>
           
           <motion.div
@@ -122,7 +121,11 @@ export default function AboutPage() {
             transition={{ delay: 0.4 }}
             className="flex flex-wrap justify-center gap-4 mt-8"
           >
-            {['Качество', 'Надежность', 'Профессионализм'].map((tag, i) => (
+            {[
+              t('about.tags.quality'),
+              t('about.tags.reliability'),
+              t('about.tags.professionalism')
+            ].map((tag, i) => (
               <span
                 key={i}
                 className="px-6 py-2 bg-white/20 backdrop-blur-sm rounded-full border-2 border-white/30 text-white font-semibold text-sm md:text-base"
@@ -145,10 +148,10 @@ export default function AboutPage() {
             style={{ marginBottom: '60px' }}
           >
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold" style={{ color: '#000000', marginBottom: '16px' }}>
-              Наша <span className="gradient-text">история</span>
+              {t('about.history.title')} <span className="gradient-text">{t('about.history.titleGradient')}</span>
             </h2>
             <p className="text-gray-600 text-lg md:text-xl max-w-3xl mx-auto font-semibold">
-              Путь от небольшой компании до лидера рынка
+              {t('about.history.subtitle')}
             </p>
           </motion.div>
 
@@ -166,26 +169,19 @@ export default function AboutPage() {
                 
                 <div className="relative z-10 space-y-6">
                   <p className="leading-relaxed text-lg md:text-xl font-medium" style={{ color: '#1f2937' }}>
-                    <span className="font-bold text-2xl gradient-text">ProfiTech</span> - это команда профессионалов, которая уже более 10 лет
-                    помогает бизнесу находить оптимальные решения в области
-                    профессионального оборудования.
+                    <span className="font-bold text-2xl gradient-text">ProfiTech</span> {t('about.history.paragraph1')}
                   </p>
                   
                   <div className="h-px bg-gradient-to-r from-transparent via-orange-200 to-transparent my-6"></div>
                   
                   <p className="leading-relaxed text-lg md:text-xl font-medium" style={{ color: '#1f2937' }}>
-                    Мы начинали как небольшая компания, специализирующаяся на
-                    кофейном оборудовании, и выросли в крупного поставщика широкого
-                    спектра профессионального оборудования для различных отраслей
-                    бизнеса.
+                    {t('about.history.paragraph2')}
                   </p>
                   
                   <div className="h-px bg-gradient-to-r from-transparent via-orange-200 to-transparent my-6"></div>
                   
                   <p className="leading-relaxed text-lg md:text-xl font-medium" style={{ color: '#1f2937' }}>
-                    Сегодня мы гордимся тем, что помогли сотням компаний реализовать
-                    их проекты, от небольших кофеен до крупных производственных
-                    предприятий.
+                    {t('about.history.paragraph3')}
                   </p>
                 </div>
               </div>
@@ -205,10 +201,10 @@ export default function AboutPage() {
             style={{ marginBottom: '60px' }}
           >
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold" style={{ color: '#000000', marginBottom: '16px' }}>
-              Наши <span className="gradient-text">ценности</span>
+              {t('about.values.title')} <span className="gradient-text">{t('about.values.titleGradient')}</span>
             </h2>
             <p className="text-gray-600 text-lg md:text-xl max-w-3xl mx-auto font-semibold">
-              Принципы, которыми мы руководствуемся в работе
+              {t('about.values.subtitle')}
             </p>
           </motion.div>
 
@@ -277,19 +273,19 @@ export default function AboutPage() {
             style={{ marginBottom: '60px' }}
           >
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 drop-shadow-lg" style={{ color: '#ffffff' }}>
-              <span style={{ color: '#ffffff' }}>Наши</span> <span style={{ color: '#ffffff' }}>достижения</span>
+              <span style={{ color: '#ffffff' }}>{t('about.achievements.title')}</span> <span style={{ color: '#ffffff' }}>{t('about.achievements.title2')}</span>
             </h2>
             <p className="text-white/90 text-lg md:text-xl max-w-3xl mx-auto font-semibold">
-              Цифры, которые говорят сами за себя
+              {t('about.achievements.subtitle')}
             </p>
           </motion.div>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
             {[
-              { value: '10+', label: 'Лет на рынке', icon: TrendingUp },
-              { value: '500+', label: 'Довольных клиентов', icon: Users },
-              { value: '10000+', label: 'Товаров в каталоге', icon: Award },
-              { value: '24/7', label: 'Поддержка', icon: Shield },
+              { value: '10+', label: t('about.achievements.yearsOnMarket'), icon: TrendingUp },
+              { value: '500+', label: t('about.achievements.satisfiedClients'), icon: Users },
+              { value: '10000+', label: t('about.achievements.productsInCatalog'), icon: Award },
+              { value: '24/7', label: t('about.achievements.support'), icon: Shield },
             ].map((stat, index) => (
               <motion.div
                 key={index}

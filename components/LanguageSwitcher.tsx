@@ -72,8 +72,13 @@ export default function LanguageSwitcher() {
     setCurrentLocale(newLocale);
     setIsOpen(false);
     
-    // Перезагружаем страницу для применения новой локали
-    window.location.reload();
+    // Триггерим событие для обновления всех компонентов
+    window.dispatchEvent(new Event('languagechange'));
+    
+    // Небольшая задержка для обновления компонентов, затем перезагрузка для полного обновления
+    setTimeout(() => {
+      window.location.reload();
+    }, 50);
   };
 
   const currentLanguage = languages.find(lang => lang.code === currentLocale) || languages[0];

@@ -44,16 +44,16 @@ export function useTranslations(namespace?: string) {
     // Обновляем локаль при монтировании
     const updateLocale = () => {
       const newLocale = getCurrentLocale();
-      if (newLocale !== locale) {
-        setLocale(newLocale);
-      }
+      setLocale(newLocale);
     };
     
     updateLocale();
     
     // Слушаем изменения языка через storage и custom event
-    const handleStorageChange = () => {
-      updateLocale();
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'language') {
+        updateLocale();
+      }
     };
     
     const handleLanguageChange = () => {
@@ -62,8 +62,11 @@ export function useTranslations(namespace?: string) {
     
     // Также проверяем периодически (на случай, если localStorage изменился в другой вкладке)
     const interval = setInterval(() => {
-      updateLocale();
-    }, 500);
+      const currentLocale = getCurrentLocale();
+      if (currentLocale !== locale) {
+        updateLocale();
+      }
+    }, 200);
     
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('languagechange', handleLanguageChange);

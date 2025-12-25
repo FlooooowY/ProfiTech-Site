@@ -9,6 +9,7 @@
     "search": "Search",
     "language": "Language",
     "loading": "Loading...",
+    "loadingProducts": "Loading products...",
     "error": "Error",
     "close": "Close"
   },
@@ -49,7 +50,15 @@
     "price": "Price",
     "sortBy": "Sort by",
     "noProducts": "No products found",
-    "productsFound": "Products found",
+    "productsFound": "Found",
+    "productsFoundFull": "Products found",
+    "page": "Page",
+    "of": "of",
+    "categories": "Categories",
+    "manufacturer": "Manufacturer",
+    "searchCategories": "Search categories...",
+    "searchManufacturers": "Search manufacturers...",
+    "noProductsByFilters": "No products found matching the selected filters",
     "addToCart": "Add to cart",
     "addToFavorites": "Add to favorites",
     "removeFromFavorites": "Remove from favorites",
@@ -110,7 +119,11 @@
     "whatsappRedirect": "After sending, you will be redirected to WhatsApp",
     "fast": "Fast",
     "reliable": "Reliable",
-    "professional": "Professional"
+    "professional": "Professional",
+    "phoneErrorLength": "Phone number must contain 10 to 15 digits",
+    "phoneErrorFormat": "Invalid phone number format",
+    "newRequestFromSite": "New request from the site:",
+    "notSpecified": "Not specified"
   },
   "product": {
     "inStock": "In stock",
@@ -152,6 +165,53 @@
     "telekommunikacionnoe-oborudovanie": "Telecommunication Equipment",
     "tochki-prodazh": "Points of Sale",
     "bitovaya-tehnika": "Household Appliances"
+  },
+  "about": {
+    "title": "About Company",
+    "subtitle": "From idea to implementation - we help your business grow",
+    "tags": {
+      "quality": "Quality",
+      "reliability": "Reliability",
+      "professionalism": "Professionalism"
+    },
+    "history": {
+      "title": "Our",
+      "titleGradient": "History",
+      "subtitle": "The path from a small company to a market leader",
+      "paragraph1": "ProfiTech is a team of professionals that has been helping businesses find optimal solutions in professional equipment for over 10 years.",
+      "paragraph2": "We started as a small company specializing in coffee equipment and grew into a major supplier of a wide range of professional equipment for various business sectors.",
+      "paragraph3": "Today we are proud to have helped hundreds of companies realize their projects, from small cafes to large manufacturing enterprises."
+    },
+    "values": {
+      "title": "Our",
+      "titleGradient": "Values",
+      "subtitle": "Principles that guide us in our work",
+      "mission": {
+        "title": "Our Mission",
+        "description": "To provide quality professional equipment and help businesses achieve their goals"
+      },
+      "team": {
+        "title": "Expert Team",
+        "description": "Our specialists have deep knowledge and are always ready to help with selection"
+      },
+      "quality": {
+        "title": "Quality",
+        "description": "We work only with verified manufacturers and guarantee product quality"
+      },
+      "innovation": {
+        "title": "Innovation",
+        "description": "We monitor market novelties and offer the most modern solutions"
+      }
+    },
+    "achievements": {
+      "title": "Our",
+      "title2": "Achievements",
+      "subtitle": "Numbers that speak for themselves",
+      "yearsOnMarket": "Years on the market",
+      "satisfiedClients": "Satisfied clients",
+      "productsInCatalog": "Products in catalog",
+      "support": "Support"
+    }
   }
 }
 

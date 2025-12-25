@@ -533,20 +533,20 @@ function CatalogPageContent() {
         <div className="mb-16 md:mb-20">
           <div className="flex flex-col items-center gap-4 mb-8">
             <h1 className="text-4xl md:text-5xl font-bold text-center">
-              <span className="gradient-text">Каталог товаров</span>
+              <span className="gradient-text">{t('catalog.title')}</span>
             </h1>
           </div>
           {/* Статистика справа */}
           <div className="flex items-center gap-3 text-gray-700 justify-end">
             <div className="px-4 py-2 bg-white rounded-xl shadow-sm border border-gray-200">
-              <span className="text-sm font-medium text-gray-600">Найдено: </span>
+              <span className="text-sm font-medium text-gray-600">{t('catalog.productsFound')}: </span>
               <span className="text-lg font-bold text-[#FF6B35]">{totalProducts}</span>
             </div>
             {totalPages > 1 && (
               <div className="px-4 py-2 bg-white rounded-xl shadow-sm border border-gray-200">
-                <span className="text-sm font-medium text-gray-600">Страница </span>
+                <span className="text-sm font-medium text-gray-600">{t('catalog.page')} </span>
                 <span className="text-lg font-bold text-[#FF6B35]">{currentPage}</span>
-                <span className="text-sm font-medium text-gray-600"> из {totalPages}</span>
+                <span className="text-sm font-medium text-gray-600"> {t('catalog.of')} {totalPages}</span>
               </div>
             )}
           </div>
@@ -559,7 +559,7 @@ function CatalogPageContent() {
         >
           <span className="flex items-center space-x-2">
             <Filter className="w-5 h-5" />
-            <span className="font-semibold">Фильтры</span>
+            <span className="font-semibold">{t('catalog.filters')}</span>
           </span>
           <ChevronDown
             className={`w-5 h-5 transition-transform ${
@@ -598,13 +598,13 @@ function CatalogPageContent() {
                   <div className="space-y-4">
                     {/* Category Filter */}
                     <div className="space-y-3">
-                      <h3 className="font-bold text-base text-gray-900">Категории</h3>
+                      <h3 className="font-bold text-base text-gray-900">{t('catalog.categories')}</h3>
                       
                       {/* Поиск по категориям */}
                       <div className="relative">
                         <input
                           type="text"
-                          placeholder="Поиск категорий..."
+                          placeholder={t('catalog.searchCategories')}
                           value={categorySearch}
                           onChange={(e) => setCategorySearch(e.target.value)}
                           className="w-full pl-4 pr-12 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-[#FF6B35] focus:bg-white transition-all"
@@ -682,13 +682,13 @@ function CatalogPageContent() {
 
                     {/* Manufacturer Filter */}
                     <div className="space-y-3">
-                      <h3 className="font-bold text-base text-gray-900">Производитель</h3>
+                      <h3 className="font-bold text-base text-gray-900">{t('catalog.manufacturer')}</h3>
                       
                       {/* Поиск по производителям */}
                       <div className="relative">
                         <input
                           type="text"
-                          placeholder="Поиск производителей..."
+                          placeholder={t('catalog.searchManufacturers')}
                           value={manufacturerSearch}
                           onChange={(e) => setManufacturerSearch(e.target.value)}
                           className="w-full pl-4 pr-12 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-[#FF6B35] focus:bg-white transition-all"
@@ -892,17 +892,17 @@ function CatalogPageContent() {
           <FilterSidebar headerHeight={96}>
             <div className="p-4 space-y-4">
               {/* Заголовок */}
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">Фильтры</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">{t('catalog.filters')}</h2>
 
               {/* Category Filter */}
               <div className="space-y-3">
-                <h3 className="font-bold text-base text-gray-900">Категории</h3>
+                <h3 className="font-bold text-base text-gray-900">{t('catalog.categories')}</h3>
                 
                 {/* Поиск по категориям */}
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Поиск категорий..."
+                    placeholder={t('catalog.searchCategories')}
                     value={categorySearch}
                     onChange={(e) => setCategorySearch(e.target.value)}
                     className="w-full pl-4 pr-12 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-[#FF6B35] focus:bg-white transition-all"
@@ -982,13 +982,13 @@ function CatalogPageContent() {
 
               {/* Manufacturer Filter */}
               <div className="space-y-3">
-                <h3 className="font-bold text-base text-gray-900">Производитель</h3>
+                <h3 className="font-bold text-base text-gray-900">{t('catalog.manufacturer')}</h3>
                 
                 {/* Поиск по производителям */}
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Поиск производителей..."
+                    placeholder={t('catalog.searchManufacturers')}
                     value={manufacturerSearch}
                     onChange={(e) => setManufacturerSearch(e.target.value)}
                     className="w-full pl-4 pr-12 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-[#FF6B35] focus:bg-white transition-all"
@@ -1178,7 +1178,7 @@ function CatalogPageContent() {
                   onClick={handleResetFilters}
                   className="w-full py-3 bg-white border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-all"
                 >
-                  Сбросить фильтры
+                  {t('catalog.resetFilters')}
                 </button>
               </div>
             </div>
@@ -1221,12 +1221,12 @@ function CatalogPageContent() {
                   </>
                 ) : (
                   <div className="text-center py-12">
-                    <p className="text-gray-600">Товары не найдены по выбранным фильтрам</p>
+                    <p className="text-gray-600">{t('catalog.noProductsByFilters')}</p>
                     <button
                       onClick={handleResetFilters}
                       className="mt-4 px-6 py-3 bg-gradient-to-r from-[#FF6B35] to-[#F7931E] text-white font-semibold rounded-full hover:shadow-lg transition-all"
                     >
-                      Сбросить фильтры
+                      {t('catalog.resetFilters')}
                     </button>
                   </div>
                 )}
@@ -1234,7 +1234,7 @@ function CatalogPageContent() {
             ) : (
               <div className="text-center py-12">
                 <Loader2 className="w-12 h-12 text-[#FF6B35] animate-spin mx-auto mb-4" />
-                <p className="text-gray-600">Загрузка товаров...</p>
+                <p className="text-gray-600">{t('common.loadingProducts')}</p>
               </div>
             )}
             </div>
