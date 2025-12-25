@@ -658,7 +658,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Анализируем намерение клиента из контекста разговора
-    const conversationContext = conversationHistory.slice(-6).map(m => m.content).join(' ');
+    const conversationContext = conversationHistory.slice(-6).map((m: { role: string; content: string }) => m.content).join(' ');
     const fullContext = `${conversationContext} ${message}`.toLowerCase();
     
     // Определяем тип запроса
