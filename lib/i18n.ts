@@ -23,30 +23,55 @@ export function getCurrentLocale(): Locale {
   return (localStorage.getItem('language') as Locale) || 'ru';
 }
 
+export function setLocale(locale: Locale): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem('language', locale);
+  // Триггерим событие для обновления компонентов
+  window.dispatchEvent(new Event('languagechange'));
+}
+
 // Хук для использования переводов в компонентах
 export function useTranslations(namespace?: string) {
-  const [locale, setLocale] = useState<Locale>('ru');
+  const [locale, setLocale] = useState<Locale>(() => {
+    // Инициализируем локаль сразу при создании компонента
+    if (typeof window !== 'undefined') {
+      return getCurrentLocale();
+    }
+    return 'ru';
+  });
 
   useEffect(() => {
-    setLocale(getCurrentLocale());
-    
-    // Слушаем изменения языка
-    const handleStorageChange = () => {
-      setLocale(getCurrentLocale());
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    // Также проверяем при каждом рендере
-    const interval = setInterval(() => {
+    // Обновляем локаль при монтировании
+    const updateLocale = () => {
       const newLocale = getCurrentLocale();
       if (newLocale !== locale) {
         setLocale(newLocale);
       }
-    }, 100);
+    };
+    
+    updateLocale();
+    
+    // Слушаем изменения языка через storage и custom event
+    const handleStorageChange = () => {
+      updateLocale();
+    };
+    
+    const handleLanguageChange = () => {
+      updateLocale();
+    };
+    
+    // Также проверяем периодически (на случай, если localStorage изменился в другой вкладке)
+    const interval = setInterval(() => {
+      updateLocale();
+    }, 500);
+    
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('languagechange', handleLanguageChange);
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
       clearInterval(interval);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('languagechange', handleLanguageChange);
     };
   }, [locale]);
 
