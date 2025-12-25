@@ -125,13 +125,16 @@ function extractCharacteristicsValues(
 /**
  * Определяет, является ли запрос запросом о характеристиках
  * Например: "какие объемы", "какие мощности", "какие размеры"
+ * Также учитывает контекст предыдущих сообщений
  */
-function isCharacteristicsQuery(query: string): {
+function isCharacteristicsQuery(query: string, conversationContext?: string): {
   isQuery: boolean;
   characteristicName?: string;
   productType?: string;
 } {
   const queryLower = query.toLowerCase();
+  const contextLower = conversationContext?.toLowerCase() || '';
+  const fullQuery = `${contextLower} ${queryLower}`.toLowerCase();
   
   // Ключевые слова для характеристик и их синонимы
   const characteristicMap: { [key: string]: string[] } = {
@@ -210,8 +213,45 @@ function isCharacteristicsQuery(query: string): {
             }
           }
           
-          // Если тип не определен, пытаемся найти его в запросе
+          // Если тип не определен, пытаемся найти его в запросе или контексте
           if (!productType) {
+            // Сначала проверяем контекст
+            if (contextLower) {
+              const contextWords = contextLower.split(/\s+/);
+              const productKeywordsMap: { [key: string]: string } = {
+                'холодильник': 'холодильник',
+                'холодильника': 'холодильник',
+                'холодильники': 'холодильник',
+                'холодильников': 'холодильник',
+                'морозилк': 'морозилк',
+                'морозилки': 'морозилк',
+                'печь': 'печь',
+                'печи': 'печь',
+                'плит': 'плит',
+                'плиты': 'плит',
+                'панел': 'панел',
+                'панели': 'панел',
+                'варочн': 'варочн',
+                'варочных': 'варочн',
+                'индукционн': 'индукционн',
+                'индукционнк': 'индукционн',
+                'индукционнки': 'индукционн',
+                'кофемашин': 'кофемашин',
+                'кофемашины': 'кофемашин',
+                'кофеварк': 'кофеварк',
+                'кофеварки': 'кофеварк'
+              };
+              
+              for (const word of contextWords) {
+                for (const [keyword, baseType] of Object.entries(productKeywordsMap)) {
+                  if (word.includes(keyword) || keyword.includes(word)) {
+                    productType = baseType;
+                    break;
+                  }
+                }
+                if (productType) break;
+              }
+            }
             // Проверяем весь запрос на наличие типов товаров (с учетом разных падежей)
             const productKeywordsMap: { [key: string]: string } = {
               'холодильник': 'холодильник',
@@ -307,7 +347,7 @@ function isCharacteristicsQuery(query: string): {
 /**
  * Умный поиск товаров по запросу клиента
  */
-async function searchProductsByQuery(query: string): Promise<{
+async function searchProductsByQuery(query: string, conversationContext?: string): Promise<{
   products: Product[];
   suggestedCategory?: string;
   suggestedCategoryId?: string;
@@ -325,17 +365,58 @@ async function searchProductsByQuery(query: string): Promise<{
   try {
     const productsCollection = await getCollection<Product>('products');
     
-    // Проверяем, является ли это запросом о характеристиках
-    const charQuery = isCharacteristicsQuery(query);
+    // Используем контекст разговора для лучшего понимания запроса
+    const contextToUse = conversationContext || query.toLowerCase();
+    
+    // Проверяем, является ли это запросом о характеристиках (с учетом контекста)
+    const charQuery = isCharacteristicsQuery(query, contextToUse);
     
     if (charQuery.isQuery) {
       // Это запрос о характеристиках (например, "какие объемы холодильников есть")
       // Сначала находим товары по типу (если указан)
       let productsToAnalyze: Product[] = [];
       
-      if (charQuery.productType) {
+      // Если тип товара не определен в текущем запросе, пытаемся найти его в контексте
+      let productType = charQuery.productType;
+      if (!productType && conversationContext) {
+        const contextLower = conversationContext.toLowerCase();
+        const productKeywordsMap: { [key: string]: string } = {
+          'холодильник': 'холодильник',
+          'холодильника': 'холодильник',
+          'холодильники': 'холодильник',
+          'холодильников': 'холодильник',
+          'морозилк': 'морозилк',
+          'морозилки': 'морозилк',
+          'печь': 'печь',
+          'печи': 'печь',
+          'плит': 'плит',
+          'плиты': 'плит',
+          'панел': 'панел',
+          'панели': 'панел',
+          'варочн': 'варочн',
+          'варочных': 'варочн',
+          'варочная': 'варочн',
+          'индукционн': 'индукционн',
+          'индукционнк': 'индукционн',
+          'индукционнки': 'индукционн',
+          'индукционная': 'индукционн',
+          'кофемашин': 'кофемашин',
+          'кофемашины': 'кофемашин',
+          'кофеварк': 'кофеварк',
+          'кофеварки': 'кофеварк'
+        };
+        
+        for (const [keyword, baseType] of Object.entries(productKeywordsMap)) {
+          if (contextLower.includes(keyword)) {
+            productType = baseType;
+            break;
+          }
+        }
+      }
+      
+      if (productType) {
         // Ищем товары по типу - более точный поиск
-        const typeKeyword = charQuery.productType.toLowerCase();
+        const typeKeyword = productType.toLowerCase();
         
         // Маппинг типов товаров на ключевые слова для поиска
         const productTypeMap: { [key: string]: string[] } = {
@@ -409,24 +490,29 @@ async function searchProductsByQuery(query: string): Promise<{
           });
         }
       } else {
-        // Если тип не указан, пытаемся определить по запросу
+        // Если тип не указан, пытаемся определить по запросу и контексту
         const queryLower = query.toLowerCase();
+        const contextLower = conversationContext?.toLowerCase() || '';
+        const fullContext = `${contextLower} ${queryLower}`;
         let categoryFilter: any = {};
         
-        if (queryLower.includes('холодильн') || queryLower.includes('морозилк')) {
+        // Проверяем контекст на наличие упоминаний товаров
+        if (fullContext.includes('холодильн') || fullContext.includes('морозилк')) {
           categoryFilter = { categoryId: '1', subcategoryId: { $regex: /holodil|холодильн/i } };
-        } else if (queryLower.includes('пекарн') || queryLower.includes('хлебопекарн')) {
+        } else if (fullContext.includes('пекарн') || fullContext.includes('хлебопекарн')) {
           categoryFilter = { categoryId: '1', subcategoryId: { $regex: /hlebopekarnoe|хлебопекарн/i } };
-        } else if (queryLower.includes('кофе') || queryLower.includes('кофемашин')) {
+        } else if (fullContext.includes('кофе') || fullContext.includes('кофемашин')) {
           categoryFilter = { categoryId: '2' };
-        } else if (queryLower.includes('бар')) {
+        } else if (fullContext.includes('бар')) {
           categoryFilter = { categoryId: '1', subcategoryId: { $regex: /bar|бар/i } };
+        } else if (fullContext.includes('плит') || fullContext.includes('панел') || fullContext.includes('варочн') || fullContext.includes('индукционн')) {
+          categoryFilter = { categoryId: '1', subcategoryId: { $regex: /teplovoe|теплов/i } };
         }
         
         if (Object.keys(categoryFilter).length > 0) {
           productsToAnalyze = await productsCollection
             .find(categoryFilter)
-            .limit(100)
+            .limit(200)
             .toArray();
         } else {
           // Берем все товары, если тип не определен
@@ -466,40 +552,119 @@ async function searchProductsByQuery(query: string): Promise<{
     // Извлекаем ключевые слова из запроса (исключаем стоп-слова)
     const stopWords = ['для', 'какой', 'какая', 'какое', 'какие', 'нужен', 'нужна', 'нужно', 'нужны', 
                        'хочу', 'хотят', 'интересует', 'интересуют', 'посоветуйте', 'подберите', 
-                       'найти', 'найти', 'купить', 'стоимость', 'цена', 'сколько', 'есть', 'у вас', 'алло'];
+                       'найти', 'найти', 'купить', 'стоимость', 'цена', 'сколько', 'есть', 'у вас', 'алло', 'у', 'них', 'их'];
     
-    const keywords = queryLower
+    // Маппинг синонимов и вариаций слов
+    const synonymsMap: { [key: string]: string[] } = {
+      'индукционнк': ['индукционн', 'индукц', 'induction'],
+      'индукционнки': ['индукционн', 'индукц', 'induction'],
+      'индукционн': ['индукционн', 'индукц', 'induction'],
+      'панел': ['панел', 'панель', 'panel'],
+      'варочн': ['варочн', 'вароч', 'cooktop'],
+      'плит': ['плит', 'плита', 'plate'],
+      'холодильник': ['холодильник', 'холодильн', 'refrigerator', 'fridge'],
+      'холодильников': ['холодильник', 'холодильн', 'refrigerator', 'fridge'],
+      'холодильники': ['холодильник', 'холодильн', 'refrigerator', 'fridge'],
+      'размер': ['размер', 'габарит', 'dimension', 'size'],
+      'размеры': ['размер', 'габарит', 'dimension', 'size'],
+      'размеров': ['размер', 'габарит', 'dimension', 'size']
+    };
+    
+    // Расширяем ключевые слова синонимами
+    const expandKeywords = (words: string[]): string[] => {
+      const expanded: string[] = [];
+      words.forEach(word => {
+        expanded.push(word);
+        // Проверяем синонимы
+        for (const [key, synonyms] of Object.entries(synonymsMap)) {
+          if (word.includes(key) || key.includes(word)) {
+            expanded.push(...synonyms);
+          }
+        }
+        // Добавляем вариации (убираем окончания)
+        if (word.length > 4) {
+          const root = word.substring(0, word.length - 2);
+          expanded.push(root);
+        }
+      });
+      return [...new Set(expanded)]; // Убираем дубликаты
+    };
+    
+    let keywords = queryLower
       .split(/\s+/)
       .filter(word => word.length > 2 && !stopWords.includes(word));
+    
+    // Расширяем ключевые слова синонимами
+    keywords = expandKeywords(keywords);
     
     if (keywords.length === 0) {
       return { products: [] };
     }
 
     // Создаем поисковый запрос с приоритетом на название
-    // Сначала ищем товары, где ВСЕ ключевые слова есть в названии (более точное совпадение)
-    const allKeywordsPattern = keywords.map(k => `(?=.*${k})`).join('');
+    // Экранируем специальные символы в ключевых словах
+    const escapedKeywords = keywords.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
     
-    // Поиск по названию с приоритетом (все слова должны быть в названии)
+    // Сначала ищем товары, где ВСЕ ключевые слова есть в названии (более точное совпадение)
+    // Используем lookahead для поиска всех слов в любом порядке
+    const allKeywordsPattern = escapedKeywords.map(k => `(?=.*${k})`).join('');
+    
+    // Поиск по названию с приоритетом (все слова должны быть в названии, в любом порядке)
     const exactNameMatch = {
       name: { $regex: new RegExp(allKeywordsPattern, 'i') }
     };
     
+    // Также ищем комбинации слов (например, "индукционная панель" или "панель индукционная")
+    const wordCombinations: any[] = [];
+    if (keywords.length >= 2) {
+      // Создаем паттерны для всех комбинаций ключевых слов
+      for (let i = 0; i < keywords.length; i++) {
+        for (let j = i + 1; j < keywords.length; j++) {
+          const word1 = escapedKeywords[i];
+          const word2 = escapedKeywords[j];
+          // Паттерн для "слово1 слово2" или "слово2 слово1"
+          wordCombinations.push({
+            name: { $regex: new RegExp(`(${word1}.*${word2}|${word2}.*${word1})`, 'i') }
+          });
+        }
+      }
+    }
+    
     // Поиск по названию (хотя бы одно слово)
     const nameMatch = {
-      name: { $regex: new RegExp(keywords.join('|'), 'i') }
+      name: { $regex: new RegExp(escapedKeywords.join('|'), 'i') }
     };
     
     // Поиск по описанию
     const descriptionMatch = {
-      description: { $regex: new RegExp(keywords.join('|'), 'i') }
+      description: { $regex: new RegExp(escapedKeywords.join('|'), 'i') }
+    };
+    
+    // Поиск по характеристикам (для случаев, когда товар описан через характеристики)
+    const characteristicsMatch = {
+      $or: [
+        { 'characteristics.name': { $regex: new RegExp(escapedKeywords.join('|'), 'i') } },
+        { 'characteristics.value': { $regex: new RegExp(escapedKeywords.join('|'), 'i') } }
+      ]
     };
 
-    // Сначала ищем точные совпадения в названии
+    // Сначала ищем точные совпадения в названии (все слова в любом порядке)
     let foundProducts = await productsCollection
       .find(exactNameMatch)
       .limit(20)
       .toArray();
+    
+    // Если точных совпадений мало, ищем комбинации слов
+    if (foundProducts.length < 5 && wordCombinations.length > 0) {
+      const foundProductIds = new Set(foundProducts.map(p => p.id));
+      const combinationProducts = await productsCollection
+        .find({ $or: wordCombinations })
+        .limit(20)
+        .toArray();
+      
+      const uniqueCombinationProducts = combinationProducts.filter(p => !foundProductIds.has(p.id));
+      foundProducts = [...foundProducts, ...uniqueCombinationProducts];
+    }
     
     // Если точных совпадений мало, добавляем товары с совпадением хотя бы одного слова в названии
     if (foundProducts.length < 5) {
@@ -507,13 +672,22 @@ async function searchProductsByQuery(query: string): Promise<{
       
       const additionalProducts = await productsCollection
         .find({ 
-          $or: [nameMatch, descriptionMatch]
+          $or: [nameMatch, descriptionMatch, characteristicsMatch]
         })
-        .limit(20)
+        .limit(30)
         .toArray();
       
       // Фильтруем дубликаты по ID
       const uniqueAdditionalProducts = additionalProducts.filter(p => !foundProductIds.has(p.id));
+      
+      // Сортируем по релевантности (количество совпадений ключевых слов)
+      uniqueAdditionalProducts.sort((a, b) => {
+        const aNameLower = a.name.toLowerCase();
+        const bNameLower = b.name.toLowerCase();
+        const aMatches = keywords.filter(k => aNameLower.includes(k)).length;
+        const bMatches = keywords.filter(k => bNameLower.includes(k)).length;
+        return bMatches - aMatches; // Больше совпадений = выше
+      });
       
       foundProducts = [...foundProducts, ...uniqueAdditionalProducts];
     }
@@ -610,8 +784,12 @@ export async function POST(request: NextRequest) {
     const apiKey = process.env.OPENROUTER_API_KEY;
     const hasValidApiKey = apiKey && apiKey.trim().length > 0;
     
-    // Ищем товары по запросу клиента
-    const searchResult = await searchProductsByQuery(message);
+    // Анализируем контекст разговора для лучшего понимания запроса
+    const conversationContext = conversationHistory.slice(-6).map((m: ConversationMessage) => m.content).join(' ');
+    const fullQuery = `${conversationContext} ${message}`.toLowerCase();
+    
+    // Ищем товары по запросу клиента (с учетом контекста)
+    const searchResult = await searchProductsByQuery(message, fullQuery);
     const { products: foundProducts, suggestedCategory, suggestedCategoryId, suggestedSubcategoryId, suggestedLink, characteristicsData } = searchResult;
     
     // Если это запрос о характеристиках, обрабатываем его специальным образом
@@ -663,17 +841,13 @@ export async function POST(request: NextRequest) {
       return await getFallbackResponse(message, conversationHistory, foundProducts, suggestedLink);
     }
 
-    // Анализируем намерение клиента из контекста разговора
-    const conversationContext = conversationHistory.slice(-6).map((m: ConversationMessage) => m.content).join(' ');
-    const fullContext = `${conversationContext} ${message}`.toLowerCase();
-    
     // Определяем тип запроса
     const isGreeting = /привет|здравств|добр|hi|hello/i.test(message);
     const isQuestion = /как|что|где|когда|почему|зачем|сколько|какой|какая|какое|какие/i.test(message);
     const isProductSearch = /нужен|нужна|нужно|нужны|хочу|интересует|ищу|ищем|подбери|посоветуй|найди/i.test(message);
-    const isPriceQuery = /цена|стоимость|сколько стоит|прайс|стоит/i.test(fullContext);
-    const isDeliveryQuery = /доставк|доставить|привезти|срок/i.test(fullContext);
-    const isWarrantyQuery = /гарант|ремонт|обслуживание|сервис/i.test(fullContext);
+    const isPriceQuery = /цена|стоимость|сколько стоит|прайс|стоит/i.test(fullQuery);
+    const isDeliveryQuery = /доставк|доставить|привезти|срок/i.test(fullQuery);
+    const isWarrantyQuery = /гарант|ремонт|обслуживание|сервис/i.test(fullQuery);
     
     // Формируем системный промпт с контекстом
     let systemPrompt = `Ты - профессиональный и дружелюбный консультант интернет-магазина ProfiTech, специализирующегося на профессиональном оборудовании для предприятий общественного питания, пекарен, кондитерских, баров и других бизнесов.
