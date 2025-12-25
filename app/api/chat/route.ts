@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCollection } from '@/lib/db';
 import { Product } from '@/types';
 
+// Тип для сообщений в истории разговора
+interface ConversationMessage {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+}
+
 // Интеграция с OpenRouter API для использования модели MiMo-V2-Flash от Xiaomi
 // Для работы нужно добавить OPENROUTER_API_KEY в .env.local
 // Получить ключ можно на https://openrouter.ai/
@@ -658,7 +664,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Анализируем намерение клиента из контекста разговора
-    const conversationContext = conversationHistory.slice(-6).map((m: { role: string; content: string }) => m.content).join(' ');
+    const conversationContext = conversationHistory.slice(-6).map((m: ConversationMessage) => m.content).join(' ');
     const fullContext = `${conversationContext} ${message}`.toLowerCase();
     
     // Определяем тип запроса
@@ -787,7 +793,7 @@ export async function POST(request: NextRequest) {
     // Добавляем контекст предыдущих сообщений
     if (conversationHistory.length > 0) {
       systemPrompt += `\n\nПРЕДЫДУЩИЙ КОНТЕКСТ РАЗГОВОРА:`;
-      conversationHistory.slice(-4).forEach((msg, idx) => {
+      conversationHistory.slice(-4).forEach((msg: ConversationMessage) => {
         if (msg.role === 'user') {
           systemPrompt += `\nКлиент: ${msg.content}`;
         } else if (msg.role === 'assistant') {
@@ -897,7 +903,7 @@ export async function POST(request: NextRequest) {
 // Fallback функция с простой логикой (используется если API недоступен)
 async function getFallbackResponse(
   message: string, 
-  conversationHistory: any[] = [],
+  conversationHistory: ConversationMessage[] = [],
   foundProducts: Product[] = [],
   suggestedLink?: string
 ) {
