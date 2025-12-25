@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "node scripts/start-production.js",
+    "start:direct": "next start",
+    "start:prod": "npm run build && next start",
     "lint": "eslint",
     "import": "tsx scripts/importCatalog.ts",
     "db:migrate-mysql-to-mongo": "node scripts/migrateToMongoDB.js",
