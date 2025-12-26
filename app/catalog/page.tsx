@@ -47,11 +47,27 @@ function CatalogPageContent() {
   const [availableCharacteristics, setAvailableCharacteristics] = useState<{ [key: string]: string[] }>({});
   const [availableCategories, setAvailableCategories] = useState<string[]>([]);
   const [isLoadingStats, setIsLoadingStats] = useState(false);
+  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Загрузка данных через API с пагинацией (оптимизированная)
   const loadProducts = useCallback(async () => {
+    // Создаем AbortController для таймаута (совместимо с мобильными устройствами)
+    const abortController = new AbortController();
+    const timeoutId = setTimeout(() => {
+      abortController.abort();
+    }, 30000); // Таймаут 30 секунд
+    
     try {
       useCatalogStore.setState({ isLoading: true });
+      
+      // Дополнительная защита: сбрасываем загрузку через 35 секунд, если запрос не завершился
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+      }
+      loadingTimeoutRef.current = setTimeout(() => {
+        console.warn('[Catalog] Loading timeout - resetting loading state');
+        useCatalogStore.setState({ isLoading: false });
+      }, 35000);
       
       const params = new URLSearchParams();
       params.set('page', String(currentPage));
@@ -85,8 +101,14 @@ function CatalogPageContent() {
           'Cache-Control': 'no-cache',
           'Pragma': 'no-cache'
         },
-        signal: AbortSignal.timeout(30000) // Таймаут 30 секунд
+        signal: abortController.signal
       });
+      
+      clearTimeout(timeoutId);
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+        loadingTimeoutRef.current = null;
+      }
       
       if (response.ok) {
         const data = await response.json();
@@ -105,13 +127,29 @@ function CatalogPageContent() {
           filteredProducts: [],
           isLoading: false 
         });
+        setTotalPages(1);
+        setTotalProducts(0);
       }
-    } catch (error) {
+    } catch (error: any) {
+      clearTimeout(timeoutId);
+      if (loadingTimeoutRef.current) {
+        clearTimeout(loadingTimeoutRef.current);
+        loadingTimeoutRef.current = null;
+      }
       console.error('[Catalog] Error loading products:', error);
+      
+      // Проверяем, была ли ошибка из-за прерывания запроса
+      if (error.name === 'AbortError') {
+        console.warn('[Catalog] Request timeout - request was aborted');
+      }
+      
+      // Всегда сбрасываем состояние загрузки
       useCatalogStore.setState({ 
         filteredProducts: [],
         isLoading: false 
       });
+      setTotalPages(1);
+      setTotalProducts(0);
     }
   }, [currentPage, appliedCategory, appliedSubcategories, appliedManufacturers, appliedCharacteristics, searchQuery, setProducts]);
 
@@ -206,6 +244,30 @@ function CatalogPageContent() {
     return () => clearTimeout(timeoutId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, appliedCategory, appliedSubcategories, appliedManufacturers, appliedCharacteristics, searchQuery]);
+
+  // Явная загрузка при монтировании компонента (для мобильных устройств)
+  // Используем ref для отслеживания первой загрузки
+  const hasInitialLoadRef = useRef(false);
+  useEffect(() => {
+    // Убеждаемся, что загрузка происходит при первой загрузке страницы
+    if (!hasInitialLoadRef.current) {
+      hasInitialLoadRef.current = true;
+      const initialLoadTimeout = setTimeout(() => {
+        // Проверяем, что товары еще не загружены и загрузка не идет
+        if (filteredProducts.length === 0 && !isLoading) {
+          loadProducts();
+        }
+      }, 300);
+
+      return () => {
+        clearTimeout(initialLoadTimeout);
+        if (loadingTimeoutRef.current) {
+          clearTimeout(loadingTimeoutRef.current);
+          loadingTimeoutRef.current = null;
+        }
+      };
+    }
+  }, []); // Только при монтировании
 
   // Слушаем обновления поиска из Header
   useEffect(() => {
