@@ -91,11 +91,15 @@ function CatalogPageContent() {
         params.set('characteristics', JSON.stringify(appliedCharacteristics));
       }
       if (searchQuery && searchQuery.trim()) {
-        params.set('search', searchQuery.trim());
+        const trimmedSearch = searchQuery.trim();
+        params.set('search', trimmedSearch);
+        console.log('[Catalog] Adding search query to params:', trimmedSearch);
       }
 
       const startTime = performance.now();
-      const response = await fetch(`/api/catalog?${params.toString()}`, {
+      const apiUrl = `/api/catalog?${params.toString()}`;
+      console.log('[Catalog] Loading products from:', apiUrl);
+      const response = await fetch(apiUrl, {
         cache: 'no-store',
         headers: {
           'Cache-Control': 'no-cache',
@@ -306,14 +310,19 @@ function CatalogPageContent() {
     }
     
     // Синхронизируем поисковый запрос из URL с store
-    const { setSearchQuery } = useCatalogStore.getState();
-    if (searchFromUrl !== null && searchFromUrl !== searchQuery) {
-      setSearchQuery(searchFromUrl);
-    } else if (searchFromUrl === null && searchQuery) {
-      // Если search параметр удален из URL, очищаем поиск
-      setSearchQuery('');
+    const { setSearchQuery, searchQuery: currentSearchQuery } = useCatalogStore.getState();
+    if (searchFromUrl !== null) {
+      // Если есть search в URL, устанавливаем его в store
+      if (searchFromUrl !== currentSearchQuery) {
+        setSearchQuery(searchFromUrl);
+      }
+    } else {
+      // Если search параметра нет в URL, но он есть в store, очищаем
+      if (currentSearchQuery) {
+        setSearchQuery('');
+      }
     }
-  }, [searchParams, searchQuery]);
+  }, [searchParams]);
 
   // Синхронизация pendingFilters с filter из store (если есть)
   useEffect(() => {

@@ -291,23 +291,35 @@ export async function GET(request: NextRequest) {
     }
 
     // Полнотекстовый поиск (используем $regex вместо $text для совместимости)
-    if (searchQuery && searchQuery.length >= 2) {
-      const searchWords = searchQuery.split(/\s+/).filter(w => w.length > 0);
+    if (searchQuery && searchQuery.trim().length >= 1) {
+      const trimmedQuery = searchQuery.trim();
+      const searchWords = trimmedQuery.split(/\s+/).filter(w => w.length > 0);
       if (searchWords.length > 0) {
-        // AND логика: все слова должны быть найдены в любом из полей
-        charFilters.push(...searchWords.map(word => ({
-          $or: [
-            { name: { $regex: word, $options: 'i' } },
-            { description: { $regex: word, $options: 'i' } },
-            { manufacturer: { $regex: word, $options: 'i' } }
-          ]
-        })));
+        // AND логика: все слова должны быть найдены (каждое слово в любом из полей)
+        // Если пользователь ввел "кофе машина", товар должен содержать И "кофе" И "машина"
+        // но каждое слово может быть в любом из полей (name, description, manufacturer, characteristics)
+        searchWords.forEach(word => {
+          charFilters.push({
+            $or: [
+              { name: { $regex: word, $options: 'i' } },
+              { description: { $regex: word, $options: 'i' } },
+              { manufacturer: { $regex: word, $options: 'i' } },
+              // Также ищем в характеристиках
+              { 'characteristics.value': { $regex: word, $options: 'i' } }
+            ]
+          });
+        });
       }
     }
 
     // Объединяем все $and условия
+    // Важно: если уже есть filter.$and, добавляем к нему, а не перезаписываем
     if (charFilters.length > 0) {
-      filter.$and = charFilters;
+      if (filter.$and && Array.isArray(filter.$and)) {
+        filter.$and.push(...charFilters);
+      } else {
+        filter.$and = charFilters;
+      }
     }
 
     console.log('[API Catalog] Filter:', JSON.stringify(filter, null, 2));
