@@ -285,20 +285,35 @@ function CatalogPageContent() {
   useEffect(() => {
     const categoryFromUrl = searchParams.get('category');
     const subcategoryFromUrl = searchParams.get('subcategory');
+    const searchFromUrl = searchParams.get('search');
     
     if (categoryFromUrl) {
       setTimeout(() => {
         setAppliedCategory(categoryFromUrl);
         setPendingFilters(prev => ({ ...prev, category: categoryFromUrl }));
       }, 0);
+    } else {
+      // Если категория удалена из URL, сбрасываем
+      setAppliedCategory('');
+      setPendingFilters(prev => ({ ...prev, category: '' }));
     }
+    
     if (subcategoryFromUrl) {
       setTimeout(() => {
         setAppliedSubcategories([subcategoryFromUrl]);
         setPendingFilters(prev => ({ ...prev, subcategories: [subcategoryFromUrl] }));
       }, 0);
     }
-  }, [searchParams]);
+    
+    // Синхронизируем поисковый запрос из URL с store
+    const { setSearchQuery } = useCatalogStore.getState();
+    if (searchFromUrl !== null && searchFromUrl !== searchQuery) {
+      setSearchQuery(searchFromUrl);
+    } else if (searchFromUrl === null && searchQuery) {
+      // Если search параметр удален из URL, очищаем поиск
+      setSearchQuery('');
+    }
+  }, [searchParams, searchQuery]);
 
   // Синхронизация pendingFilters с filter из store (если есть)
   useEffect(() => {

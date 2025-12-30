@@ -31,7 +31,7 @@ export default function HomePage() {
       alt: t('home.carousel2Title'),
       title: t('home.carousel2Title'),
       description: t('home.carousel2Desc'),
-      link: '/catalog?category=kofevarki-i-kofemashini',
+      link: '/catalog?category=2', // Кофеварки и кофемашины
     },
     {
       id: '3',
@@ -39,7 +39,7 @@ export default function HomePage() {
       alt: t('home.carousel3Title'),
       title: t('home.carousel3Title'),
       description: t('home.carousel3Desc'),
-      link: '/catalog?category=profoborudovanie',
+      link: '/catalog?category=1', // Профоборудование
     },
   ];
   
@@ -143,7 +143,7 @@ export default function HomePage() {
                 transition={{ delay: index * 0.1 }}
               >
                 <Link
-                  href={`/catalog?category=${category.slug}`}
+                  href={`/catalog?category=${category.id}`}
                   className="card block group hover:shadow-2xl transition-all duration-300 h-full"
                   style={{ padding: '32px' }}
                 >

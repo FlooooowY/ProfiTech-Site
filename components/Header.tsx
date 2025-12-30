@@ -19,8 +19,29 @@ export default function Header() {
   const [searchQuery, setSearchQuery] = useState('');
   const getTotalItems = useCartStore((state) => state.getTotalItems);
   const setSearchQueryStore = useCatalogStore((state) => state.setSearchQuery);
+  const storeSearchQuery = useCatalogStore((state) => state.searchQuery);
   const favorites = useFavoritesStore((state) => state.favorites);
   const t = useTranslations();
+
+  // Синхронизируем поле поиска с store при монтировании и изменении store
+  useEffect(() => {
+    // Синхронизируем с store только если поле поиска пустое, чтобы не перезаписывать то, что пользователь вводит
+    if (storeSearchQuery && storeSearchQuery !== searchQuery && !searchQuery) {
+      setSearchQuery(storeSearchQuery);
+    }
+  }, [storeSearchQuery]);
+  
+  // Синхронизируем поле поиска с URL при загрузке страницы
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const searchFromUrl = urlParams.get('search');
+      if (searchFromUrl && searchFromUrl !== searchQuery) {
+        setSearchQuery(searchFromUrl);
+        setSearchQueryStore(searchFromUrl);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -35,6 +56,8 @@ export default function Header() {
     e.preventDefault();
     if (searchQuery.trim()) {
       setSearchQueryStore(searchQuery.trim());
+      router.push(`/catalog?search=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
       router.push('/catalog');
     }
   };
@@ -43,18 +66,34 @@ export default function Header() {
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (searchQuery.trim()) {
-        setSearchQueryStore(searchQuery.trim());
-        // Если мы на странице каталога, обновляем результаты
+        const trimmedQuery = searchQuery.trim();
+        setSearchQueryStore(trimmedQuery);
+        // Если мы на странице каталога, обновляем URL и результаты
         if (window.location.pathname === '/catalog') {
+          // Обновляем URL с поисковым запросом
+          const currentUrl = new URL(window.location.href);
+          currentUrl.searchParams.set('search', trimmedQuery);
+          router.push(currentUrl.pathname + currentUrl.search, { scroll: false });
           // Триггерим обновление через событие
           window.dispatchEvent(new CustomEvent('searchUpdated'));
         } else {
-          // Если не на каталоге, переходим туда
-          router.push('/catalog');
+          // Если не на каталоге, переходим туда с поисковым запросом
+          router.push(`/catalog?search=${encodeURIComponent(trimmedQuery)}`);
         }
       } else {
         // Если поиск пустой, очищаем
         setSearchQueryStore('');
+        // Если мы на странице каталога, удаляем search параметр из URL
+        if (window.location.pathname === '/catalog') {
+          const currentUrl = new URL(window.location.href);
+          const hasSearchParam = currentUrl.searchParams.has('search');
+          if (hasSearchParam) {
+            currentUrl.searchParams.delete('search');
+            router.push(currentUrl.pathname + currentUrl.search, { scroll: false });
+            // Триггерим обновление через событие
+            window.dispatchEvent(new CustomEvent('searchUpdated'));
+          }
+        }
       }
     }, 300); // Debounce 300ms
 
